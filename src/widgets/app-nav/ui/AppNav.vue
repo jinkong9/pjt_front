@@ -1,9 +1,11 @@
 <script setup>
-import { onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 
 const memberStore = useMemberStore()
+const route = useRoute()
+const isHome = computed(() => route.name === 'home')
 
 onMounted(() => {
   if (!memberStore.loaded) {
@@ -13,7 +15,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <header class="site-header">
+  <header class="site-header" :class="{ 'hero-header': isHome }">
     <nav class="nav">
       <RouterLink class="brand" to="/home">
         <span class="brand-mark">HOME</span>
