@@ -1,17 +1,36 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 
 const memberStore = useMemberStore()
 const route = useRoute()
 const isHome = computed(() => route.name === 'home')
+const sidebarOpen = ref(false)
+
+const sidebarLinks = computed(() => [
+  { to: '/home', label: '홈' },
+  { to: '/notices', label: '공지사항' },
+  { to: '/lh-calendar', label: 'LH 캘린더' },
+  { to: '/analysis', label: '생활권 분석' },
+])
+
+watch(
+  () => route.fullPath,
+  () => {
+    sidebarOpen.value = false
+  },
+)
 
 onMounted(() => {
   if (!memberStore.loaded) {
     memberStore.fetchMe()
   }
 })
+
+function toggleSidebar() {
+  sidebarOpen.value = !sidebarOpen.value
+}
 </script>
 
 <template>
@@ -22,28 +41,41 @@ onMounted(() => {
         <strong>SSAFY Home</strong>
       </RouterLink>
       <div class="nav-links">
-        <RouterLink to="/home">홈</RouterLink>
         <RouterLink to="/prices">부동산 시세</RouterLink>
         <RouterLink to="/rentals">공공임대</RouterLink>
         <RouterLink to="/transfers">양도 게시판</RouterLink>
-        <RouterLink to="/lh-calendar">LH 캘린더</RouterLink>
-        <RouterLink to="/notices">공지사항</RouterLink>
-        <RouterLink to="/analysis">생활권 분석</RouterLink>
-        <RouterLink v-if="!memberStore.isLoggedIn" to="/login">로그인</RouterLink>
-        <RouterLink v-if="!memberStore.isLoggedIn" to="/register">회원가입</RouterLink>
-        <RouterLink v-if="memberStore.isLoggedIn" to="/member">마이페이지</RouterLink>
-        <RouterLink class="nav-cta" to="/rentals">공공임대 보기</RouterLink>
-        <RouterLink class="nav-cta" to="/transfers">양도글 보기</RouterLink>
+        <button
+          type="button"
+          class="menu-toggle"
+          :aria-expanded="sidebarOpen"
+          aria-controls="sidebar-drawer"
+          @click="toggleSidebar"
+        >
+          <strong>메뉴</strong>
+        </button>
       </div>
     </nav>
-    <aside class="quick-sidebar">
-      <RouterLink to="/notices">공지사항</RouterLink>
-      <RouterLink to="/prices">실거래 검색</RouterLink>
-      <RouterLink to="/transfers">양도 게시판</RouterLink>
-      <RouterLink to="/lh-calendar">LH 캘린더</RouterLink>
-      <RouterLink to="/member">회원정보</RouterLink>
-      <RouterLink to="/analysis">생활권 분석</RouterLink>
+
+    <button
+      v-if="sidebarOpen"
+      type="button"
+      class="sidebar-backdrop"
+      aria-label="메뉴 닫기"
+      @click="sidebarOpen = false"
+    />
+    <aside v-if="sidebarOpen" id="sidebar-drawer" class="sidebar-drawer" aria-label="전체 메뉴">
+      <div class="sidebar-head">
+        <span class="brand-mark">HOME</span>
+        <button type="button" class="sidebar-close" @click="sidebarOpen = false">닫기</button>
+      </div>
+      <nav class="sidebar-links">
+        <RouterLink v-for="link in sidebarLinks" :key="link.to" :to="link.to">{{
+          link.label
+        }}</RouterLink>
+        <RouterLink v-if="!memberStore.isLoggedIn" to="/login">로그인</RouterLink>
+        <RouterLink v-if="!memberStore.isLoggedIn" to="/register">회원가입</RouterLink>
+        <RouterLink v-if="memberStore.isLoggedIn" to="/member">회원정보</RouterLink>
+      </nav>
     </aside>
   </header>
 </template>
-

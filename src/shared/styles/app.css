@@ -81,9 +81,30 @@ a:hover {
     align-items: center;
     justify-content: flex-end;
     flex-wrap: wrap;
-    gap: 14px 22px;
+    gap: 14px 18px;
     font-size: 14px;
     font-weight: 900;
+}
+
+.menu-toggle {
+    gap: 5px;
+    min-height: 40px;
+    border-color: currentColor;
+    background: transparent;
+    color: inherit;
+    padding: 0 12px;
+}
+
+.menu-toggle span {
+    display: block;
+    width: 16px;
+    height: 2px;
+    background: currentColor;
+}
+
+.menu-toggle strong {
+    margin-left: 4px;
+    font-size: 13px;
 }
 
 .nav-cta,
@@ -104,6 +125,67 @@ button {
 .nav-cta.ghost {
     border-color: rgba(255, 255, 255, .65);
     background: rgba(255, 255, 255, .08);
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    min-height: 0;
+    border: 0;
+    background: rgba(23, 23, 23, .34);
+    padding: 0;
+}
+
+.sidebar-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 90;
+    display: grid;
+    align-content: start;
+    width: min(380px, 100%);
+    height: 100vh;
+    background: #ffffff;
+    color: #171717;
+    border-left: 1px solid #d8d8d8;
+    box-shadow: -24px 0 60px rgba(23, 23, 23, .22);
+}
+
+.sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 84px;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 0 24px;
+}
+
+.sidebar-close {
+    min-height: 40px;
+    border-color: #171717;
+    background: #ffffff;
+    color: #171717;
+    padding: 0 14px;
+}
+
+.sidebar-links {
+    display: grid;
+    padding: 18px 0;
+}
+
+.sidebar-links a {
+    display: flex;
+    align-items: center;
+    min-height: 58px;
+    border-bottom: 1px solid #eeeeee;
+    padding: 0 28px;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.sidebar-links a:hover {
+    background: #f4f0ea;
 }
 
 .main-hero {
@@ -295,6 +377,112 @@ textarea {
 .home-section > .shell {
     padding-top: 36px;
     padding-bottom: 36px;
+}
+
+.home-rental-section {
+    background: #f4f0ea;
+}
+
+.rental-section-head {
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.rental-section-head h2 {
+    font-size: clamp(28px, 3vw, 42px);
+}
+
+.rental-section-head .muted {
+    margin-top: 10px;
+}
+
+.rental-slider-shell {
+    position: relative;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
+    gap: 14px;
+    align-items: center;
+}
+
+.rental-swiper {
+    width: 100%;
+    border: 1px solid #e5e5e5;
+    background: #ffffff;
+    padding: 18px;
+    overflow: hidden;
+}
+
+.rental-window-button {
+    width: 52px;
+    min-height: 52px;
+    border-color: #171717;
+    background: #ffffff;
+    color: #171717;
+    padding: 0;
+    font-size: 20px;
+}
+
+.rental-swiper .swiper-wrapper {
+    align-items: stretch;
+}
+
+.rental-slide-card {
+    display: grid;
+    align-content: space-between;
+    gap: 14px;
+    height: 100%;
+    min-height: 220px;
+    border: 1px solid #e5e5e5;
+    background: #ffffff;
+    padding: 22px;
+    color: #171717;
+}
+
+.rental-slide-card span {
+    color: #b4212a;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .2em;
+}
+
+.rental-slide-card strong {
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.24;
+}
+
+.rental-slide-card small {
+    color: #666666;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.rental-slide-card em {
+    color: #171717;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 900;
+}
+
+.rental-swiper-pagination {
+    grid-column: 2;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    min-height: 14px;
+}
+
+.rental-swiper-pagination .swiper-pagination-bullet {
+    width: 26px;
+    height: 4px;
+    margin: 0;
+    border-radius: 0;
+    background: #d9d4cc;
+    opacity: 1;
+}
+
+.rental-swiper-pagination .swiper-pagination-bullet-active {
+    background: #b4212a;
 }
 
 .home-feature-section {
@@ -1207,15 +1395,20 @@ textarea {
 @media (max-width: 980px) {
     .nav {
         width: min(100% - 32px, 1480px);
-        align-items: flex-start;
-        flex-direction: column;
-        padding: 18px 0;
-        gap: 16px;
+        align-items: center;
+        flex-direction: row;
+        min-height: 72px;
+        padding: 12px 0;
+        gap: 12px;
     }
 
     .nav-links {
         flex-wrap: wrap;
-        gap: 14px;
+        gap: 12px;
+    }
+
+    .nav-links > a {
+        display: none;
     }
 
     .main-hero-inner,
@@ -1234,6 +1427,7 @@ textarea {
     .form-section,
     .form-grid,
     .image-preview-grid,
+    .rental-slider-shell,
     .auth-page,
     .auth-page.compact,
     .member-grid,
@@ -1313,6 +1507,29 @@ textarea {
         align-content: start;
         padding-top: 84px;
         overflow-y: auto;
+    }
+
+    .rental-slider-shell {
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
+        gap: 8px;
+    }
+
+    .rental-window-button {
+        width: 44px;
+        min-height: 44px;
+    }
+
+    .rental-swiper {
+        padding: 12px;
+    }
+
+    .rental-slide-card {
+        min-height: 210px;
+        padding: 18px;
+    }
+
+    .rental-slide-card strong {
+        font-size: 20px;
     }
 
     .quick-sidebar,

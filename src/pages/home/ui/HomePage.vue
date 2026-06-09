@@ -1,19 +1,27 @@
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { A11y, Navigation, Pagination } from 'swiper/modules'
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/pagination'
 import { api, toQuery } from '@/shared/api/client'
+import { fetchRentalNotices } from '@/entities/rental/api/rentalApi'
+import { sampleRentalNotices } from '@/entities/rental/model/sampleRentalNotices'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const router = useRouter()
 const loading = ref(true)
-const trades = ref([])
+const rentalNotices = ref([...sampleRentalNotices])
 const popups = ref([])
 const activeSection = ref(0)
 let sectionObserver
 let scrollContainer
 let wheelCleanup
 let isSectionScrolling = false
+const rentalSwiperModules = [Navigation, Pagination, A11y]
 const condition = ref({
   gugunName: '',
   keyword: '',
@@ -23,14 +31,14 @@ const condition = ref({
 async function loadHome() {
   loading.value = true
   try {
-    const [recentRes, popupRes] = await Promise.all([
-      api.get('/houses/recent', { params: { limit: 6 } }),
+    const [rentalData, popupRes] = await Promise.all([
+      fetchRentalNotices({ size: 6 }),
       api.get('/notices/popups', { params: { limit: 3 } }),
     ])
-    trades.value = recentRes.data
+    rentalNotices.value = rentalData
     popups.value = popupRes.data
   } catch {
-    trades.value = []
+    rentalNotices.value = await fetchRentalNotices({ size: 6 })
     popups.value = []
   } finally {
     loading.value = false
@@ -168,36 +176,55 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <section class="home-section fullpage-section" data-section-index="1">
+    <section class="home-section home-rental-section fullpage-section" data-section-index="1">
       <div class="shell fullpage-reveal" :class="{ 'is-visible': activeSection === 1 }">
-        <div class="section-head">
+        <div class="section-head rental-section-head">
           <div>
-            <p class="eyebrow">Market Price</p>
-            <h2>최근 부동산 실거래</h2>
-            <p class="muted">상단 검색 또는 부동산 시세 메뉴를 누르면 지도 화면으로 이동합니다.</p>
+            <p class="eyebrow">Public Rental</p>
+            <h2>LH 공고</h2>
+            <p class="muted">접수 일정과 지역을 빠르게 훑고 관심 공고의 상세 정보를 확인합니다.</p>
           </div>
-          <RouterLink class="button primary" to="/prices">부동산 시세 보기</RouterLink>
+          <RouterLink class="button primary" to="/rentals">공공임대 전체 보기</RouterLink>
         </div>
 
-        <LoadingState v-if="loading" />
-        <EmptyState v-else-if="!trades.length" message="표시할 실거래 정보가 없습니다." />
-        <div v-else class="grid">
-          <article v-for="trade in trades" :key="trade.no" class="card">
-            <span class="tag">APT SALE</span>
-            <h3>{{ trade.aptName }}</h3>
-            <p class="muted">{{ trade.address }}</p>
-            <p>
-              <strong>{{ trade.dealAmount }}만원</strong><br />
-              <span>{{ trade.dealDate }}</span>
-              · 전용 {{ trade.exclusiveArea }}㎡ · {{ trade.floor }}층
-            </p>
-            <RouterLink
-              class="button primary"
-              :to="{ path: '/prices', query: { mode: 'search', keyword: trade.aptName, gugunName: trade.gugunName } }"
-            >
-              지도에서 보기
-            </RouterLink>
-          </article>
+        <LoadingState v-if="loading && !rentalNotices.length" />
+        <EmptyState v-else-if="!rentalNotices.length" message="표시할 LH 공고가 없습니다." />
+        <div v-else class="rental-slider-shell">
+          <button type="button" class="rental-window-button rental-window-prev" aria-label="이전 LH 공고">
+            ←
+          </button>
+          <Swiper
+            class="rental-swiper"
+            :modules="rentalSwiperModules"
+            :slides-per-view="3"
+            :slides-per-group="3"
+            :space-between="14"
+            :rewind="true"
+            :navigation="{ prevEl: '.rental-window-prev', nextEl: '.rental-window-next' }"
+            :pagination="{ clickable: true, el: '.rental-swiper-pagination' }"
+            :a11y="{ prevSlideMessage: '이전 LH 공고', nextSlideMessage: '다음 LH 공고' }"
+            :breakpoints="{
+              0: { slidesPerView: 1, slidesPerGroup: 1, spaceBetween: 12 },
+              720: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 14 },
+              1100: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 14 },
+            }"
+          >
+            <SwiperSlide v-for="notice in rentalNotices" :key="notice.noticeId">
+              <RouterLink
+                class="rental-slide-card"
+                :to="`/rentals/${notice.noticeId}`"
+              >
+                <span>{{ notice.status || 'LH' }}</span>
+                <strong>{{ notice.title }}</strong>
+                <small>{{ notice.regionName }} · {{ notice.noticeType }} · {{ notice.detailType }}</small>
+                <em>접수 {{ notice.applyStartDate || '-' }} - {{ notice.applyEndDate || notice.closeDate || '-' }}</em>
+              </RouterLink>
+            </SwiperSlide>
+          </Swiper>
+          <button type="button" class="rental-window-button rental-window-next" aria-label="다음 LH 공고">
+            →
+          </button>
+          <div class="rental-swiper-pagination"></div>
         </div>
       </div>
     </section>
