@@ -86,5 +86,36 @@ describe('App', () => {
     expect(wrapper.find('.rental-window-next').exists()).toBe(true)
     expect(wrapper.text()).toContain('LH 공고')
   })
+
+  it('renders login and register as form-only pages', async () => {
+    await router.push('/login')
+    await router.isReady()
+
+    const loginWrapper = mount(App, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+
+    expect(loginWrapper.find('.auth-visual').exists()).toBe(false)
+    expect(loginWrapper.find('.auth-card').exists()).toBe(true)
+    expect(loginWrapper.find('.auth-welcome-pane').exists()).toBe(true)
+    expect(loginWrapper.find('.auth-form').exists()).toBe(true)
+    expect(loginWrapper.find('.oauth-panel').exists()).toBe(true)
+
+    await router.push('/register')
+    await router.isReady()
+
+    const registerWrapper = mount(App, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+
+    expect(registerWrapper.find('.auth-visual').exists()).toBe(false)
+    expect(registerWrapper.find('.auth-card').exists()).toBe(true)
+    expect(registerWrapper.find('.auth-welcome-pane').exists()).toBe(true)
+    expect(registerWrapper.find('.auth-form').exists()).toBe(true)
+  })
 })
 

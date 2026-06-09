@@ -127,7 +127,7 @@ onMounted(async () => {
       <div class="flex h-20 items-center justify-between px-6 lg:px-8">
         <RouterLink to="/home" class="flex items-center gap-3">
           <span
-            class="grid h-8 w-12 place-items-center border border-white/70 text-[10px] font-black tracking-[0.18em]"
+            class="grid h-10 w-16 place-items-center border border-white/70 text-[10px] font-black leading-none tracking-[0.12em] [text-indent:0.12em] whitespace-nowrap"
             >HOME</span
           >
           <strong class="text-sm font-black uppercase tracking-[0.22em]">SSAFY Home</strong>

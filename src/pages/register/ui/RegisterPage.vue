@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 
 const router = useRouter()
@@ -26,15 +26,9 @@ async function register() {
 </script>
 
 <template>
-  <main class="auth-page">
-    <section class="auth-visual">
-      <div>
-        <p class="eyebrow">Join HappyHome</p>
-        <h1>나에게 맞는 주거 정보를 모아보세요</h1>
-      </div>
-    </section>
-    <section class="auth-panel">
-      <div class="auth-box">
+  <main class="auth-page form-only">
+    <section class="auth-card">
+      <div class="auth-form-pane">
         <p class="eyebrow">Register</p>
         <h1>회원가입</h1>
         <p v-if="error" class="alert error">{{ error }}</p>
@@ -46,7 +40,17 @@ async function register() {
           <label>전화번호 <input v-model="form.phone" required /></label>
           <button type="submit">가입하기</button>
         </form>
+        <div class="auth-links">
+          <RouterLink to="/login">로그인</RouterLink>
+          <RouterLink to="/home">홈으로</RouterLink>
+        </div>
       </div>
+      <aside class="auth-welcome-pane">
+        <p class="eyebrow">Join SSAFY Home</p>
+        <h2>주거 정보를 한곳에서 관리하세요</h2>
+        <p>공공임대 일정, 양도글, 관심 매물을 편하게 이어서 볼 수 있어요.</p>
+        <RouterLink class="button" to="/login">이미 계정이 있나요?</RouterLink>
+      </aside>
     </section>
   </main>
 </template>
