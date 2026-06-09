@@ -791,6 +791,16 @@ textarea {
     grid-template-columns: 1fr 180px auto;
 }
 
+.transfer-head-actions,
+.detail-actions,
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
 .search-field {
     display: grid;
     gap: 4px;
@@ -818,6 +828,30 @@ textarea {
 
 .transfer-card {
     min-height: 360px;
+}
+
+.transfer-card-image {
+    display: grid;
+    place-items: center;
+    min-height: 190px;
+    margin: -28px -28px 0;
+    overflow: hidden;
+    background: #171717;
+    color: rgba(255, 255, 255, .72);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .18em;
+}
+
+.transfer-card-image img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    transition: transform .22s ease;
+}
+
+.transfer-card:hover .transfer-card-image img {
+    transform: scale(1.035);
 }
 
 .card-topline {
@@ -897,6 +931,156 @@ textarea {
 .contact-box strong {
     margin-top: 8px;
     font-size: 22px;
+}
+
+.transfer-gallery {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(260px, .7fr);
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.transfer-gallery-main,
+.transfer-gallery-thumbs img {
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    object-fit: cover;
+    border: 1px solid #e5e5e5;
+    background: #ffffff;
+}
+
+.transfer-gallery-thumbs {
+    display: grid;
+    gap: 16px;
+}
+
+.transfer-gallery-thumbs img {
+    min-height: 202px;
+}
+
+.transfer-form {
+    display: grid;
+    gap: 18px;
+}
+
+.form-section {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 28px;
+}
+
+.form-section h2 {
+    margin-top: 8px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.form-field {
+    display: grid;
+    gap: 8px;
+    color: #171717;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.form-field.wide {
+    grid-column: 1 / -1;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    min-height: 52px;
+    border: 1px solid #d4d4d4;
+    background: #ffffff;
+    padding: 0 14px;
+    color: #171717;
+    font-size: 15px;
+}
+
+.form-field textarea {
+    min-height: 180px;
+    padding: 14px;
+    line-height: 1.7;
+    resize: vertical;
+}
+
+.image-drop {
+    position: relative;
+    display: grid;
+    min-height: 156px;
+    place-items: center;
+    gap: 8px;
+    border: 1px dashed #b8b8b8;
+    background: #fafafa;
+    text-align: center;
+    cursor: pointer;
+}
+
+.image-drop span {
+    color: #666666;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+}
+
+.image-drop strong {
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.image-drop input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.image-preview-grid {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.image-preview {
+    position: relative;
+    min-height: 160px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid #e5e5e5;
+    background: #ffffff;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.image-preview figcaption,
+.image-remove {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    min-height: 34px;
+    border: 1px solid rgba(23, 23, 23, .18);
+    background: rgba(255, 255, 255, .92);
+    color: #171717;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.image-remove {
+    cursor: pointer;
 }
 
 .calendar-actions {
@@ -1046,11 +1230,19 @@ textarea {
     .transfer-grid,
     .metric-grid,
     .split,
+    .transfer-gallery,
+    .form-section,
+    .form-grid,
+    .image-preview-grid,
     .auth-page,
     .auth-page.compact,
     .member-grid,
     .detail-grid {
         grid-template-columns: 1fr;
+    }
+
+    .image-preview-grid {
+        grid-column: 1;
     }
 
     .calendar-actions {

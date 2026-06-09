@@ -28,6 +28,8 @@ describe('App', () => {
   it('registers transfer board and LH calendar routes', () => {
     expect(router.resolve('/transfers').name).toBe('transfers')
     expect(router.resolve('/transfers/1').name).toBe('transfer-detail')
+    expect(router.resolve('/transfers/new').name).toBe('transfer-create')
+    expect(router.resolve('/transfers/1/edit').name).toBe('transfer-edit')
     expect(router.resolve('/lh-calendar').name).toBe('lh-calendar')
   })
 

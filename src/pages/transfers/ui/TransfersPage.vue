@@ -42,9 +42,12 @@ onMounted(() => {
         <h1 class="page-title">양도 게시판</h1>
         <p class="muted">계약 기간이 남은 전월세 매물을 조건과 입주 일정 기준으로 확인합니다.</p>
       </div>
-      <div class="panel stat-panel">
-        <span>양도 가능</span>
-        <strong>{{ availableCount }}</strong>
+      <div class="transfer-head-actions">
+        <div class="panel stat-panel">
+          <span>양도 가능</span>
+          <strong>{{ availableCount }}</strong>
+        </div>
+        <RouterLink class="button primary" to="/transfers/new">글쓰기</RouterLink>
       </div>
     </div>
 
@@ -69,6 +72,10 @@ onMounted(() => {
     <EmptyState v-else-if="!transfers.length" message="조회된 양도글이 없습니다." />
     <div v-else class="grid transfer-grid">
       <article v-for="post in transfers" :key="post.transferId" class="card transfer-card">
+        <RouterLink class="transfer-card-image" :to="`/transfers/${post.transferId}`">
+          <img v-if="post.imageUrls?.length" :src="post.imageUrls[0]" :alt="post.title" />
+          <span v-else>NO IMAGE</span>
+        </RouterLink>
         <div class="card-topline">
           <span class="tag">{{ post.status }}</span>
           <span class="muted">조회 {{ post.viewCount ?? 0 }}</span>

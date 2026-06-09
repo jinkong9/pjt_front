@@ -1,10 +1,11 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
-import { fetchTransferDetail } from '@/entities/transfer/api/transferApi'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { deleteTransfer, fetchTransferDetail } from '@/entities/transfer/api/transferApi'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
+const router = useRouter()
 const loading = ref(true)
 const post = ref(null)
 
@@ -22,6 +23,12 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+async function removeTransfer() {
+  if (!window.confirm('양도글을 삭제할까요?')) return
+  await deleteTransfer(route.params.transferId)
+  router.push('/transfers')
+}
 </script>
 
 <template>
@@ -35,8 +42,19 @@ onMounted(async () => {
           <h1 class="page-title">{{ post.title }}</h1>
           <p class="muted">{{ post.address }} {{ post.detailAddress }} · {{ post.status }}</p>
         </div>
-        <a class="button primary" :href="`tel:${post.contactPhone}`">연락하기</a>
+        <div class="detail-actions">
+          <RouterLink class="button" :to="`/transfers/${post.transferId}/edit`">수정</RouterLink>
+          <button type="button" class="button danger" @click="removeTransfer">삭제</button>
+          <a class="button primary" :href="`tel:${post.contactPhone}`">연락하기</a>
+        </div>
       </div>
+
+      <section v-if="post.imageUrls?.length" class="transfer-gallery">
+        <img class="transfer-gallery-main" :src="post.imageUrls[0]" :alt="post.title" />
+        <div v-if="post.imageUrls.length > 1" class="transfer-gallery-thumbs">
+          <img v-for="imageUrl in post.imageUrls.slice(1)" :key="imageUrl" :src="imageUrl" :alt="post.title" />
+        </div>
+      </section>
 
       <section class="split transfer-detail-layout">
         <article class="panel">

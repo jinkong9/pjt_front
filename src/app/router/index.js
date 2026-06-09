@@ -11,7 +11,9 @@ import PricesPage from '@/pages/prices/ui/PricesPage.vue'
 import RegisterPage from '@/pages/register/ui/RegisterPage.vue'
 import RentalDetailPage from '@/pages/rental-detail/ui/RentalDetailPage.vue'
 import RentalsPage from '@/pages/rentals/ui/RentalsPage.vue'
+import TransferCreatePage from '@/pages/transfer-create/ui/TransferCreatePage.vue'
 import TransferDetailPage from '@/pages/transfer-detail/ui/TransferDetailPage.vue'
+import TransferEditPage from '@/pages/transfer-edit/ui/TransferEditPage.vue'
 import TransfersPage from '@/pages/transfers/ui/TransfersPage.vue'
 
 const router = createRouter({
@@ -24,6 +26,8 @@ const router = createRouter({
     { path: '/rentals', name: 'rentals', component: RentalsPage },
     { path: '/rentals/:noticeId', name: 'rental-detail', component: RentalDetailPage },
     { path: '/transfers', name: 'transfers', component: TransfersPage },
+    { path: '/transfers/new', name: 'transfer-create', component: TransferCreatePage },
+    { path: '/transfers/:transferId/edit', name: 'transfer-edit', component: TransferEditPage },
     { path: '/transfers/:transferId', name: 'transfer-detail', component: TransferDetailPage },
     { path: '/lh-calendar', name: 'lh-calendar', component: LhCalendarPage },
     { path: '/analysis', name: 'analysis', component: AnalysisPage },
