@@ -1,15 +1,19 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 
 const memberStore = useMemberStore()
 const route = useRoute()
+const router = useRouter()
 const isHome = computed(() => route.name === 'home')
 const sidebarOpen = ref(false)
 
 const sidebarLinks = computed(() => [
   { to: '/home', label: '홈' },
+  { to: '/prices', label: '부동산 시세' },
+  { to: '/rentals', label: '공공임대' },
+  { to: '/transfers', label: '양도 게시판' },
   { to: '/notices', label: '공지사항' },
   { to: '/lh-calendar', label: 'LH 캘린더' },
   { to: '/analysis', label: '생활권 분석' },
@@ -31,6 +35,11 @@ onMounted(() => {
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
 }
+
+async function logout() {
+  await memberStore.logout()
+  await router.push('/home')
+}
 </script>
 
 <template>
@@ -41,9 +50,8 @@ function toggleSidebar() {
         <strong>SSAFY Home</strong>
       </RouterLink>
       <div class="nav-links">
-        <RouterLink to="/prices">부동산 시세</RouterLink>
-        <RouterLink to="/rentals">공공임대</RouterLink>
-        <RouterLink to="/transfers">양도 게시판</RouterLink>
+        <RouterLink v-if="!memberStore.isLoggedIn" class="nav-login-link" to="/login">로그인</RouterLink>
+        <button v-else type="button" class="nav-login-link" @click="logout">로그아웃</button>
         <button
           type="button"
           class="menu-toggle"
@@ -72,7 +80,6 @@ function toggleSidebar() {
         <RouterLink v-for="link in sidebarLinks" :key="link.to" :to="link.to">{{
           link.label
         }}</RouterLink>
-        <RouterLink v-if="!memberStore.isLoggedIn" to="/login">로그인</RouterLink>
         <RouterLink v-if="!memberStore.isLoggedIn" to="/register">회원가입</RouterLink>
         <RouterLink v-if="memberStore.isLoggedIn" to="/member">회원정보</RouterLink>
       </nav>

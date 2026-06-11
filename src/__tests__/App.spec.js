@@ -4,6 +4,7 @@ import { createPinia } from 'pinia'
 
 import App from '@/app/App.vue'
 import router from '@/app/router'
+import { useMemberStore } from '@/entities/member/model/member'
 
 describe('App', () => {
   it('renders the application navigation', async () => {
@@ -17,8 +18,9 @@ describe('App', () => {
     })
 
     expect(wrapper.text()).toContain('SSAFY Home')
-    expect(wrapper.text()).toContain('부동산 시세')
-    expect(wrapper.text()).toContain('양도 게시판')
+    expect(wrapper.find('.nav-links').text()).toContain('로그인')
+    expect(wrapper.find('.nav-links').text()).not.toContain('부동산 시세')
+    expect(wrapper.find('.nav-links').text()).not.toContain('양도 게시판')
     expect(wrapper.find('.sidebar-drawer').exists()).toBe(false)
     expect(wrapper.find('.menu-toggle').exists()).toBe(true)
     expect(wrapper.text()).toContain('FIND YOUR HOME')
@@ -39,8 +41,30 @@ describe('App', () => {
     await wrapper.find('.menu-toggle').trigger('click')
 
     expect(wrapper.find('.sidebar-drawer').exists()).toBe(true)
+    expect(wrapper.find('.sidebar-drawer').text()).toContain('부동산 시세')
+    expect(wrapper.find('.sidebar-drawer').text()).toContain('공공임대')
+    expect(wrapper.find('.sidebar-drawer').text()).toContain('양도 게시판')
     expect(wrapper.find('.sidebar-drawer').text()).toContain('LH 캘린더')
     expect(wrapper.find('.sidebar-drawer').text()).toContain('생활권 분석')
+  })
+
+  it('shows logout in the top nav when logged in', async () => {
+    await router.push('/home')
+    await router.isReady()
+
+    const pinia = createPinia()
+    const memberStore = useMemberStore(pinia)
+    memberStore.current = { userId: 'ssafy', name: '싸피' }
+    memberStore.loaded = true
+
+    const wrapper = mount(App, {
+      global: {
+        plugins: [router, pinia],
+      },
+    })
+
+    expect(wrapper.find('.nav-links').text()).toContain('로그아웃')
+    expect(wrapper.find('.nav-links').text()).not.toContain('로그인')
   })
 
   it('registers transfer board and LH calendar routes', () => {
@@ -102,6 +126,9 @@ describe('App', () => {
     expect(loginWrapper.find('.auth-welcome-pane').exists()).toBe(true)
     expect(loginWrapper.find('.auth-form').exists()).toBe(true)
     expect(loginWrapper.find('.oauth-panel').exists()).toBe(true)
+    expect(loginWrapper.text()).toContain('이메일')
+    expect(loginWrapper.text()).toContain('Social Login')
+    expect(loginWrapper.text()).not.toContain('OAuth 로그인')
 
     await router.push('/register')
     await router.isReady()
@@ -116,6 +143,24 @@ describe('App', () => {
     expect(registerWrapper.find('.auth-card').exists()).toBe(true)
     expect(registerWrapper.find('.auth-welcome-pane').exists()).toBe(true)
     expect(registerWrapper.find('.auth-form').exists()).toBe(true)
+    expect(registerWrapper.find('.auth-form').text()).not.toContain('아이디')
+    expect(registerWrapper.find('.auth-form').text()).toContain('비밀번호 확인')
+  })
+
+  it('renders analysis as an easy guided form', async () => {
+    await router.push('/analysis')
+    await router.isReady()
+
+    const wrapper = mount(App, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+
+    expect(wrapper.find('.analysis-quick-form').exists()).toBe(true)
+    expect(wrapper.find('.analysis-presets').exists()).toBe(true)
+    expect(wrapper.text()).toContain('동네 이름')
+    expect(wrapper.text()).toContain('고급 좌표 설정')
   })
 })
 

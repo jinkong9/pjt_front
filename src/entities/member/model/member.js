@@ -35,6 +35,15 @@ export const useMemberStore = defineStore('member', {
       this.current = data
       return data
     },
+    async logout() {
+      try {
+        await api.post('/members/logout')
+      } catch {
+        // Local session state should still clear if the backend session is already gone.
+      }
+      this.current = null
+      this.loaded = true
+    },
   },
 })
 

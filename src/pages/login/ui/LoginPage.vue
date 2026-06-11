@@ -7,17 +7,21 @@ const router = useRouter()
 const memberStore = useMemberStore()
 const error = ref('')
 const form = reactive({
-  userId: '',
+  email: '',
   password: '',
 })
 
 async function login() {
   error.value = ''
   try {
-    await memberStore.login(form)
+    await memberStore.login({
+      email: form.email,
+      userId: form.email,
+      password: form.password,
+    })
     router.push('/member')
   } catch {
-    error.value = '아이디 또는 비밀번호를 확인하세요.'
+    error.value = '이메일 또는 비밀번호를 확인하세요.'
   }
 }
 </script>
@@ -30,12 +34,12 @@ async function login() {
         <h1>로그인</h1>
         <p v-if="error" class="alert error">{{ error }}</p>
         <form class="auth-form" @submit.prevent="login">
-          <label>아이디 <input v-model="form.userId" required /></label>
+          <label>이메일 <input v-model="form.email" type="email" required /></label>
           <label>비밀번호 <input v-model="form.password" type="password" required /></label>
           <button type="submit">로그인</button>
         </form>
-        <div class="oauth-panel" aria-label="OAuth 로그인">
-          <span>OAuth 로그인</span>
+        <div class="oauth-panel" aria-label="Social Login">
+          <span>Social Login</span>
           <div class="oauth-actions">
             <button type="button" class="oauth-button kakao">Kakao</button>
             <button type="button" class="oauth-button naver">Naver</button>

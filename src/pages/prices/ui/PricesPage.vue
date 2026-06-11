@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api, toQuery } from '@/shared/api/client'
 import { useMemberStore } from '@/entities/member/model/member'
@@ -13,6 +13,12 @@ const sidos = ref([])
 const guguns = ref([])
 const dongs = ref([])
 const selectedTrade = ref(null)
+const mapEl = ref(null)
+const mapMessage = ref('')
+let kakaoMap = null
+let markerBounds = null
+let kakaoSdkPromise = null
+const markers = []
 const condition = reactive({
   mode: 'search',
   keyword: '',
@@ -82,6 +88,94 @@ async function loadTrades() {
   }
 }
 
+function clearMarkers() {
+  while (markers.length) {
+    markers.pop().setMap(null)
+  }
+}
+
+function getLatLng(trade) {
+  const latitude = Number(trade.latitude)
+  const longitude = Number(trade.longitude)
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null
+  }
+  return { latitude, longitude }
+}
+
+async function loadKakaoSdk() {
+  if (window.kakao?.maps?.load) {
+    return window.kakao
+  }
+  if (!kakaoSdkPromise) {
+    kakaoSdkPromise = api.get('/config').then(({ data }) => {
+      const appKey = data.kakaoJavascriptKey
+      if (!appKey) {
+        throw new Error('Kakao JavaScript key is empty')
+      }
+      return new Promise((resolve, reject) => {
+        const existing = document.getElementById('kakao-map-sdk')
+        if (existing) {
+          existing.addEventListener('load', resolve, { once: true })
+          existing.addEventListener('error', reject, { once: true })
+          return
+        }
+        const script = document.createElement('script')
+        script.id = 'kakao-map-sdk'
+        script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services&autoload=false`
+        script.async = true
+        script.onload = resolve
+        script.onerror = reject
+        document.head.appendChild(script)
+      })
+    })
+  }
+  await kakaoSdkPromise
+  await new Promise((resolve) => window.kakao.maps.load(resolve))
+  return window.kakao
+}
+
+async function renderMap() {
+  await nextTick()
+  if (!mapEl.value) return
+  try {
+    const kakao = await loadKakaoSdk()
+    const fallbackCenter = new kakao.maps.LatLng(37.5665, 126.978)
+    if (!kakaoMap) {
+      kakaoMap = new kakao.maps.Map(mapEl.value, {
+        center: fallbackCenter,
+        level: 6,
+      })
+    }
+    clearMarkers()
+    markerBounds = new kakao.maps.LatLngBounds()
+    const visibleTrades = trades.value.filter(getLatLng)
+    visibleTrades.forEach((trade) => {
+      const point = getLatLng(trade)
+      const position = new kakao.maps.LatLng(point.latitude, point.longitude)
+      const marker = new kakao.maps.Marker({
+        map: kakaoMap,
+        position,
+        title: trade.aptName,
+      })
+      kakao.maps.event.addListener(marker, 'click', () => {
+        selectedTrade.value = trade
+      })
+      markers.push(marker)
+      markerBounds.extend(position)
+    })
+    if (visibleTrades.length) {
+      kakaoMap.setBounds(markerBounds)
+    } else {
+      kakaoMap.setCenter(fallbackCenter)
+    }
+    mapMessage.value = ''
+  } catch {
+    mapMessage.value =
+      'Kakao 지도를 불러오지 못했습니다. 백엔드 .env의 OPENAPI_KAKAO_JAVASCRIPT_KEY와 Kakao Web 플랫폼 도메인을 확인하세요.'
+  }
+}
+
 async function search() {
   condition.mode = 'search'
   await router.push({ path: '/prices', query: toQuery(condition) })
@@ -105,6 +199,15 @@ async function onGugunChange() {
 
 function openDetail(trade) {
   selectedTrade.value = trade
+  const point = getLatLng(trade)
+  if (point && kakaoMap && window.kakao?.maps) {
+    kakaoMap.panTo(new window.kakao.maps.LatLng(point.latitude, point.longitude))
+  }
+}
+
+async function logout() {
+  await memberStore.logout()
+  await router.push('/home')
 }
 
 onMounted(async () => {
@@ -116,6 +219,15 @@ onMounted(async () => {
   await loadRegions()
   await loadDependentRegions()
   await loadTrades()
+  await renderMap()
+})
+
+onBeforeUnmount(() => {
+  clearMarkers()
+})
+
+watch(trades, () => {
+  renderMap()
 })
 </script>
 
@@ -133,26 +245,19 @@ onMounted(async () => {
           <strong class="text-sm font-black uppercase tracking-[0.22em]">SSAFY Home</strong>
         </RouterLink>
         <nav class="hidden items-center gap-7 text-sm font-black md:flex">
-          <RouterLink to="/home" class="text-white hover:text-white/70">홈</RouterLink>
-          <RouterLink to="/prices" class="text-white hover:text-white/70">부동산 시세</RouterLink>
-          <RouterLink to="/rentals" class="text-white hover:text-white/70">공공임대</RouterLink>
-          <RouterLink to="/analysis" class="text-white hover:text-white/70">생활권 분석</RouterLink>
           <RouterLink v-if="!memberStore.isLoggedIn" to="/login" class="text-white hover:text-white/70">
             로그인
           </RouterLink>
-          <RouterLink v-if="!memberStore.isLoggedIn" to="/register" class="text-white hover:text-white/70">
-            회원가입
-          </RouterLink>
-          <RouterLink v-if="memberStore.isLoggedIn" to="/member" class="text-white hover:text-white/70">
-            마이페이지
-          </RouterLink>
+          <button v-else type="button" class="border-white/60 bg-white/10 text-white hover:bg-white/20" @click="logout">
+            로그아웃
+          </button>
         </nav>
       </div>
     </header>
 
     <main class="relative h-screen">
       <section id="map" class="absolute inset-0 bg-neutral-300">
-        <div class="h-full w-full bg-[linear-gradient(135deg,#d6d6d6_0%,#ededed_42%,#c8c8c8_100%)]"></div>
+        <div ref="mapEl" class="h-full w-full bg-[linear-gradient(135deg,#d6d6d6_0%,#ededed_42%,#c8c8c8_100%)]"></div>
       </section>
       <div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent"></div>
 
@@ -264,16 +369,21 @@ onMounted(async () => {
       </aside>
 
       <aside class="map-side-nav">
-        <RouterLink to="/rentals">공지사항</RouterLink>
-        <RouterLink to="/prices">실거래 검색</RouterLink>
+        <RouterLink to="/home">홈</RouterLink>
+        <RouterLink to="/prices">부동산 시세</RouterLink>
+        <RouterLink to="/rentals">공공임대</RouterLink>
+        <RouterLink to="/transfers">양도 게시판</RouterLink>
+        <RouterLink to="/notices">공지사항</RouterLink>
+        <RouterLink to="/lh-calendar">LH 캘린더</RouterLink>
+        <RouterLink to="/analysis">생활권 분석</RouterLink>
         <RouterLink to="/member">회원정보</RouterLink>
-        <RouterLink to="/analysis">FAQ</RouterLink>
       </aside>
 
       <div
+        v-if="mapMessage"
         class="absolute right-6 top-28 z-30 max-w-sm border border-red-200 bg-white p-5 text-sm font-bold text-red-700 shadow-xl"
       >
-        Kakao 지도를 불러오지 못했습니다. Kakao JavaScript 키와 Web 플랫폼 등록 정보를 확인하세요.
+        {{ mapMessage }}
       </div>
 
       <div
