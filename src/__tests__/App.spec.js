@@ -92,7 +92,7 @@ describe('App', () => {
     expect(wrapper.find('.home-bottom-sheets').exists()).toBe(false)
   })
 
-  it('shows public rental notices as a slider on the second home section', async () => {
+  it('does not show sample rental notices when backend data is unavailable', async () => {
     router.push('/home')
     await router.isReady()
 
@@ -104,10 +104,8 @@ describe('App', () => {
 
     await flushPromises()
 
-    expect(wrapper.find('.rental-slider-shell').exists()).toBe(true)
-    expect(wrapper.findAll('.rental-slide-card').length).toBeGreaterThanOrEqual(3)
-    expect(wrapper.find('.rental-window-prev').exists()).toBe(true)
-    expect(wrapper.find('.rental-window-next').exists()).toBe(true)
+    expect(wrapper.find('.rental-slider-shell').exists()).toBe(false)
+    expect(wrapper.findAll('.rental-slide-card')).toHaveLength(0)
     expect(wrapper.text()).toContain('LH 공고')
   })
 

@@ -1,15 +1,32 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  createTransferPayload,
   createTransfer,
+  createTransferPayload,
   deleteTransfer,
-  fetchTransferDetail,
   fetchTransfers,
   updateTransfer,
 } from '@/entities/transfer/api/transferApi'
+import { api } from '@/shared/api/client'
+
+vi.mock('@/shared/api/client', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+  toQuery: (params) =>
+    Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ''),
+    ),
+}))
 
 describe('transferApi', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('builds multipart transfer payload with images', () => {
     const image = new File(['image'], 'room.jpg', { type: 'image/jpeg' })
     const payload = createTransferPayload(
@@ -28,33 +45,52 @@ describe('transferApi', () => {
     expect(payload.getAll('imageUrls')).toEqual(['https://example.com/old.jpg'])
   })
 
-  it('supports create, update, and delete fallback flow', async () => {
-    const created = await createTransfer({
-      title: '새 양도글',
-      content: '테스트용 양도글입니다.',
-      address: '서울 강남구',
-      detailAddress: '테스트 원룸',
-      depositAmount: 1000,
-      monthlyRentAmount: 70,
-      maintenanceFee: 8,
-      transferFee: 0,
-      contractEndDate: '2027-01-01',
-      moveInDate: '2026-07-01',
-      contactPhone: '010-1234-5678',
-      status: '양도가능',
+  it('uses backend transfer data without falling back to sample posts', async () => {
+    api.get.mockResolvedValueOnce({
+      data: [
+        {
+          transfer_id: 7,
+          writer_id: 3,
+          title: '강남구 역삼동 전월세 양도',
+          image_urls: ['https://example.com/room.jpg'],
+        },
+      ],
     })
 
-    expect(created.transferId).toBeTruthy()
-    expect(created.title).toBe('새 양도글')
+    await expect(fetchTransfers({ keyword: '강남' })).resolves.toEqual([
+      expect.objectContaining({
+        transferId: 7,
+        writerId: 3,
+        title: '강남구 역삼동 전월세 양도',
+        imageUrls: ['https://example.com/room.jpg'],
+      }),
+    ])
+    expect(api.get).toHaveBeenCalledWith('/transfers', { params: { keyword: '강남' } })
+  })
 
-    const updated = await updateTransfer(created.transferId, { ...created, title: '수정된 양도글' })
-    expect(updated.title).toBe('수정된 양도글')
+  it('propagates backend errors instead of serving sample transfer data', async () => {
+    api.get.mockRejectedValueOnce(new Error('backend unavailable'))
 
-    const detail = await fetchTransferDetail(created.transferId)
-    expect(detail.title).toBe('수정된 양도글')
+    await expect(fetchTransfers()).rejects.toThrow('backend unavailable')
+  })
 
-    await deleteTransfer(created.transferId)
-    const transfers = await fetchTransfers()
-    expect(transfers.some((post) => post.transferId === created.transferId)).toBe(false)
+  it('sends transfer mutations to the backend without local fallback state', async () => {
+    api.post.mockResolvedValueOnce({ data: { transfer_id: 10, title: '등록된 양도글' } })
+    api.put.mockResolvedValueOnce({ data: { transfer_id: 10, title: '수정된 양도글' } })
+    api.delete.mockResolvedValueOnce({})
+
+    await expect(createTransfer({ title: '등록된 양도글' })).resolves.toMatchObject({
+      transferId: 10,
+      title: '등록된 양도글',
+    })
+    await expect(updateTransfer(10, { title: '수정된 양도글' })).resolves.toMatchObject({
+      transferId: 10,
+      title: '수정된 양도글',
+    })
+    await expect(deleteTransfer(10)).resolves.toBeUndefined()
+
+    expect(api.post).toHaveBeenCalledTimes(1)
+    expect(api.put).toHaveBeenCalledTimes(1)
+    expect(api.delete).toHaveBeenCalledWith('/transfers/10')
   })
 })

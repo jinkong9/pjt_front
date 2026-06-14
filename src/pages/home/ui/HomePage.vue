@@ -6,15 +6,14 @@ import { Swiper, SwiperSlide } from 'swiper/vue'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import { api, toQuery } from '@/shared/api/client'
+import { api } from '@/shared/api/client'
 import { fetchRentalNotices } from '@/entities/rental/api/rentalApi'
-import { sampleRentalNotices } from '@/entities/rental/model/sampleRentalNotices'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const router = useRouter()
 const loading = ref(true)
-const rentalNotices = ref([...sampleRentalNotices])
+const rentalNotices = ref([])
 const popups = ref([])
 const activeSection = ref(0)
 let sectionObserver
@@ -22,11 +21,12 @@ let scrollContainer
 let wheelCleanup
 let isSectionScrolling = false
 const rentalSwiperModules = [Navigation, Pagination, A11y]
-const condition = ref({
-  gugunName: '',
-  keyword: '',
-  dealYear: '',
-})
+const defaultPriceMapQuery = {
+  mode: 'region',
+  sidoName: '서울특별시',
+  gugunName: '강남구',
+  limit: 20,
+}
 
 async function loadHome() {
   loading.value = true
@@ -38,7 +38,7 @@ async function loadHome() {
     rentalNotices.value = rentalData
     popups.value = popupRes.data
   } catch {
-    rentalNotices.value = await fetchRentalNotices({ size: 6 })
+    rentalNotices.value = []
     popups.value = []
   } finally {
     loading.value = false
@@ -48,7 +48,7 @@ async function loadHome() {
 function search() {
   router.push({
     path: '/prices',
-    query: toQuery({ mode: 'search', ...condition.value }),
+    query: defaultPriceMapQuery,
   })
 }
 
@@ -159,19 +159,7 @@ onBeforeUnmount(() => {
         </p>
 
         <form class="main-search" @submit.prevent="search">
-          <label>
-            <span>지역</span>
-            <input v-model="condition.gugunName" placeholder="구군을 입력하세요" />
-          </label>
-          <label>
-            <span>아파트</span>
-            <input v-model="condition.keyword" placeholder="아파트명을 입력하세요" />
-          </label>
-          <label>
-            <span>추천 지역</span>
-            <input v-model="condition.dealYear" placeholder="강남구 서초구 송파구 종로구" />
-          </label>
-          <button type="submit">검색</button>
+          <button type="submit">지도에서 시세 확인하기</button>
         </form>
       </div>
     </section>

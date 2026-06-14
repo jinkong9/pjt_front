@@ -19,14 +19,23 @@ let kakaoMap = null
 let markerBounds = null
 let kakaoSdkPromise = null
 const markers = []
-const condition = reactive({
-  mode: 'search',
+const defaultPriceCondition = {
+  mode: 'region',
   keyword: '',
-  sidoName: '',
-  gugunName: '',
+  sidoName: '서울특별시',
+  gugunName: '강남구',
   dongName: '',
   dealYear: '',
   limit: 20,
+}
+const condition = reactive({
+  mode: defaultPriceCondition.mode,
+  keyword: '',
+  sidoName: defaultPriceCondition.sidoName,
+  gugunName: defaultPriceCondition.gugunName,
+  dongName: '',
+  dealYear: '',
+  limit: defaultPriceCondition.limit,
 })
 
 const statusText = computed(() => {
@@ -46,14 +55,16 @@ function hasSearchCondition() {
 }
 
 function syncFromRoute() {
+  const hasQuery = Object.keys(route.query).length > 0
+  const defaults = hasQuery ? { ...defaultPriceCondition, mode: 'search', sidoName: '', gugunName: '' } : defaultPriceCondition
   Object.assign(condition, {
-    mode: route.query.mode || 'search',
-    keyword: route.query.keyword || '',
-    sidoName: route.query.sidoName || '',
-    gugunName: route.query.gugunName || '',
-    dongName: route.query.dongName || '',
-    dealYear: route.query.dealYear || '',
-    limit: route.query.limit || 20,
+    mode: route.query.mode || defaults.mode,
+    keyword: route.query.keyword || defaults.keyword,
+    sidoName: route.query.sidoName || defaults.sidoName,
+    gugunName: route.query.gugunName || defaults.gugunName,
+    dongName: route.query.dongName || defaults.dongName,
+    dealYear: route.query.dealYear || defaults.dealYear,
+    limit: route.query.limit || defaults.limit,
   })
 }
 
@@ -77,12 +88,21 @@ async function loadDependentRegions() {
   }
 }
 
+function isSampleTrade(trade) {
+  return (
+    String(trade.aptSeq ?? '').startsWith('SAMPLE-') ||
+    String(trade.aptName ?? '').includes('샘플') ||
+    Number(trade.no) >= 900000
+  )
+}
+
 async function loadTrades() {
   loading.value = true
   try {
     const { data } = await api.get('/houses', { params: toQuery(condition) })
-    trades.value = data
-    selectedTrade.value = data[0] || null
+    const realTrades = data.filter((trade) => !isSampleTrade(trade))
+    trades.value = realTrades
+    selectedTrade.value = realTrades[0] || null
   } finally {
     loading.value = false
   }
@@ -140,7 +160,7 @@ async function renderMap() {
   if (!mapEl.value) return
   try {
     const kakao = await loadKakaoSdk()
-    const fallbackCenter = new kakao.maps.LatLng(37.5665, 126.978)
+    const fallbackCenter = new kakao.maps.LatLng(37.5172, 127.0473)
     if (!kakaoMap) {
       kakaoMap = new kakao.maps.Map(mapEl.value, {
         center: fallbackCenter,
@@ -366,17 +386,6 @@ watch(trades, () => {
             </div>
           </article>
         </section>
-      </aside>
-
-      <aside class="map-side-nav">
-        <RouterLink to="/home">홈</RouterLink>
-        <RouterLink to="/prices">부동산 시세</RouterLink>
-        <RouterLink to="/rentals">공공임대</RouterLink>
-        <RouterLink to="/transfers">양도 게시판</RouterLink>
-        <RouterLink to="/notices">공지사항</RouterLink>
-        <RouterLink to="/lh-calendar">LH 캘린더</RouterLink>
-        <RouterLink to="/analysis">생활권 분석</RouterLink>
-        <RouterLink to="/member">회원정보</RouterLink>
       </aside>
 
       <div

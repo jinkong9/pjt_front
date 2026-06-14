@@ -1,7 +1,4 @@
 import { api, toQuery } from '@/shared/api/client'
-import { sampleTransfers } from '@/entities/transfer/model/sampleTransfers'
-
-let fallbackTransfers = [...sampleTransfers]
 
 function normalizeTransfer(post) {
   return {
@@ -46,82 +43,30 @@ export function createTransferPayload(fields, images = []) {
   return payload
 }
 
-function createObjectUrls(images = []) {
-  if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return []
-  return images.map((image) => URL.createObjectURL(image))
-}
-
-function normalizePayloadFields(fields, images = []) {
-  return normalizeTransfer({
-    ...fields,
-    imageUrls: [...(fields.imageUrls ?? []), ...createObjectUrls(images)],
-  })
-}
-
 export async function fetchTransfers(params = {}) {
-  try {
-    const { data } = await api.get('/transfers', { params: toQuery(params) })
-    return data.map(normalizeTransfer)
-  } catch {
-    const keyword = params.keyword?.trim()
-    const status = params.status?.trim()
-    return fallbackTransfers
-      .filter((post) => !keyword || `${post.title} ${post.address}`.includes(keyword))
-      .filter((post) => !status || post.status === status)
-  }
+  const { data } = await api.get('/transfers', { params: toQuery(params) })
+  return data.map(normalizeTransfer)
 }
 
 export async function fetchTransferDetail(transferId) {
-  try {
-    const { data } = await api.get(`/transfers/${transferId}`)
-    return normalizeTransfer(data)
-  } catch {
-    return fallbackTransfers.find((post) => String(post.transferId) === String(transferId)) ?? fallbackTransfers[0]
-  }
+  const { data } = await api.get(`/transfers/${transferId}`)
+  return normalizeTransfer(data)
 }
 
 export async function createTransfer(fields, images = []) {
-  try {
-    const { data } = await api.post('/transfers', createTransferPayload(fields, images), {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    return normalizeTransfer(data)
-  } catch {
-    const created = {
-      ...normalizePayloadFields(fields, images),
-      transferId: Date.now(),
-      viewCount: 0,
-      createdAt: new Date().toISOString(),
-    }
-    fallbackTransfers = [created, ...fallbackTransfers]
-    return created
-  }
+  const { data } = await api.post('/transfers', createTransferPayload(fields, images), {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return normalizeTransfer(data)
 }
 
 export async function updateTransfer(transferId, fields, images = []) {
-  try {
-    const { data } = await api.put(`/transfers/${transferId}`, createTransferPayload(fields, images), {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    return normalizeTransfer(data)
-  } catch {
-    const updated = {
-      ...normalizePayloadFields(fields, images),
-      transferId,
-      viewCount: fields.viewCount ?? 0,
-      createdAt: fields.createdAt ?? new Date().toISOString(),
-    }
-    fallbackTransfers = fallbackTransfers.map((post) =>
-      String(post.transferId) === String(transferId) ? updated : post,
-    )
-    return updated
-  }
+  const { data } = await api.put(`/transfers/${transferId}`, createTransferPayload(fields, images), {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return normalizeTransfer(data)
 }
 
 export async function deleteTransfer(transferId) {
-  try {
-    await api.delete(`/transfers/${transferId}`)
-  } catch {
-    fallbackTransfers = fallbackTransfers.filter((post) => String(post.transferId) !== String(transferId))
-  }
+  await api.delete(`/transfers/${transferId}`)
 }
