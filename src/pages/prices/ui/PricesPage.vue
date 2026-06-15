@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api, toQuery } from '@/shared/api/client'
 import { useMemberStore } from '@/entities/member/model/member'
+import PropertyDetailPanel from '@/features/property-detail/ui/PropertyDetailPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -102,7 +103,7 @@ async function loadTrades() {
     const { data } = await api.get('/houses', { params: toQuery(condition) })
     const realTrades = data.filter((trade) => !isSampleTrade(trade))
     trades.value = realTrades
-    selectedTrade.value = realTrades[0] || null
+    selectedTrade.value = null
   } finally {
     loading.value = false
   }
@@ -378,10 +379,11 @@ watch(trades, () => {
               <p class="mt-2 text-xs leading-5 text-neutral-500">{{ trade.address }}</p>
               <button
                 type="button"
+                :data-testid="`open-detail-${trade.no}`"
                 class="mt-4 w-full border border-neutral-300 bg-white px-3 py-2 text-xs font-black text-[#b4212a]"
-                @click.stop
+                @click.stop="openDetail(trade)"
               >
-                관심매물 등록
+                상세보기
               </button>
             </div>
           </article>
@@ -395,40 +397,12 @@ watch(trades, () => {
         {{ mapMessage }}
       </div>
 
-      <div
+      <PropertyDetailPanel
         v-if="selectedTrade"
-        class="absolute right-6 top-28 z-30 hidden w-96 border border-neutral-200 bg-white/95 p-6 shadow-2xl backdrop-blur md:block"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">APT SALE</p>
-            <h2 class="mt-2 text-2xl font-black">{{ selectedTrade.aptName }}</h2>
-          </div>
-          <button
-            class="grid h-8 w-8 place-items-center border border-neutral-300 text-xs font-black"
-            @click="selectedTrade = null"
-          >
-            X
-          </button>
-        </div>
-        <dl class="mt-6 space-y-4 text-sm">
-          <div>
-            <dt class="text-xs font-black text-neutral-500">주소</dt>
-            <dd class="mt-1 font-bold text-neutral-900">{{ selectedTrade.address }}</dd>
-          </div>
-          <div>
-            <dt class="text-xs font-black text-neutral-500">가격</dt>
-            <dd class="mt-1 font-bold text-neutral-900">{{ selectedTrade.dealAmount }}만원</dd>
-          </div>
-          <div>
-            <dt class="text-xs font-black text-neutral-500">면적/층</dt>
-            <dd class="mt-1 font-bold text-neutral-900">
-              {{ selectedTrade.exclusiveArea }}㎡ · {{ selectedTrade.floor }}층 · {{ selectedTrade.dealDate }}
-            </dd>
-          </div>
-        </dl>
-      </div>
+        :trade="selectedTrade"
+        :logged-in="memberStore.isLoggedIn"
+        @close="selectedTrade = null"
+      />
     </main>
   </div>
 </template>
-
