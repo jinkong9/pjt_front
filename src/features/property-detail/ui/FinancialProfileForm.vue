@@ -40,8 +40,30 @@ function submit() {
       {{ field[1] }} (원)
       <input v-model="form[field[0]]" type="number" min="0" class="mt-2 h-11 w-full border-neutral-300 text-sm font-bold" />
     </label>
-    <button class="h-12 w-full bg-[#b4212a] text-sm font-black text-white" :disabled="saving">
+    <button class="property-primary-button" :disabled="saving">
       {{ saving ? '저장 중...' : '저장하고 분석하기' }}
     </button>
   </form>
 </template>
+
+<style scoped>
+.property-primary-button {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #b4212a;
+  border-radius: 12px;
+  background: #b4212a;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.property-primary-button:hover {
+  background: #941b23;
+}
+
+.property-primary-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+</style>

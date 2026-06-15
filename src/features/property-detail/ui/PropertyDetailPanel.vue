@@ -97,11 +97,31 @@ async function loadAnalysis() {
           <h2 class="mt-2 text-2xl font-black">{{ trade.aptName }}</h2>
           <p class="mt-2 text-xs leading-5 text-neutral-500">{{ trade.address }}</p>
         </div>
-        <button class="grid h-9 w-9 place-items-center border border-neutral-300 font-black" @click="$emit('close')">X</button>
+        <button
+          data-testid="property-close"
+          class="property-icon-button"
+          aria-label="상세 패널 닫기"
+          @click="$emit('close')"
+        >
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
       </div>
-      <nav class="mt-5 grid grid-cols-2 border-b border-neutral-200">
-        <button class="pb-3 text-sm font-black" :class="activeTab === 'detail' ? 'border-b-2 border-[#b4212a] text-[#b4212a]' : 'text-neutral-500'" @click="activeTab = 'detail'">상세정보</button>
-        <button data-testid="loan-tab" class="pb-3 text-sm font-black" :class="activeTab === 'loan' ? 'border-b-2 border-[#b4212a] text-[#b4212a]' : 'text-neutral-500'" @click="openLoanTab">대출 계산</button>
+      <nav class="mt-5 grid grid-cols-2 gap-2">
+        <button
+          class="property-tab"
+          :class="{ 'property-tab-active': activeTab === 'detail' }"
+          @click="activeTab = 'detail'"
+        >
+          상세정보
+        </button>
+        <button
+          data-testid="loan-tab"
+          class="property-tab"
+          :class="{ 'property-tab-active': activeTab === 'loan' }"
+          @click="openLoanTab"
+        >
+          대출 계산
+        </button>
       </nav>
     </header>
 
@@ -136,3 +156,48 @@ async function loadAnalysis() {
     </div>
   </aside>
 </template>
+
+<style scoped>
+.property-icon-button {
+  display: grid;
+  width: 40px;
+  min-height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border: 1px solid #d4d4d4;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #404040;
+  padding: 0;
+}
+
+.property-icon-button:hover {
+  border-color: #b4212a;
+  background: #fff7f7;
+  color: #b4212a;
+}
+
+.property-tab {
+  min-height: 44px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px 12px 0 0;
+  background: #fafafa;
+  color: #737373;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.property-tab:hover {
+  border-color: #d7a0a4;
+  background: #fff7f7;
+  color: #b4212a;
+}
+
+.property-tab-active {
+  border-color: #b4212a;
+  background: #fff1f2;
+  color: #b4212a;
+  box-shadow: inset 0 -3px 0 #b4212a;
+}
+</style>

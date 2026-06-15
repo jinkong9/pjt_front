@@ -17,7 +17,7 @@ import TransferEditPage from '@/pages/transfer-edit/ui/TransferEditPage.vue'
 import TransfersPage from '@/pages/transfers/ui/TransfersPage.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory('/'),
   routes: [
     { path: '/', redirect: '/home' },
     { path: '/home', name: 'home', component: HomePage },
@@ -40,4 +40,3 @@ const router = createRouter({
 })
 
 export default router
-

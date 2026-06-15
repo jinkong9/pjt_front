@@ -139,6 +139,8 @@ describe('PricesPage', () => {
     await wrapper.get('[data-testid="open-detail-11"]').trigger('click')
     expect(wrapper.find('[data-testid="property-detail-panel"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('관심 매물 등록')
+    expect(wrapper.get('[data-testid="property-close"]').classes()).toContain('property-icon-button')
+    expect(wrapper.get('[data-testid="loan-tab"]').classes()).toContain('property-tab')
 
     await wrapper.get('[data-testid="loan-tab"]').trigger('click')
     expect(wrapper.text()).toContain('로그인 후 내 자산 기준 대출 분석을 확인하세요')
