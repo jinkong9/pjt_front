@@ -83,7 +83,7 @@ describe('PricesPage', () => {
         longitude: '127.0574',
       },
       {
-        no: 11,
+        no: 7928647,
         aptSeq: 'REAL-APT-001',
         aptName: '개포 실제 아파트',
         address: '서울특별시 강남구 개포동 1',

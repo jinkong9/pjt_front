@@ -92,8 +92,7 @@ async function loadDependentRegions() {
 function isSampleTrade(trade) {
   return (
     String(trade.aptSeq ?? '').startsWith('SAMPLE-') ||
-    String(trade.aptName ?? '').includes('샘플') ||
-    Number(trade.no) >= 900000
+    String(trade.aptName ?? '').includes('샘플')
   )
 }
 
