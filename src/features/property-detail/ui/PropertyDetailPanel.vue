@@ -2,18 +2,24 @@
 import { ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/shared/api/client'
-import { getFinancialProfile, saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
+import {
+  getFinancialProfile,
+  saveFinancialProfile,
+} from '@/entities/member/api/financialProfileApi'
 import { analyzePropertyLoan } from '@/entities/loan/api/loanAnalysisApi'
 import FinancialProfileForm from './FinancialProfileForm.vue'
 import LoanAnalysisResult from './LoanAnalysisResult.vue'
+import PropertyNeighborhoodAnalysis from './PropertyNeighborhoodAnalysis.vue'
 
 const props = defineProps({
   trade: { type: Object, required: true },
   loggedIn: Boolean,
+  initialTab: { type: String, default: 'detail' },
+  loginRoute: { type: [String, Object], default: '/login' },
 })
-defineEmits(['close'])
+const emit = defineEmits(['close', 'tab-change'])
 
-const activeTab = ref('detail')
+const activeTab = ref(props.initialTab === 'loan' ? 'loan' : 'detail')
 const favorite = ref(false)
 const profile = ref(null)
 const profileLoaded = ref(false)
@@ -22,11 +28,19 @@ const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
 
-watch(() => props.trade.no, () => {
+watch(
+  () => props.trade.no,
+  () => {
+    activeTab.value = props.initialTab === 'loan' ? 'loan' : 'detail'
+    analysis.value = null
+    error.value = ''
+  },
+)
+
+function openDetailTab() {
   activeTab.value = 'detail'
-  analysis.value = null
-  error.value = ''
-})
+  emit('tab-change', 'detail')
+}
 
 async function toggleFavorite() {
   const { data } = await api.post(`/favorites/${props.trade.no}/toggle`)
@@ -35,6 +49,7 @@ async function toggleFavorite() {
 
 async function openLoanTab() {
   activeTab.value = 'loan'
+  emit('tab-change', 'loan')
   if (!props.loggedIn) return
   loading.value = true
   error.value = ''
@@ -110,7 +125,7 @@ async function loadAnalysis() {
         <button
           class="property-tab"
           :class="{ 'property-tab-active': activeTab === 'detail' }"
-          @click="activeTab = 'detail'"
+          @click="openDetailTab"
         >
           상세정보
         </button>
@@ -132,24 +147,67 @@ async function loadAnalysis() {
           <strong class="mt-2 block text-3xl text-[#b4212a]">{{ trade.dealAmount }}만원</strong>
         </div>
         <dl class="grid grid-cols-2 gap-4 text-sm">
-          <div><dt class="text-xs font-black text-neutral-500">전용면적</dt><dd class="mt-1 font-bold">{{ trade.exclusiveArea }}㎡</dd></div>
-          <div><dt class="text-xs font-black text-neutral-500">층</dt><dd class="mt-1 font-bold">{{ trade.floor }}층</dd></div>
-          <div class="col-span-2"><dt class="text-xs font-black text-neutral-500">거래일</dt><dd class="mt-1 font-bold">{{ trade.dealDate }}</dd></div>
+          <div>
+            <dt class="text-xs font-black text-neutral-500">전용면적</dt>
+            <dd class="mt-1 font-bold">{{ trade.exclusiveArea }}㎡</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-black text-neutral-500">층</dt>
+            <dd class="mt-1 font-bold">{{ trade.floor }}층</dd>
+          </div>
+          <div class="col-span-2">
+            <dt class="text-xs font-black text-neutral-500">거래일</dt>
+            <dd class="mt-1 font-bold">{{ trade.dealDate }}</dd>
+          </div>
         </dl>
-        <RouterLink class="block border border-neutral-300 px-4 py-3 text-center text-xs font-black" :to="{ path: '/analysis', query: { label: trade.address, longitude: trade.longitude, latitude: trade.latitude, radius: 1000 } }">생활권 분석 보기</RouterLink>
-        <button v-if="loggedIn" class="w-full bg-[#b4212a] px-4 py-3 text-sm font-black text-white" @click="toggleFavorite">
+        <PropertyNeighborhoodAnalysis :trade="trade" />
+        <RouterLink
+          class="block border border-neutral-300 px-4 py-3 text-center text-xs font-black"
+          :to="{
+            path: '/analysis',
+            query: {
+              label: trade.address,
+              longitude: trade.longitude,
+              latitude: trade.latitude,
+              radius: 1000,
+            },
+          }"
+          >생활권 분석 보기</RouterLink
+        >
+        <button
+          v-if="loggedIn"
+          class="w-full bg-[#b4212a] px-4 py-3 text-sm font-black text-white"
+          @click="toggleFavorite"
+        >
           {{ favorite ? '관심 매물 해제' : '관심 매물 등록' }}
         </button>
-        <RouterLink v-else to="/login" class="block w-full bg-[#b4212a] px-4 py-3 text-center text-sm font-black text-white">로그인하고 관심 매물 등록</RouterLink>
+        <RouterLink
+          v-else
+          data-testid="property-login-link"
+          :to="loginRoute"
+          class="block w-full bg-[#b4212a] px-4 py-3 text-center text-sm font-black text-white"
+          >로그인하고 관심 매물 등록</RouterLink
+        >
       </section>
 
       <section v-else>
         <div v-if="!loggedIn" class="border border-neutral-200 bg-[#f7f4ef] p-5">
           <h3 class="text-lg font-black">로그인 후 내 자산 기준 대출 분석을 확인하세요</h3>
-          <RouterLink to="/login" class="mt-4 block bg-[#b4212a] px-4 py-3 text-center text-sm font-black text-white">로그인</RouterLink>
+          <RouterLink
+            data-testid="property-login-link"
+            :to="loginRoute"
+            class="mt-4 block bg-[#b4212a] px-4 py-3 text-center text-sm font-black text-white"
+            >로그인</RouterLink
+          >
         </div>
-        <p v-else-if="loading && !profileLoaded" class="text-sm font-bold text-neutral-500">금융정보를 불러오는 중입니다.</p>
-        <FinancialProfileForm v-else-if="profileLoaded && !profile" :saving="saving" @save="saveProfile" />
+        <p v-else-if="loading && !profileLoaded" class="text-sm font-bold text-neutral-500">
+          금융정보를 불러오는 중입니다.
+        </p>
+        <FinancialProfileForm
+          v-else-if="profileLoaded && !profile"
+          :saving="saving"
+          @save="saveProfile"
+        />
         <LoanAnalysisResult v-else-if="analysis" :analysis="analysis" />
         <p v-if="error" class="mt-4 text-sm font-bold text-red-700">{{ error }}</p>
       </section>

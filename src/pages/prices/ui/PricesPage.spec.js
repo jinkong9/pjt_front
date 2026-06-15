@@ -11,8 +11,10 @@ let housesResponse = []
 vi.mock('@/shared/api/client', () => ({
   api: {
     get: vi.fn((url) => {
-      if (url === '/regions/sidos') return Promise.resolve({ data: [{ label: '서울특별시', value: '서울특별시' }] })
-      if (url === '/regions/guguns') return Promise.resolve({ data: [{ label: '강남구', value: '강남구' }] })
+      if (url === '/regions/sidos')
+        return Promise.resolve({ data: [{ label: '서울특별시', value: '서울특별시' }] })
+      if (url === '/regions/guguns')
+        return Promise.resolve({ data: [{ label: '강남구', value: '강남구' }] })
       if (url === '/regions/dongs') return Promise.resolve({ data: [] })
       if (url === '/houses') return Promise.resolve({ data: housesResponse })
       return Promise.reject(new Error('unexpected url'))
@@ -22,7 +24,9 @@ vi.mock('@/shared/api/client', () => ({
   },
   toQuery: (params) =>
     Object.fromEntries(
-      Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ''),
+      Object.entries(params).filter(
+        ([, value]) => value !== undefined && value !== null && value !== '',
+      ),
     ),
 }))
 
@@ -139,10 +143,112 @@ describe('PricesPage', () => {
     await wrapper.get('[data-testid="open-detail-11"]').trigger('click')
     expect(wrapper.find('[data-testid="property-detail-panel"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('관심 매물 등록')
-    expect(wrapper.get('[data-testid="property-close"]').classes()).toContain('property-icon-button')
+    expect(wrapper.get('[data-testid="property-close"]').classes()).toContain(
+      'property-icon-button',
+    )
     expect(wrapper.get('[data-testid="loan-tab"]').classes()).toContain('property-tab')
 
     await wrapper.get('[data-testid="loan-tab"]').trigger('click')
     expect(wrapper.text()).toContain('로그인 후 내 자산 기준 대출 분석을 확인하세요')
+  })
+
+  it('preserves the selected trade and active tab in login links', async () => {
+    housesResponse = [
+      {
+        no: 11,
+        aptSeq: 'REAL-APT-001',
+        aptName: '역삼 실제 아파트',
+        address: '서울특별시 강남구 역삼동 1',
+        dealAmount: '210000',
+        exclusiveArea: 84.9,
+        floor: '12',
+        dealDate: '2026-04-10',
+        latitude: '37.50',
+        longitude: '127.03',
+      },
+    ]
+    const router = createTestRouter()
+    await router.push('/prices?mode=search&keyword=역삼')
+    await router.isReady()
+    const wrapper = mount(PricesPage, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+    await flushPromises()
+
+    await wrapper.get('[data-testid="open-detail-11"]').trigger('click')
+    await wrapper.get('[data-testid="loan-tab"]').trigger('click')
+
+    const loginLink = wrapper
+      .findAllComponents({ name: 'RouterLink' })
+      .find((link) => link.attributes('data-testid') === 'property-login-link')
+
+    expect(loginLink.props('to')).toEqual({
+      path: '/login',
+      query: {
+        redirect: '/prices?mode=search&keyword=역삼&trade=11&tab=loan',
+      },
+    })
+  })
+
+  it('restores the selected trade and loan tab after returning from login', async () => {
+    housesResponse = [
+      {
+        no: 11,
+        aptSeq: 'REAL-APT-001',
+        aptName: '역삼 실제 아파트',
+        address: '서울특별시 강남구 역삼동 1',
+        dealAmount: '210000',
+        exclusiveArea: 84.9,
+        floor: '12',
+        dealDate: '2026-04-10',
+        latitude: '37.50',
+        longitude: '127.03',
+      },
+    ]
+    const router = createTestRouter()
+    await router.push('/prices?mode=search&keyword=역삼&trade=11&tab=loan')
+    await router.isReady()
+    const wrapper = mount(PricesPage, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="property-detail-panel"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="loan-tab"]').classes()).toContain('property-tab-active')
+    expect(wrapper.text()).toContain('로그인 후 내 자산 기준 대출 분석을 확인하세요')
+  })
+
+  it('restores a valid trade on the detail tab when the requested tab is invalid', async () => {
+    housesResponse = [
+      {
+        no: 11,
+        aptSeq: 'REAL-APT-001',
+        aptName: '역삼 실제 아파트',
+        address: '서울특별시 강남구 역삼동 1',
+        dealAmount: '210000',
+        exclusiveArea: 84.9,
+        floor: '12',
+        dealDate: '2026-04-10',
+        latitude: '37.50',
+        longitude: '127.03',
+      },
+    ]
+    const router = createTestRouter()
+    await router.push('/prices?mode=search&keyword=역삼&trade=11&tab=unknown')
+    await router.isReady()
+    const wrapper = mount(PricesPage, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="property-detail-panel"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="loan-tab"]').classes()).not.toContain('property-tab-active')
+    expect(wrapper.text()).toContain('거래 가격')
   })
 })
