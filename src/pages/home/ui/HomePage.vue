@@ -159,7 +159,7 @@ onBeforeUnmount(() => {
         </p>
 
         <form class="main-search" @submit.prevent="search">
-          <button type="submit">지도에서 시세 확인하기</button>
+          <button type="submit">지도에서 시세확인하기</button>
         </form>
       </div>
     </section>
