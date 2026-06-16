@@ -385,7 +385,7 @@ select,
 textarea {
   width: 100%;
   min-height: 32px;
-  border: 0;
+  border: 1;
   background: #ffffff;
   color: #171717;
   font-size: 15px;
@@ -448,7 +448,7 @@ textarea {
 .rental-window-button {
   width: 52px;
   min-height: 52px;
-  border-color: #171717;
+  border: none;
   background: #ffffff;
   color: #171717;
   padding: 0;
@@ -473,7 +473,7 @@ textarea {
 
 .rental-slide-card span {
   color: #b4212a;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.2em;
 }
@@ -492,7 +492,7 @@ textarea {
 
 .rental-slide-card em {
   color: #171717;
-  font-size: 13px;
+  font-size: 16px;
   font-style: normal;
   font-weight: 900;
 }
@@ -601,12 +601,6 @@ textarea {
   padding: 13px 18px;
   font-size: 14px;
   font-weight: 900;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
 }
 
 .card,
@@ -2000,7 +1994,7 @@ textarea {
   border-radius: 999px;
   background: #b4212a;
   color: #ffffff;
-  padding: 9px 16px 9px 11px;
+  padding: 16px 20px 16px 20px;
   box-shadow: 0 16px 38px rgba(180, 33, 42, 0.34);
   transition:
     transform 0.18s ease,
@@ -2091,7 +2085,6 @@ textarea {
   .main-search,
   .home-hero .main-search,
   .search,
-  .grid,
   .transfer-grid,
   .metric-grid,
   .split,

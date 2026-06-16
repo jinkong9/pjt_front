@@ -37,213 +37,88 @@ async function register() {
 </script>
 
 <template>
-  <main class="register-page">
-    <section class="register-card">
-      <div class="register-form-pane">
-        <p class="register-eyebrow">Register</p>
-        <h1>회원가입</h1>
-        <p v-if="error" class="alert error">{{ error }}</p>
-        <form class="register-form" @submit.prevent="register">
-          <label>이름 <input v-model="form.name" required /></label>
-          <label>이메일 <input v-model="form.email" type="email" required /></label>
-          <label>비밀번호 <input v-model="form.password" type="password" required /></label>
-          <label>비밀번호 확인 <input v-model="form.passwordConfirm" type="password" required /></label>
-          <label>전화번호 <input v-model="form.phone" required /></label>
-          <button type="submit" class="register-submit">가입하기</button>
+  <main class="grid min-h-[calc(100svh-80px)] items-center bg-[#f4f0ea] px-6 py-[clamp(28px,4.8vh,56px)] max-[899px]:min-h-[calc(100svh-72px)] max-[899px]:px-4 max-[899px]:pb-10 max-[899px]:pt-6">
+    <section
+      data-testid="register-card"
+      class="mx-auto grid min-h-[min(690px,calc(100svh-118px))] w-[min(1120px,calc(100vw-48px))] grid-cols-[minmax(0,1.04fr)_minmax(360px,0.96fr)] overflow-hidden border border-[#e0ddd7] bg-white shadow-[0_22px_58px_rgba(23,23,23,0.12)] max-[899px]:min-h-0 max-[899px]:grid-cols-1"
+    >
+      <div class="grid w-[min(100%,500px)] content-center justify-self-center px-[52px] py-12 max-[899px]:w-full max-[899px]:px-6 max-[899px]:py-[34px]">
+        <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Register</p>
+        <h1 class="mt-4 text-[clamp(38px,4vw,50px)] font-normal leading-none">회원가입</h1>
+        <p v-if="error" class="mt-4 border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">
+          {{ error }}
+        </p>
+        <form class="mt-[26px] grid gap-[13px]" @submit.prevent="register">
+          <label class="grid gap-2 text-sm font-black text-[#171717]">
+            이름
+            <input
+              v-model="form.name"
+              required
+              class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
+            />
+          </label>
+          <label class="grid gap-2 text-sm font-black text-[#171717]">
+            이메일
+            <input
+              v-model="form.email"
+              type="email"
+              required
+              class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
+            />
+          </label>
+          <label class="grid gap-2 text-sm font-black text-[#171717]">
+            비밀번호
+            <input
+              v-model="form.password"
+              type="password"
+              required
+              class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
+            />
+          </label>
+          <label class="grid gap-2 text-sm font-black text-[#171717]">
+            비밀번호 확인
+            <input
+              v-model="form.passwordConfirm"
+              type="password"
+              required
+              class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
+            />
+          </label>
+          <label class="grid gap-2 text-sm font-black text-[#171717]">
+            전화번호
+            <input
+              v-model="form.phone"
+              required
+              class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
+            />
+          </label>
+          <button
+            type="submit"
+            class="mt-1.5 min-h-[54px] border border-[#b4212a] bg-[#b4212a] text-[15px] font-black text-white hover:border-[#921b22] hover:bg-[#921b22]"
+          >
+            가입하기
+          </button>
         </form>
-        <div class="register-links">
-          <RouterLink to="/login">로그인</RouterLink>
-          <RouterLink to="/home">홈으로</RouterLink>
+        <div class="mt-6 flex flex-wrap justify-between gap-3 text-sm font-black">
+          <RouterLink class="text-[#b4212a]" to="/login">로그인</RouterLink>
+          <RouterLink class="text-[#b4212a]" to="/home">홈으로</RouterLink>
         </div>
       </div>
-      <aside class="register-welcome-pane">
-        <p class="register-welcome-eyebrow">Join SSAFY Home</p>
-        <h2>주거 정보를 한곳에서 관리하세요</h2>
-        <p>공공임대 일정, 양도글, 관심 매물을 편하게 이어서 볼 수 있어요.</p>
-        <RouterLink class="register-login-button" to="/login">이미 계정이 있나요?</RouterLink>
+      <aside class="grid content-center justify-items-center gap-[18px] bg-[linear-gradient(180deg,rgba(23,23,23,0.9),rgba(23,23,23,0.82)),url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center px-[42px] py-12 text-center text-white max-[899px]:order-[-1] max-[899px]:min-h-[230px] max-[899px]:px-6 max-[899px]:py-[34px]">
+        <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-white/75">Join SSAFY Home</p>
+        <h2 class="m-0 max-w-[380px] text-[clamp(32px,3.2vw,44px)] font-normal leading-[1.12] text-white">
+          주거 정보를 한곳에서 관리하세요
+        </h2>
+        <p class="m-0 max-w-[380px] text-[15px] font-extrabold leading-[1.7] text-white/85">
+          공공임대 일정, 양도글, 관심 매물을 편하게 이어서 볼 수 있어요.
+        </p>
+        <RouterLink
+          class="mt-1 inline-flex min-h-11 items-center justify-center border border-white/80 bg-white/10 px-6 text-sm font-black text-white"
+          to="/login"
+        >
+          이미 계정이 있나요?
+        </RouterLink>
       </aside>
     </section>
   </main>
 </template>
-
-<style scoped>
-.register-page {
-  display: grid;
-  min-height: calc(100svh - 80px);
-  align-items: center;
-  padding: clamp(28px, 4.8vh, 56px) 24px;
-  background: #f4f0ea;
-}
-
-.register-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1.04fr) minmax(360px, 0.96fr);
-  width: min(1120px, calc(100vw - 48px));
-  min-height: min(690px, calc(100svh - 118px));
-  margin: 0 auto;
-  overflow: hidden;
-  border: 1px solid #e0ddd7;
-  background: #ffffff;
-  box-shadow: 0 22px 58px rgba(23, 23, 23, 0.12);
-}
-
-.register-form-pane {
-  display: grid;
-  width: min(100%, 500px);
-  align-content: center;
-  justify-self: center;
-  padding: 48px 52px;
-}
-
-.register-eyebrow,
-.register-welcome-eyebrow {
-  margin: 0;
-  color: #b4212a;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-}
-
-.register-form-pane h1 {
-  margin: 16px 0 0;
-  font-size: clamp(38px, 4vw, 50px);
-  font-weight: 400;
-  line-height: 1;
-}
-
-.register-form {
-  display: grid;
-  gap: 13px;
-  margin-top: 26px;
-}
-
-.register-form label {
-  display: grid;
-  gap: 8px;
-  color: #171717;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.register-form input {
-  min-height: 48px;
-  border: 1px solid #d4d4d4;
-  border-radius: 0;
-  background: #ffffff;
-  color: #171717;
-  padding: 0 14px;
-  font: inherit;
-  outline: none;
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.register-form input:focus {
-  border-color: #b4212a;
-  box-shadow: 0 0 0 3px rgba(180, 33, 42, 0.12);
-}
-
-.register-submit {
-  min-height: 54px;
-  margin-top: 6px;
-  border: 1px solid #b4212a;
-  background: #b4212a;
-  color: #ffffff;
-  font-size: 15px;
-  font-weight: 900;
-}
-
-.register-submit:hover {
-  border-color: #921b22;
-  background: #921b22;
-}
-
-.register-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 24px;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.register-links a {
-  color: #b4212a;
-}
-
-.register-welcome-pane {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 18px;
-  padding: 48px 42px;
-  background:
-    linear-gradient(180deg, rgba(23, 23, 23, 0.9), rgba(23, 23, 23, 0.82)),
-    url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80')
-      center/cover;
-  color: #ffffff;
-  text-align: center;
-}
-
-.register-welcome-eyebrow {
-  color: rgba(255, 255, 255, 0.74);
-}
-
-.register-welcome-pane h2 {
-  max-width: 380px;
-  margin: 0;
-  color: #ffffff;
-  font-size: clamp(32px, 3.2vw, 44px);
-  font-weight: 400;
-  line-height: 1.12;
-}
-
-.register-welcome-pane p:not(.register-welcome-eyebrow) {
-  max-width: 380px;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.84);
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1.7;
-}
-
-.register-login-button {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  margin-top: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  padding: 0 24px;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-@media (max-width: 899px) {
-  .register-page {
-    min-height: calc(100svh - 72px);
-    padding: 24px 16px 40px;
-  }
-
-  .register-card {
-    grid-template-columns: 1fr;
-    min-height: 0;
-  }
-
-  .register-form-pane {
-    width: 100%;
-    padding: 34px 24px;
-  }
-
-  .register-welcome-pane {
-    order: -1;
-    min-height: 230px;
-    padding: 34px 24px;
-  }
-}
-</style>

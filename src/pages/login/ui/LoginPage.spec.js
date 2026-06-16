@@ -42,28 +42,30 @@ async function mountLogin(initialPath) {
 }
 
 describe('LoginPage', () => {
-  it('uses dedicated login page style hooks', async () => {
+  it('uses Tailwind-only login page layout classes', async () => {
     const { wrapper } = await mountLogin('/login')
 
-    expect(wrapper.find('.login-page').exists()).toBe(true)
-    expect(wrapper.find('.login-card').exists()).toBe(true)
-    expect(wrapper.find('.login-submit').exists()).toBe(true)
+    expect(wrapper.find('main').classes()).toContain('min-h-[calc(100svh-80px)]')
+    expect(wrapper.get('[data-testid="login-card"]').classes()).toContain(
+      'grid-cols-[minmax(0,1fr)_minmax(360px,0.95fr)]',
+    )
+    expect(wrapper.find('button[type="submit"]').classes()).toContain('min-h-[52px]')
   })
 
   it('keeps login layout isolated from the shared auth layout classes', async () => {
     const { wrapper } = await mountLogin('/login')
 
-    expect(wrapper.find('main').classes()).toEqual(['login-page'])
-    expect(wrapper.find('section').classes()).toEqual(['login-card'])
-    expect(wrapper.find('.login-oauth .kakao').classes()).toContain('login-oauth-button')
-    expect(wrapper.find('.login-oauth .naver').classes()).toContain('login-oauth-button')
-    expect(wrapper.find('.login-oauth .google').classes()).toContain('login-oauth-button')
+    expect(wrapper.find('main').classes()).not.toContain('auth-page')
+    expect(wrapper.get('[data-testid="login-card"]').classes()).not.toContain('auth-card')
+    expect(wrapper.get('[data-testid="oauth-kakao"]').classes()).toContain('bg-[#fee500]')
+    expect(wrapper.get('[data-testid="oauth-naver"]').classes()).toContain('bg-[#03c75a]')
+    expect(wrapper.get('[data-testid="oauth-google"]').classes()).toContain('bg-white')
   })
 
   it('links social login buttons to backend oauth redirects with the safe return path', async () => {
     const { wrapper } = await mountLogin('/login?redirect=%2Fprices%3Fmode%3Dsearch')
 
-    const kakaoHref = wrapper.find('.login-oauth .kakao').attributes('href')
+    const kakaoHref = wrapper.get('[data-testid="oauth-kakao"]').attributes('href')
 
     expect(kakaoHref).toContain('/api/oauth/redirect/kakao?redirect=')
     expect(decodeURIComponent(kakaoHref)).toContain('/prices?mode=search')

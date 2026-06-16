@@ -70,7 +70,7 @@ onMounted(() => {
 
     <LoadingState v-if="loading" />
     <EmptyState v-else-if="!transfers.length" message="조회된 양도글이 없습니다." />
-    <div v-else class="grid transfer-grid">
+    <div v-else class="grid grid-cols-1 gap-4 min-[981px]:grid-cols-3 transfer-grid">
       <article v-for="post in transfers" :key="post.transferId" class="card transfer-card">
         <RouterLink class="transfer-card-image" :to="`/transfers/${post.transferId}`">
           <img v-if="post.imageUrls?.length" :src="post.imageUrls[0]" :alt="post.title" />
