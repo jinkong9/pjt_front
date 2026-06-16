@@ -60,6 +60,21 @@ describe('LoginPage', () => {
     expect(wrapper.find('.login-oauth .google').classes()).toContain('login-oauth-button')
   })
 
+  it('links social login buttons to backend oauth redirects with the safe return path', async () => {
+    const { wrapper } = await mountLogin('/login?redirect=%2Fprices%3Fmode%3Dsearch')
+
+    const kakaoHref = wrapper.find('.login-oauth .kakao').attributes('href')
+
+    expect(kakaoHref).toContain('/api/oauth/redirect/kakao?redirect=')
+    expect(decodeURIComponent(kakaoHref)).toContain('/prices?mode=search')
+  })
+
+  it('explains when a social provider is not configured yet', async () => {
+    const { wrapper } = await mountLogin('/login?oauthSetup=kakao')
+
+    expect(wrapper.text()).toContain('KAKAO 로그인 설정이 아직 완료되지 않았습니다')
+  })
+
   it('routes a normal login to home', async () => {
     const { memberStore, router, wrapper } = await mountLogin('/login')
 

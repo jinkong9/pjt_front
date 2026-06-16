@@ -120,10 +120,10 @@ describe('App', () => {
     })
 
     expect(loginWrapper.find('.auth-visual').exists()).toBe(false)
-    expect(loginWrapper.find('.auth-card').exists()).toBe(true)
-    expect(loginWrapper.find('.auth-welcome-pane').exists()).toBe(true)
-    expect(loginWrapper.find('.auth-form').exists()).toBe(true)
-    expect(loginWrapper.find('.oauth-panel').exists()).toBe(true)
+    expect(loginWrapper.find('.login-card').exists()).toBe(true)
+    expect(loginWrapper.find('.login-welcome-pane').exists()).toBe(true)
+    expect(loginWrapper.find('.login-form').exists()).toBe(true)
+    expect(loginWrapper.find('.login-oauth').exists()).toBe(true)
     expect(loginWrapper.text()).toContain('이메일')
     expect(loginWrapper.text()).toContain('Social Login')
     expect(loginWrapper.text()).not.toContain('OAuth 로그인')
@@ -138,11 +138,11 @@ describe('App', () => {
     })
 
     expect(registerWrapper.find('.auth-visual').exists()).toBe(false)
-    expect(registerWrapper.find('.auth-card').exists()).toBe(true)
-    expect(registerWrapper.find('.auth-welcome-pane').exists()).toBe(true)
-    expect(registerWrapper.find('.auth-form').exists()).toBe(true)
-    expect(registerWrapper.find('.auth-form').text()).not.toContain('아이디')
-    expect(registerWrapper.find('.auth-form').text()).toContain('비밀번호 확인')
+    expect(registerWrapper.find('.register-card').exists()).toBe(true)
+    expect(registerWrapper.find('.register-welcome-pane').exists()).toBe(true)
+    expect(registerWrapper.find('.register-form').exists()).toBe(true)
+    expect(registerWrapper.find('.register-form').text()).not.toContain('아이디')
+    expect(registerWrapper.find('.register-form').text()).toContain('비밀번호 확인')
   })
 
   it('renders analysis as an easy guided form', async () => {
@@ -161,4 +161,3 @@ describe('App', () => {
     expect(wrapper.text()).toContain('고급 좌표 설정')
   })
 })
-
