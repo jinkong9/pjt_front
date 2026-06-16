@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api, toQuery } from '@/shared/api/client'
 import { useMemberStore } from '@/entities/member/model/member'
+import PropertyDetailPanel from '@/features/property-detail/ui/PropertyDetailPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,6 +14,7 @@ const sidos = ref([])
 const guguns = ref([])
 const dongs = ref([])
 const selectedTrade = ref(null)
+const selectedTab = ref('detail')
 const mapEl = ref(null)
 const mapMessage = ref('')
 let kakaoMap = null
@@ -44,19 +46,37 @@ const statusText = computed(() => {
   return '지역이나 아파트명을 검색하면 DB 실거래 정보가 표시됩니다.'
 })
 
+const propertyLoginRoute = computed(() => {
+  if (!selectedTrade.value) return '/login'
+  const query = Object.entries(route.query)
+    .filter(([key]) => key !== 'trade' && key !== 'tab')
+    .flatMap(([key, value]) =>
+      (Array.isArray(value) ? value : [value]).map((item) => `${key}=${item}`),
+    )
+  query.push(`trade=${selectedTrade.value.no}`, `tab=${selectedTab.value}`)
+  return {
+    path: '/login',
+    query: {
+      redirect: `/prices?${query.join('&')}`,
+    },
+  }
+})
+
 function hasSearchCondition() {
   return Boolean(
     condition.keyword ||
-      condition.sidoName ||
-      condition.gugunName ||
-      condition.dongName ||
-      condition.dealYear,
+    condition.sidoName ||
+    condition.gugunName ||
+    condition.dongName ||
+    condition.dealYear,
   )
 }
 
 function syncFromRoute() {
   const hasQuery = Object.keys(route.query).length > 0
-  const defaults = hasQuery ? { ...defaultPriceCondition, mode: 'search', sidoName: '', gugunName: '' } : defaultPriceCondition
+  const defaults = hasQuery
+    ? { ...defaultPriceCondition, mode: 'search', sidoName: '', gugunName: '' }
+    : defaultPriceCondition
   Object.assign(condition, {
     mode: route.query.mode || defaults.mode,
     keyword: route.query.keyword || defaults.keyword,
@@ -90,9 +110,7 @@ async function loadDependentRegions() {
 
 function isSampleTrade(trade) {
   return (
-    String(trade.aptSeq ?? '').startsWith('SAMPLE-') ||
-    String(trade.aptName ?? '').includes('샘플') ||
-    Number(trade.no) >= 900000
+    String(trade.aptSeq ?? '').startsWith('SAMPLE-') || String(trade.aptName ?? '').includes('샘플')
   )
 }
 
@@ -102,10 +120,20 @@ async function loadTrades() {
     const { data } = await api.get('/houses', { params: toQuery(condition) })
     const realTrades = data.filter((trade) => !isSampleTrade(trade))
     trades.value = realTrades
-    selectedTrade.value = realTrades[0] || null
+    selectedTrade.value = null
+    restorePropertyContext()
   } finally {
     loading.value = false
   }
+}
+
+function restorePropertyContext() {
+  const tradeNo = route.query.trade
+  if (tradeNo === undefined) return
+  const matchingTrade = trades.value.find((trade) => String(trade.no) === String(tradeNo))
+  if (!matchingTrade) return
+  selectedTrade.value = matchingTrade
+  selectedTab.value = ['detail', 'loan'].includes(route.query.tab) ? route.query.tab : 'detail'
 }
 
 function clearMarkers() {
@@ -219,6 +247,7 @@ async function onGugunChange() {
 
 function openDetail(trade) {
   selectedTrade.value = trade
+  selectedTab.value = 'detail'
   const point = getLatLng(trade)
   if (point && kakaoMap && window.kakao?.maps) {
     kakaoMap.panTo(new window.kakao.maps.LatLng(point.latitude, point.longitude))
@@ -265,10 +294,19 @@ watch(trades, () => {
           <strong class="text-sm font-black uppercase tracking-[0.22em]">SSAFY Home</strong>
         </RouterLink>
         <nav class="hidden items-center gap-7 text-sm font-black md:flex">
-          <RouterLink v-if="!memberStore.isLoggedIn" to="/login" class="text-white hover:text-white/70">
+          <RouterLink
+            v-if="!memberStore.isLoggedIn"
+            to="/login"
+            class="text-white hover:text-white/70"
+          >
             로그인
           </RouterLink>
-          <button v-else type="button" class="border-white/60 bg-white/10 text-white hover:bg-white/20" @click="logout">
+          <button
+            v-else
+            type="button"
+            class="border-white/60 bg-white/10 text-white hover:bg-white/20"
+            @click="logout"
+          >
             로그아웃
           </button>
         </nav>
@@ -277,15 +315,22 @@ watch(trades, () => {
 
     <main class="relative h-screen">
       <section id="map" class="absolute inset-0 bg-neutral-300">
-        <div ref="mapEl" class="h-full w-full bg-[linear-gradient(135deg,#d6d6d6_0%,#ededed_42%,#c8c8c8_100%)]"></div>
+        <div
+          ref="mapEl"
+          class="h-full w-full bg-[linear-gradient(135deg,#d6d6d6_0%,#ededed_42%,#c8c8c8_100%)]"
+        ></div>
       </section>
-      <div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent"></div>
+      <div
+        class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent"
+      ></div>
 
       <aside
         class="absolute bottom-0 left-0 top-20 z-20 flex w-full max-w-[520px] flex-col bg-white/95 shadow-2xl backdrop-blur md:m-6 md:top-24 md:max-h-[calc(100vh-7.5rem)] md:border md:border-white/70"
       >
         <section class="border-b border-neutral-200 p-5">
-          <p class="text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Apartment Search</p>
+          <p class="text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
+            Apartment Search
+          </p>
           <h1 class="mt-2 text-3xl font-black leading-tight">실거래 지도</h1>
           <form class="mt-5 space-y-3" @submit.prevent="search">
             <input
@@ -293,14 +338,19 @@ watch(trades, () => {
               class="h-12 w-full border-neutral-300 text-sm font-bold"
               placeholder="아파트명 또는 지역명을 입력하세요"
             />
-            <div class="grid grid-cols-2 gap-2" style="grid-template-columns: repeat(2, minmax(0, 1fr))">
+            <div
+              class="grid grid-cols-2 gap-2"
+              style="grid-template-columns: repeat(2, minmax(0, 1fr))"
+            >
               <select
                 v-model="condition.sidoName"
                 class="h-11 border-neutral-300 text-sm font-bold"
                 @change="onSidoChange"
               >
                 <option value="">시도 전체</option>
-                <option v-for="sido in sidos" :key="sido.value" :value="sido.value">{{ sido.label }}</option>
+                <option v-for="sido in sidos" :key="sido.value" :value="sido.value">
+                  {{ sido.label }}
+                </option>
               </select>
               <select
                 v-model="condition.gugunName"
@@ -308,11 +358,18 @@ watch(trades, () => {
                 @change="onGugunChange"
               >
                 <option value="">구군 전체</option>
-                <option v-for="gugun in guguns" :key="gugun.value" :value="gugun.value">{{ gugun.label }}</option>
+                <option v-for="gugun in guguns" :key="gugun.value" :value="gugun.value">
+                  {{ gugun.label }}
+                </option>
               </select>
-              <select v-model="condition.dongName" class="h-11 border-neutral-300 text-sm font-bold">
+              <select
+                v-model="condition.dongName"
+                class="h-11 border-neutral-300 text-sm font-bold"
+              >
                 <option value="">동 전체</option>
-                <option v-for="dong in dongs" :key="dong.value" :value="dong.value">{{ dong.label }}</option>
+                <option v-for="dong in dongs" :key="dong.value" :value="dong.value">
+                  {{ dong.label }}
+                </option>
               </select>
               <input
                 v-model="condition.dealYear"
@@ -330,7 +387,9 @@ watch(trades, () => {
                 class="h-11 border-neutral-300 text-sm font-bold"
                 placeholder="조회 개수"
               />
-              <button class="flex h-11 items-center gap-2 bg-[#b4212a] px-5 text-sm font-black text-white">
+              <button
+                class="flex h-11 items-center gap-2 bg-[#b4212a] px-5 text-sm font-black text-white"
+              >
                 검색
                 <span class="material-symbols-outlined text-base">search</span>
               </button>
@@ -340,8 +399,13 @@ watch(trades, () => {
         </section>
 
         <section class="flex-1 overflow-y-auto">
-          <p v-if="loading" class="p-6 text-sm font-bold text-neutral-500">거래 정보를 불러오는 중입니다.</p>
-          <p v-else-if="!trades.length && !hasSearchCondition()" class="p-6 text-sm font-bold text-neutral-500">
+          <p v-if="loading" class="p-6 text-sm font-bold text-neutral-500">
+            거래 정보를 불러오는 중입니다.
+          </p>
+          <p
+            v-else-if="!trades.length && !hasSearchCondition()"
+            class="p-6 text-sm font-bold text-neutral-500"
+          >
             검색 조건을 입력해 주세요.
           </p>
           <p v-else-if="!trades.length" class="p-6 text-sm font-bold text-neutral-500">
@@ -368,7 +432,9 @@ watch(trades, () => {
             >
               생활권 분석
             </RouterLink>
-            <div class="pr-28 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">APT SALE</div>
+            <div class="pr-28 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">
+              APT SALE
+            </div>
             <h2 class="mt-2 text-xl font-black leading-tight">{{ trade.aptName }}</h2>
             <div class="mt-4 text-sm">
               <strong class="text-lg text-[#b4212a]">{{ trade.dealAmount }}만원</strong>
@@ -378,10 +444,11 @@ watch(trades, () => {
               <p class="mt-2 text-xs leading-5 text-neutral-500">{{ trade.address }}</p>
               <button
                 type="button"
+                :data-testid="`open-detail-${trade.no}`"
                 class="mt-4 w-full border border-neutral-300 bg-white px-3 py-2 text-xs font-black text-[#b4212a]"
-                @click.stop
+                @click.stop="openDetail(trade)"
               >
-                관심매물 등록
+                상세보기
               </button>
             </div>
           </article>
@@ -395,40 +462,15 @@ watch(trades, () => {
         {{ mapMessage }}
       </div>
 
-      <div
+      <PropertyDetailPanel
         v-if="selectedTrade"
-        class="absolute right-6 top-28 z-30 hidden w-96 border border-neutral-200 bg-white/95 p-6 shadow-2xl backdrop-blur md:block"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">APT SALE</p>
-            <h2 class="mt-2 text-2xl font-black">{{ selectedTrade.aptName }}</h2>
-          </div>
-          <button
-            class="grid h-8 w-8 place-items-center border border-neutral-300 text-xs font-black"
-            @click="selectedTrade = null"
-          >
-            X
-          </button>
-        </div>
-        <dl class="mt-6 space-y-4 text-sm">
-          <div>
-            <dt class="text-xs font-black text-neutral-500">주소</dt>
-            <dd class="mt-1 font-bold text-neutral-900">{{ selectedTrade.address }}</dd>
-          </div>
-          <div>
-            <dt class="text-xs font-black text-neutral-500">가격</dt>
-            <dd class="mt-1 font-bold text-neutral-900">{{ selectedTrade.dealAmount }}만원</dd>
-          </div>
-          <div>
-            <dt class="text-xs font-black text-neutral-500">면적/층</dt>
-            <dd class="mt-1 font-bold text-neutral-900">
-              {{ selectedTrade.exclusiveArea }}㎡ · {{ selectedTrade.floor }}층 · {{ selectedTrade.dealDate }}
-            </dd>
-          </div>
-        </dl>
-      </div>
+        :trade="selectedTrade"
+        :logged-in="memberStore.isLoggedIn"
+        :initial-tab="selectedTab"
+        :login-route="propertyLoginRoute"
+        @tab-change="selectedTab = $event"
+        @close="selectedTrade = null"
+      />
     </main>
   </div>
 </template>
-

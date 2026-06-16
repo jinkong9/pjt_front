@@ -43,6 +43,7 @@ lerna-debug.log*
 
 # Generated review artifacts
 .design-review/
+.superpowers/
 
 # Editor directories and files
 .vscode/*
