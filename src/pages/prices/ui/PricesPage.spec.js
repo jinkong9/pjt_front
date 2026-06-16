@@ -7,6 +7,7 @@ import PricesPage from '@/pages/prices/ui/PricesPage.vue'
 import { api } from '@/shared/api/client'
 
 let housesResponse = []
+let latestMap = null
 
 vi.mock('@/shared/api/client', () => ({
   api: {
@@ -50,6 +51,37 @@ function createTestRouter() {
 describe('PricesPage', () => {
   beforeEach(() => {
     housesResponse = []
+    latestMap = null
+    window.kakao = {
+      maps: {
+        load: (callback) => callback(),
+        LatLng: vi.fn(function LatLng(latitude, longitude) {
+          return { latitude, longitude }
+        }),
+        LatLngBounds: vi.fn(function LatLngBounds() {
+          return {
+            extend: vi.fn(),
+          }
+        }),
+        Map: vi.fn(function Map() {
+          latestMap = {
+            setBounds: vi.fn(),
+            setCenter: vi.fn(),
+            panTo: vi.fn(),
+            setLevel: vi.fn(),
+          }
+          return latestMap
+        }),
+        Marker: vi.fn(function Marker() {
+          return {
+            setMap: vi.fn(),
+          }
+        }),
+        event: {
+          addListener: vi.fn(),
+        },
+      },
+    }
     vi.clearAllMocks()
   })
 
@@ -142,14 +174,53 @@ describe('PricesPage', () => {
 
     await wrapper.get('[data-testid="open-detail-11"]').trigger('click')
     expect(wrapper.find('[data-testid="property-detail-panel"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('관심 매물 등록')
-    expect(wrapper.get('[data-testid="property-close"]').classes()).toContain(
-      'property-icon-button',
+    expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).toContain(
+      'md:left-[544px]',
     )
-    expect(wrapper.get('[data-testid="loan-tab"]').classes()).toContain('property-tab')
+    expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).toContain('md:bottom-0')
+    expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).toContain('md:my-6')
+    expect(wrapper.text()).toContain('관심 매물 등록')
+    expect(wrapper.get('[data-testid="property-close"]').classes()).toContain('rounded-xl')
+    expect(wrapper.get('[data-testid="loan-tab"]').classes()).toContain('min-h-11')
 
     await wrapper.get('[data-testid="loan-tab"]').trigger('click')
     expect(wrapper.text()).toContain('로그인 후 내 자산 기준 대출 분석을 확인하세요')
+  })
+
+  it('keeps the initial map close instead of fitting all listings to a wide view', async () => {
+    housesResponse = [
+      {
+        no: 11,
+        aptSeq: 'REAL-APT-001',
+        aptName: '역삼 실제 아파트',
+        address: '서울특별시 강남구 역삼동 1',
+        dealAmount: '210000',
+        exclusiveArea: 84.9,
+        floor: '12',
+        dealDate: '2026-04-10',
+        latitude: '37.50',
+        longitude: '127.03',
+      },
+    ]
+    const router = createTestRouter()
+    await router.push('/prices')
+    await router.isReady()
+
+    mount(PricesPage, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+    await flushPromises()
+
+    expect(window.kakao.maps.Map).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        level: 6,
+      }),
+    )
+    expect(latestMap.setLevel).toHaveBeenCalledWith(6)
+    expect(latestMap.setBounds).not.toHaveBeenCalled()
   })
 
   it('preserves the selected trade and active tab in login links', async () => {
@@ -218,7 +289,7 @@ describe('PricesPage', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-testid="property-detail-panel"]').exists()).toBe(true)
-    expect(wrapper.get('[data-testid="loan-tab"]').classes()).toContain('property-tab-active')
+    expect(wrapper.get('[data-testid="loan-tab"]').classes()).toContain('border-[#b4212a]')
     expect(wrapper.text()).toContain('로그인 후 내 자산 기준 대출 분석을 확인하세요')
   })
 
@@ -248,7 +319,7 @@ describe('PricesPage', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-testid="property-detail-panel"]').exists()).toBe(true)
-    expect(wrapper.get('[data-testid="loan-tab"]').classes()).not.toContain('property-tab-active')
+    expect(wrapper.get('[data-testid="loan-tab"]').classes()).not.toContain('border-[#b4212a]')
     expect(wrapper.text()).toContain('거래 가격')
   })
 })

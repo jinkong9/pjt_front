@@ -103,7 +103,7 @@ async function loadAnalysis() {
 <template>
   <aside
     data-testid="property-detail-panel"
-    class="absolute bottom-0 left-0 top-20 z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:bottom-6 md:left-[568px] md:top-24 md:w-[430px] md:border md:border-neutral-200"
+    class="absolute bottom-0 left-0 top-20 z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:bottom-0 md:left-[544px] md:top-24 md:my-6 md:w-[430px] md:border md:border-neutral-200"
   >
     <header class="border-b border-neutral-200 p-5">
       <div class="flex items-start justify-between gap-4">
@@ -114,25 +114,31 @@ async function loadAnalysis() {
         </div>
         <button
           data-testid="property-close"
-          class="property-icon-button"
+          class="grid min-h-10 w-10 flex-[0_0_40px] place-items-center rounded-xl border border-[#d4d4d4] bg-white p-0 text-[#404040] hover:border-[#b4212a] hover:bg-[#fff7f7] hover:text-[#b4212a]"
           aria-label="상세 패널 닫기"
           @click="$emit('close')"
         >
           <span class="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
-      <nav class="mt-5 grid grid-cols-2 gap-2">
+      <nav class="mt-5 grid !grid-cols-2 gap-2">
         <button
-          class="property-tab"
-          :class="{ 'property-tab-active': activeTab === 'detail' }"
+          class="min-h-11 rounded-t-xl border border-neutral-200 bg-[#fafafa] px-4 text-sm font-black text-neutral-500 hover:border-[#d7a0a4] hover:bg-[#fff7f7] hover:text-[#b4212a]"
+          :class="{
+            'border-[#b4212a] bg-[#fff1f2] text-[#b4212a] shadow-[inset_0_-3px_0_#b4212a]':
+              activeTab === 'detail',
+          }"
           @click="openDetailTab"
         >
           상세정보
         </button>
         <button
           data-testid="loan-tab"
-          class="property-tab"
-          :class="{ 'property-tab-active': activeTab === 'loan' }"
+          class="min-h-11 rounded-t-xl border border-neutral-200 bg-[#fafafa] px-4 text-sm font-black text-neutral-500 hover:border-[#d7a0a4] hover:bg-[#fff7f7] hover:text-[#b4212a]"
+          :class="{
+            'border-[#b4212a] bg-[#fff1f2] text-[#b4212a] shadow-[inset_0_-3px_0_#b4212a]':
+              activeTab === 'loan',
+          }"
           @click="openLoanTab"
         >
           대출 계산
@@ -146,7 +152,7 @@ async function loadAnalysis() {
           <p class="text-xs font-black text-neutral-500">거래 가격</p>
           <strong class="mt-2 block text-3xl text-[#b4212a]">{{ trade.dealAmount }}만원</strong>
         </div>
-        <dl class="grid grid-cols-2 gap-4 text-sm">
+        <dl class="grid !grid-cols-2 gap-4 text-sm">
           <div>
             <dt class="text-xs font-black text-neutral-500">전용면적</dt>
             <dd class="mt-1 font-bold">{{ trade.exclusiveArea }}㎡</dd>
@@ -214,48 +220,3 @@ async function loadAnalysis() {
     </div>
   </aside>
 </template>
-
-<style scoped>
-.property-icon-button {
-  display: grid;
-  width: 40px;
-  min-height: 40px;
-  flex: 0 0 40px;
-  place-items: center;
-  border: 1px solid #d4d4d4;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #404040;
-  padding: 0;
-}
-
-.property-icon-button:hover {
-  border-color: #b4212a;
-  background: #fff7f7;
-  color: #b4212a;
-}
-
-.property-tab {
-  min-height: 44px;
-  border: 1px solid #e5e5e5;
-  border-radius: 12px 12px 0 0;
-  background: #fafafa;
-  color: #737373;
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.property-tab:hover {
-  border-color: #d7a0a4;
-  background: #fff7f7;
-  color: #b4212a;
-}
-
-.property-tab-active {
-  border-color: #b4212a;
-  background: #fff1f2;
-  color: #b4212a;
-  box-shadow: inset 0 -3px 0 #b4212a;
-}
-</style>

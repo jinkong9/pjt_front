@@ -83,7 +83,6 @@ async function sendMessage(question = draft.value) {
             </span>
             <div>
               <strong>HappyHome AI</strong>
-              <small>Spring AI RAG 상담봇</small>
             </div>
           </div>
           <button class="ai-chat-close" type="button" aria-label="챗봇 닫기" @click="closeChat">
