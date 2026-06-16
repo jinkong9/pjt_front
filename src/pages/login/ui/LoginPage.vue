@@ -29,10 +29,10 @@ async function login() {
 </script>
 
 <template>
-  <main class="auth-page form-only login-page">
-    <section class="auth-card login-card">
-      <div class="auth-form-pane login-form-pane">
-        <p class="eyebrow">Login</p>
+  <main class="login-page">
+    <section class="login-card">
+      <div class="login-form-pane">
+        <p class="login-eyebrow">Login</p>
         <h1>로그인</h1>
         <p v-if="error" class="alert error">{{ error }}</p>
         <form class="auth-form login-form" @submit.prevent="login">
@@ -43,21 +43,21 @@ async function login() {
         <div class="oauth-panel login-oauth" aria-label="Social Login">
           <span>Social Login</span>
           <div class="oauth-actions">
-            <button type="button" class="oauth-button kakao">Kakao</button>
-            <button type="button" class="oauth-button naver">Naver</button>
-            <button type="button" class="oauth-button google">Google</button>
+            <button type="button" class="login-oauth-button kakao">Kakao</button>
+            <button type="button" class="login-oauth-button naver">Naver</button>
+            <button type="button" class="login-oauth-button google">Google</button>
           </div>
         </div>
-        <div class="auth-links">
+        <div class="login-links">
           <RouterLink to="/register">회원가입</RouterLink>
           <RouterLink to="/home">홈으로</RouterLink>
         </div>
       </div>
-      <aside class="auth-welcome-pane login-welcome-pane">
-        <p class="eyebrow">Welcome Back</p>
+      <aside class="login-welcome-pane">
+        <p class="login-welcome-eyebrow">Welcome Back</p>
         <h2>다시 만나서 반가워요</h2>
         <p>관심 매물과 주거 정보를 이어서 확인하세요.</p>
-        <RouterLink class="button" to="/register">계정이 없나요?</RouterLink>
+        <RouterLink class="login-register-button" to="/register">계정이 없나요?</RouterLink>
       </aside>
     </section>
   </main>
@@ -66,42 +66,53 @@ async function login() {
 <style scoped>
 .login-page {
   display: grid;
-  min-height: 100vh;
+  min-height: calc(100svh - 80px);
   align-items: center;
-  padding: 112px 24px 56px;
+  padding: clamp(32px, 6vh, 64px) 24px;
   background: #f4f0ea;
 }
 
 .login-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.88fr);
-  width: min(960px, 100%);
-  min-height: 560px;
+  grid-template-columns: minmax(0, 0.96fr) minmax(320px, 0.88fr);
+  width: min(880px, calc(100vw - 48px));
+  min-height: min(540px, calc(100svh - 150px));
   margin: 0 auto;
   overflow: hidden;
   border: 1px solid #e0ddd7;
   background: #ffffff;
-  box-shadow: 0 24px 70px rgba(23, 23, 23, 0.12);
+  box-shadow: 0 22px 58px rgba(23, 23, 23, 0.12);
 }
 
 .login-form-pane {
   display: grid;
-  width: min(100%, 480px);
+  width: min(100%, 420px);
   align-content: center;
   justify-self: center;
-  padding: 56px 48px;
+  padding: 44px 40px;
+}
+
+.login-eyebrow,
+.login-welcome-eyebrow {
+  margin: 0;
+  color: #b4212a;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
 }
 
 .login-form-pane h1 {
-  margin: 18px 0 0;
-  font-size: clamp(34px, 4vw, 48px);
+  margin: 16px 0 0;
+  font-size: clamp(38px, 4vw, 48px);
+  font-weight: 400;
   line-height: 1;
 }
 
 .login-form {
   display: grid;
-  gap: 16px;
-  margin-top: 28px;
+  gap: 14px;
+  margin-top: 26px;
 }
 
 .login-form label {
@@ -113,7 +124,7 @@ async function login() {
 }
 
 .login-form input {
-  min-height: 52px;
+  min-height: 48px;
   border: 1px solid #d4d4d4;
   border-radius: 0;
   background: #ffffff;
@@ -132,7 +143,8 @@ async function login() {
 }
 
 .login-submit {
-  min-height: 54px;
+  min-height: 52px;
+  margin-top: 2px;
   border: 1px solid #b4212a;
   background: #b4212a;
   color: #ffffff;
@@ -145,46 +157,126 @@ async function login() {
 }
 
 .login-oauth {
-  margin-top: 24px;
+  margin-top: 22px;
   border-top: 1px solid #e5e5e5;
-  padding-top: 22px;
+  padding-top: 20px;
 }
 
-.login-oauth .oauth-button {
-  min-height: 46px;
+.login-oauth > span {
+  display: block;
+  color: #666666;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.login-oauth .oauth-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.login-oauth-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #d4d4d4;
   background: #ffffff;
   color: #171717;
-  padding: 0 10px;
+  padding: 0 12px;
   font-size: 13px;
   font-weight: 900;
+  cursor: pointer;
 }
 
-.login-oauth .kakao {
+.login-oauth-button.kakao {
   border-color: #fee500;
   background: #fee500;
   color: #171717;
 }
 
-.login-oauth .naver {
+.login-oauth-button.naver {
   border-color: #03c75a;
   background: #03c75a;
   color: #ffffff;
 }
 
-.login-oauth .google {
+.login-oauth-button.google {
   border-color: #d4d4d4;
   background: #ffffff;
   color: #171717;
 }
 
+.login-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.login-links a {
+  color: #b4212a;
+}
+
 .login-welcome-pane {
+  display: grid;
   align-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: 48px 40px;
+  background:
+    linear-gradient(180deg, rgba(23, 23, 23, 0.9), rgba(23, 23, 23, 0.82)),
+    url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80')
+      center/cover;
+  color: #ffffff;
+  text-align: center;
+}
+
+.login-welcome-eyebrow {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.login-welcome-pane h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.login-welcome-pane p:not(.login-welcome-eyebrow) {
+  max-width: 320px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+.login-register-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 900;
 }
 
 @media (max-width: 899px) {
   .login-page {
-    padding: 96px 16px 40px;
+    min-height: calc(100svh - 72px);
+    padding: 24px 16px 40px;
   }
 
   .login-card {

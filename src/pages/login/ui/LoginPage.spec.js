@@ -50,6 +50,16 @@ describe('LoginPage', () => {
     expect(wrapper.find('.login-submit').exists()).toBe(true)
   })
 
+  it('keeps login layout isolated from the shared auth layout classes', async () => {
+    const { wrapper } = await mountLogin('/login')
+
+    expect(wrapper.find('main').classes()).toEqual(['login-page'])
+    expect(wrapper.find('section').classes()).toEqual(['login-card'])
+    expect(wrapper.find('.login-oauth .kakao').classes()).toContain('login-oauth-button')
+    expect(wrapper.find('.login-oauth .naver').classes()).toContain('login-oauth-button')
+    expect(wrapper.find('.login-oauth .google').classes()).toContain('login-oauth-button')
+  })
+
   it('routes a normal login to home', async () => {
     const { memberStore, router, wrapper } = await mountLogin('/login')
 
