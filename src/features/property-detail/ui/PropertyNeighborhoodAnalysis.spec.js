@@ -90,6 +90,7 @@ describe('PropertyNeighborhoodAnalysis', () => {
     expect(wrapper.text()).toContain('교통 이벤트')
     expect(wrapper.text()).toContain('도로공사')
     expect(wrapper.text()).toContain('위험 등급')
+    expect(wrapper.get('[data-testid="score-grid"]').classes()).toContain('!grid-cols-2')
   })
 
   it('limits facilities and traffic events until each section is expanded', async () => {

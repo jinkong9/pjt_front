@@ -91,7 +91,7 @@ onMounted(async () => {
 
     <LoadingState v-if="loading" />
     <EmptyState v-else-if="!notices.length" message="조회된 공고가 없습니다." />
-    <div v-else class="grid">
+    <div v-else class="grid grid-cols-1 gap-4 min-[981px]:grid-cols-3">
       <article v-for="notice in notices" :key="notice.noticeId" class="card">
         <span class="tag">{{ notice.status || 'RENTAL' }}</span>
         <h3>{{ notice.title }}</h3>

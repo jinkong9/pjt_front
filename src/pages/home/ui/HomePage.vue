@@ -53,7 +53,9 @@ function search() {
 }
 
 function easeInOutCubic(progress) {
-  return progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2
+  return progress < 0.5
+    ? 4 * progress * progress * progress
+    : 1 - Math.pow(-2 * progress + 2, 3) / 2
 }
 
 function animateSectionScroll(targetTop) {
@@ -178,7 +180,11 @@ onBeforeUnmount(() => {
         <LoadingState v-if="loading && !rentalNotices.length" />
         <EmptyState v-else-if="!rentalNotices.length" message="표시할 LH 공고가 없습니다." />
         <div v-else class="rental-slider-shell">
-          <button type="button" class="rental-window-button rental-window-prev" aria-label="이전 LH 공고">
+          <button
+            type="button"
+            class="rental-window-button rental-window-prev"
+            aria-label="이전 LH 공고"
+          >
             ←
           </button>
           <Swiper
@@ -198,18 +204,25 @@ onBeforeUnmount(() => {
             }"
           >
             <SwiperSlide v-for="notice in rentalNotices" :key="notice.noticeId">
-              <RouterLink
-                class="rental-slide-card"
-                :to="`/rentals/${notice.noticeId}`"
-              >
+              <RouterLink class="rental-slide-card" :to="`/rentals/${notice.noticeId}`">
                 <span>{{ notice.status || 'LH' }}</span>
                 <strong>{{ notice.title }}</strong>
-                <small>{{ notice.regionName }} · {{ notice.noticeType }} · {{ notice.detailType }}</small>
-                <em>접수 {{ notice.applyStartDate || '-' }} - {{ notice.applyEndDate || notice.closeDate || '-' }}</em>
+                <small
+                  >{{ notice.regionName }} · {{ notice.noticeType }} ·
+                  {{ notice.detailType }}</small
+                >
+                <em
+                  >접수 {{ notice.noticeDate || '-' }} ~
+                  {{ notice.applyEndDate || notice.closeDate || '-' }}</em
+                >
               </RouterLink>
             </SwiperSlide>
           </Swiper>
-          <button type="button" class="rental-window-button rental-window-next" aria-label="다음 LH 공고">
+          <button
+            type="button"
+            class="rental-window-button rental-window-next"
+            aria-label="다음 LH 공고"
+          >
             →
           </button>
           <div class="rental-swiper-pagination"></div>
@@ -251,4 +264,3 @@ onBeforeUnmount(() => {
     </section>
   </main>
 </template>
-

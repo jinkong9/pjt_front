@@ -120,10 +120,10 @@ describe('App', () => {
     })
 
     expect(loginWrapper.find('.auth-visual').exists()).toBe(false)
-    expect(loginWrapper.find('.login-card').exists()).toBe(true)
-    expect(loginWrapper.find('.login-welcome-pane').exists()).toBe(true)
-    expect(loginWrapper.find('.login-form').exists()).toBe(true)
-    expect(loginWrapper.find('.login-oauth').exists()).toBe(true)
+    expect(loginWrapper.get('[data-testid="login-card"]').classes()).toContain(
+      'grid-cols-[minmax(0,1fr)_minmax(360px,0.95fr)]',
+    )
+    expect(loginWrapper.text()).toContain('Welcome Back')
     expect(loginWrapper.text()).toContain('이메일')
     expect(loginWrapper.text()).toContain('Social Login')
     expect(loginWrapper.text()).not.toContain('OAuth 로그인')
@@ -138,11 +138,12 @@ describe('App', () => {
     })
 
     expect(registerWrapper.find('.auth-visual').exists()).toBe(false)
-    expect(registerWrapper.find('.register-card').exists()).toBe(true)
-    expect(registerWrapper.find('.register-welcome-pane').exists()).toBe(true)
-    expect(registerWrapper.find('.register-form').exists()).toBe(true)
-    expect(registerWrapper.find('.register-form').text()).not.toContain('아이디')
-    expect(registerWrapper.find('.register-form').text()).toContain('비밀번호 확인')
+    expect(registerWrapper.get('[data-testid="register-card"]').classes()).toContain(
+      'grid-cols-[minmax(0,1.04fr)_minmax(360px,0.96fr)]',
+    )
+    expect(registerWrapper.text()).toContain('Join SSAFY Home')
+    expect(registerWrapper.text()).not.toContain('아이디')
+    expect(registerWrapper.text()).toContain('비밀번호 확인')
   })
 
   it('renders analysis as an easy guided form', async () => {

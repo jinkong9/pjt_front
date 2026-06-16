@@ -42,7 +42,7 @@ describe('LoanAnalysisResult', () => {
 
     expect(wrapper.text()).toContain('추가 필요자금')
     expect(wrapper.text()).toContain('28,280만원')
-    expect(wrapper.find('[data-testid="readiness-card"]').classes()).toContain('loan-readiness-card')
+    expect(wrapper.find('[data-testid="readiness-card"]').classes()).toContain('rounded-[18px]')
   })
 
   it('labels negative monthly cash flow as a repayment burden', () => {
