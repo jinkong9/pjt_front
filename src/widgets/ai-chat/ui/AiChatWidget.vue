@@ -73,47 +73,69 @@ async function sendMessage(question = draft.value) {
 </script>
 
 <template>
-  <section class="ai-chat-widget" :class="{ open: isOpen }" aria-label="AI 챗봇">
+  <section
+    class="ai-chat-widget fixed bottom-6 right-6 z-[70] grid justify-items-end gap-4"
+    :class="{ open: isOpen }"
+    aria-label="AI 챗봇"
+  >
     <transition name="ai-chat-panel">
-      <article v-if="isOpen" class="ai-chat-panel">
-        <header class="ai-chat-header">
-          <div class="ai-chat-title">
-            <span class="ai-chat-avatar" aria-hidden="true">
-              <span></span>
+      <article
+        v-if="isOpen"
+        class="ai-chat-panel grid h-[min(640px,calc(100vh_-_120px))] w-[min(420px,calc(100vw_-_32px))] grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden border border-neutral-200 bg-white shadow-[0_24px_70px_rgba(23,23,23,0.24)]"
+      >
+        <header class="ai-chat-header flex items-center justify-between gap-4 bg-[#b4212a] p-4 text-white">
+          <div class="ai-chat-title flex items-center gap-3">
+            <span
+              class="ai-chat-avatar grid h-11 w-11 place-items-center rounded-2xl border border-white/35 bg-white/15"
+              aria-hidden="true"
+            >
+              <span class="h-5 w-5 rounded-full border-2 border-white"></span>
             </span>
             <div>
-              <strong>HappyHome AI</strong>
-              <small>Spring AI RAG 상담봇</small>
+              <strong class="block font-black">HappyHome AI</strong>
+              <small class="block text-xs font-bold text-white/75">Spring AI RAG 상담봇</small>
             </div>
           </div>
-          <button class="ai-chat-close" type="button" aria-label="챗봇 닫기" @click="closeChat">
+          <button
+            class="ai-chat-close inline-flex min-h-9 w-9 items-center justify-center border border-white/40 bg-white/10 text-xl font-black text-white"
+            type="button"
+            aria-label="챗봇 닫기"
+            @click="closeChat"
+          >
             ×
           </button>
         </header>
 
-        <div ref="messageList" class="ai-chat-messages">
+        <div ref="messageList" class="ai-chat-messages grid content-start gap-3 overflow-y-auto bg-[#f7f4ef] p-4">
           <div
             v-for="message in messages"
             :key="message.id"
-            class="ai-chat-message"
-            :class="[message.role, { error: message.isError }]"
+            class="ai-chat-message max-w-[86%] border border-neutral-200 bg-white p-3 text-sm font-bold leading-6 text-[#171717]"
+            :class="[
+              message.role === 'user' ? 'user justify-self-end border-[#b4212a] bg-[#b4212a] text-white' : 'assistant justify-self-start',
+              { 'error border-red-200 bg-red-50 text-red-700': message.isError },
+            ]"
           >
             <p>{{ message.text }}</p>
-            <small v-if="message.meta">{{ message.meta }}</small>
+            <small v-if="message.meta" class="mt-2 block text-[11px] font-black opacity-70">{{ message.meta }}</small>
           </div>
 
-          <div v-if="isSending" class="ai-chat-message assistant typing">
-            <span></span>
-            <span></span>
-            <span></span>
+          <div
+            v-if="isSending"
+            class="ai-chat-message assistant typing flex w-fit gap-1 border border-neutral-200 bg-white p-3"
+          >
+            <span class="h-2 w-2 animate-bounce rounded-full bg-neutral-400"></span>
+            <span class="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.12s]"></span>
+            <span class="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.24s]"></span>
           </div>
         </div>
 
-        <div class="ai-chat-prompts">
+        <div class="ai-chat-prompts flex flex-wrap gap-2 border-t border-neutral-200 bg-white p-3">
           <button
             v-for="question in quickQuestions"
             :key="question"
             type="button"
+            class="min-h-8 border border-neutral-200 bg-white px-3 text-xs font-black text-[#171717] disabled:opacity-50"
             :disabled="isSending"
             @click="sendMessage(question)"
           >
@@ -121,30 +143,55 @@ async function sendMessage(question = draft.value) {
           </button>
         </div>
 
-        <form class="ai-chat-form" @submit.prevent="sendMessage()">
+        <form class="ai-chat-form grid grid-cols-[1fr_auto] gap-2 border-t border-neutral-200 bg-white p-3" @submit.prevent="sendMessage()">
           <textarea
             v-model="draft"
+            class="min-h-11 resize-none border border-neutral-200 bg-white px-3 py-2 text-sm font-bold outline-0"
             rows="1"
             placeholder="궁금한 내용을 입력하세요"
             :disabled="isSending"
             @keydown.enter.exact.prevent="sendMessage()"
           ></textarea>
-          <button type="submit" :disabled="isSending || !draft.trim()">전송</button>
+          <button
+            type="submit"
+            class="inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-4 text-sm font-black text-white disabled:opacity-50"
+            :disabled="isSending || !draft.trim()"
+          >
+            전송
+          </button>
         </form>
       </article>
     </transition>
 
     <button
-      class="ai-chat-fab"
+      class="ai-chat-fab flex min-h-[72px] items-center gap-3 rounded-full border border-[#b4212a] bg-[#b4212a] px-5 font-black text-white shadow-[0_18px_40px_rgba(180,33,42,0.28)]"
       type="button"
       :aria-expanded="isOpen"
       aria-label="AI 챗봇 열기"
       @click="toggleChat"
     >
-      <span class="ai-chat-fab-face" aria-hidden="true">
-        <span></span>
+      <span
+        class="ai-chat-fab-face relative grid h-10 w-10 place-items-center rounded-2xl border-2 border-white"
+        aria-hidden="true"
+      >
+        <span class="h-2 w-2 rounded-full bg-white shadow-[14px_0_0_#fff]"></span>
       </span>
       <strong>AI</strong>
     </button>
   </section>
 </template>
+
+<style scoped>
+.ai-chat-panel-enter-active,
+.ai-chat-panel-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.ai-chat-panel-enter-from,
+.ai-chat-panel-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
+}
+</style>

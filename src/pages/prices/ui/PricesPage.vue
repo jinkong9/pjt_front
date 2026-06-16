@@ -151,6 +151,17 @@ function getLatLng(trade) {
   return { latitude, longitude }
 }
 
+function focusMap(point, level = 3) {
+  if (!point || !kakaoMap || !window.kakao?.maps) return
+  const position = new window.kakao.maps.LatLng(point.latitude, point.longitude)
+  kakaoMap.setLevel(level)
+  kakaoMap.panTo(position)
+}
+
+function shouldFocusSearchResult() {
+  return Boolean(condition.mode === 'search' || condition.keyword || condition.dongName)
+}
+
 async function loadKakaoSdk() {
   if (window.kakao?.maps?.load) {
     return window.kakao
@@ -208,11 +219,19 @@ async function renderMap() {
       })
       kakao.maps.event.addListener(marker, 'click', () => {
         selectedTrade.value = trade
+        selectedTab.value = 'detail'
+        focusMap(point, 3)
       })
       markers.push(marker)
       markerBounds.extend(position)
     })
-    if (visibleTrades.length) {
+    const selectedPoint = selectedTrade.value ? getLatLng(selectedTrade.value) : null
+    const firstSearchPoint = visibleTrades.length ? getLatLng(visibleTrades[0]) : null
+    if (selectedPoint) {
+      focusMap(selectedPoint, 3)
+    } else if (shouldFocusSearchResult() && firstSearchPoint) {
+      focusMap(firstSearchPoint, 4)
+    } else if (visibleTrades.length) {
       kakaoMap.setBounds(markerBounds)
     } else {
       kakaoMap.setCenter(fallbackCenter)
@@ -248,10 +267,7 @@ async function onGugunChange() {
 function openDetail(trade) {
   selectedTrade.value = trade
   selectedTab.value = 'detail'
-  const point = getLatLng(trade)
-  if (point && kakaoMap && window.kakao?.maps) {
-    kakaoMap.panTo(new window.kakao.maps.LatLng(point.latitude, point.longitude))
-  }
+  focusMap(getLatLng(trade), 3)
 }
 
 async function logout() {
@@ -268,7 +284,6 @@ onMounted(async () => {
   await loadRegions()
   await loadDependentRegions()
   await loadTrades()
-  await renderMap()
 })
 
 onBeforeUnmount(() => {
@@ -313,7 +328,7 @@ watch(trades, () => {
       </div>
     </header>
 
-    <main class="relative h-screen">
+    <main class="price-map-shell relative h-screen">
       <section id="map" class="absolute inset-0 bg-neutral-300">
         <div
           ref="mapEl"
@@ -325,7 +340,7 @@ watch(trades, () => {
       ></div>
 
       <aside
-        class="absolute bottom-0 left-0 top-20 z-20 flex w-full max-w-[520px] flex-col bg-white/95 shadow-2xl backdrop-blur md:m-6 md:top-24 md:max-h-[calc(100vh-7.5rem)] md:border md:border-white/70"
+        class="price-search-panel absolute bottom-0 left-0 top-20 z-20 flex w-full flex-col bg-white/95 shadow-2xl backdrop-blur md:border md:border-white/70"
       >
         <section class="border-b border-neutral-200 p-5">
           <p class="text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
@@ -474,3 +489,24 @@ watch(trades, () => {
     </main>
   </div>
 </template>
+
+<style scoped>
+.price-map-shell {
+  --price-panel-width: min(520px, calc((100vw - 48px) / 2));
+}
+
+.price-search-panel {
+  max-width: var(--price-panel-width);
+}
+
+@media (min-width: 768px) {
+  .price-search-panel {
+    top: 6rem;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    width: var(--price-panel-width);
+    max-width: none;
+    max-height: calc(100vh - 7.5rem);
+  }
+}
+</style>

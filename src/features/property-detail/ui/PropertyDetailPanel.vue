@@ -103,7 +103,7 @@ async function loadAnalysis() {
 <template>
   <aside
     data-testid="property-detail-panel"
-    class="absolute bottom-0 left-0 top-20 z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:bottom-6 md:left-[568px] md:top-24 md:w-[430px] md:border md:border-neutral-200"
+    class="property-detail-panel absolute bottom-0 left-0 top-20 z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:border md:border-neutral-200"
   >
     <header class="border-b border-neutral-200 p-5">
       <div class="flex items-start justify-between gap-4">
@@ -216,6 +216,20 @@ async function loadAnalysis() {
 </template>
 
 <style scoped>
+.property-detail-panel {
+  max-width: var(--price-panel-width, 520px);
+}
+
+@media (min-width: 768px) {
+  .property-detail-panel {
+    top: 6rem;
+    bottom: 1.5rem;
+    left: calc(1.5rem + var(--price-panel-width, 520px));
+    width: var(--price-panel-width, 520px);
+    max-width: none;
+  }
+}
+
 .property-icon-button {
   display: grid;
   width: 40px;

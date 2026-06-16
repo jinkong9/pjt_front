@@ -78,23 +78,39 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="shell page-shell">
-    <div class="section-head">
+  <main class="shell page-shell mx-auto w-[min(1480px,calc(100%_-_48px))] py-28">
+    <div class="section-head mb-8 flex items-end justify-between gap-6">
       <div>
-        <p class="eyebrow">LH Calendar</p>
-        <h1 class="page-title">LH 캘린더</h1>
-        <p class="muted">공고일, 접수 시작, 접수 마감, 마감일을 월간 일정으로 확인합니다.</p>
+        <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">LH Calendar</p>
+        <h1 class="page-title mt-3 max-w-4xl text-[clamp(42px,6vw,76px)] font-black leading-none">
+          LH 캘린더
+        </h1>
+        <p class="muted mt-3 text-sm font-bold leading-7 text-neutral-500">
+          공고일, 접수 시작, 접수 마감, 마감일을 월간 일정으로 확인합니다.
+        </p>
       </div>
-      <div class="calendar-actions">
-        <button type="button" class="button danger" @click="moveMonth(-1)">이전</button>
-        <strong>{{ monthLabel }}</strong>
-        <button type="button" class="button primary" @click="moveMonth(1)">다음</button>
+      <div class="calendar-actions flex items-center gap-3">
+        <button
+          type="button"
+          class="button danger inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-white px-[18px] font-black text-[#b4212a]"
+          @click="moveMonth(-1)"
+        >
+          이전
+        </button>
+        <strong class="min-w-36 text-center text-xl font-black">{{ monthLabel }}</strong>
+        <button
+          type="button"
+          class="button primary inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] font-black text-white"
+          @click="moveMonth(1)"
+        >
+          다음
+        </button>
       </div>
     </div>
 
     <LoadingState v-if="loading" />
-    <section v-else class="panel calendar-panel">
-      <div class="calendar-weekdays">
+    <section v-else class="panel calendar-panel border border-neutral-200 bg-white p-6">
+      <div class="calendar-weekdays grid grid-cols-7 border-b border-neutral-200 pb-3 text-center text-xs font-black text-neutral-500">
         <span>일</span>
         <span>월</span>
         <span>화</span>
@@ -103,22 +119,22 @@ onMounted(() => {
         <span>금</span>
         <span>토</span>
       </div>
-      <div class="calendar-grid">
+      <div class="calendar-grid mt-3 grid grid-cols-7 gap-px bg-neutral-200">
         <article
           v-for="day in calendarDays"
           :key="day.key"
-          class="calendar-day"
-          :class="{ muted: !day.inMonth }"
+          class="calendar-day min-h-36 bg-white p-3"
+          :class="{ 'muted bg-[#f7f4ef] text-neutral-400': !day.inMonth }"
         >
-          <strong>{{ day.day }}</strong>
-          <div class="calendar-events">
+          <strong class="text-sm font-black">{{ day.day }}</strong>
+          <div class="calendar-events mt-3 grid gap-1.5">
             <RouterLink
               v-for="event in day.events"
               :key="`${event.type}-${event.notice.rentalNoticeId}`"
-              class="calendar-event"
+              class="calendar-event grid gap-1 bg-[#fff1f2] p-2 text-xs font-black leading-4 text-[#b4212a]"
               :to="`/rentals/${event.notice.rentalNoticeId}`"
             >
-              <span>{{ event.type }}</span>
+              <span class="text-[10px] uppercase tracking-[0.12em] text-[#b4212a]/70">{{ event.type }}</span>
               {{ event.notice.title }}
             </RouterLink>
           </div>
