@@ -44,6 +44,18 @@ lerna-debug.log*
 # Generated review artifacts
 .design-review/
 .superpowers/
+.gstack/
+.agents/
+docs/superpowers/
+codex-*.log
+codex-*.tmp
+codex-*.temp
+codex-clipboard-*
+gstack-*.log
+gstack-*.json
+gstack-*.jsonl
+design-audit-*/
+design-baseline.json
 
 # Editor directories and files
 .vscode/*

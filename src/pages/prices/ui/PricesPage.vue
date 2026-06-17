@@ -21,6 +21,7 @@ let kakaoMap = null
 let markerBounds = null
 let kakaoSdkPromise = null
 const markers = []
+const defaultMapLevel = 6
 const defaultPriceCondition = {
   mode: 'region',
   keyword: '',
@@ -167,26 +168,25 @@ async function loadKakaoSdk() {
     return window.kakao
   }
   if (!kakaoSdkPromise) {
-    kakaoSdkPromise = api.get('/config').then(({ data }) => {
-      const appKey = data.kakaoJavascriptKey
+    kakaoSdkPromise = new Promise((resolve, reject) => {
+      const appKey = import.meta.env.OPENAPI_KAKAO_JAVASCRIPT_KEY
       if (!appKey) {
-        throw new Error('Kakao JavaScript key is empty')
+        reject(new Error('Kakao JavaScript key is empty'))
+        return
       }
-      return new Promise((resolve, reject) => {
-        const existing = document.getElementById('kakao-map-sdk')
-        if (existing) {
-          existing.addEventListener('load', resolve, { once: true })
-          existing.addEventListener('error', reject, { once: true })
-          return
-        }
-        const script = document.createElement('script')
-        script.id = 'kakao-map-sdk'
-        script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services&autoload=false`
-        script.async = true
-        script.onload = resolve
-        script.onerror = reject
-        document.head.appendChild(script)
-      })
+      const existing = document.getElementById('kakao-map-sdk')
+      if (existing) {
+        existing.addEventListener('load', resolve, { once: true })
+        existing.addEventListener('error', reject, { once: true })
+        return
+      }
+      const script = document.createElement('script')
+      script.id = 'kakao-map-sdk'
+      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services&autoload=false`
+      script.async = true
+      script.onload = resolve
+      script.onerror = reject
+      document.head.appendChild(script)
     })
   }
   await kakaoSdkPromise
@@ -203,7 +203,7 @@ async function renderMap() {
     if (!kakaoMap) {
       kakaoMap = new kakao.maps.Map(mapEl.value, {
         center: fallbackCenter,
-        level: 6,
+        level: defaultMapLevel,
       })
     }
     clearMarkers()
@@ -235,11 +235,12 @@ async function renderMap() {
       kakaoMap.setBounds(markerBounds)
     } else {
       kakaoMap.setCenter(fallbackCenter)
+      kakaoMap.setLevel(defaultMapLevel)
     }
     mapMessage.value = ''
   } catch {
     mapMessage.value =
-      'Kakao 지도를 불러오지 못했습니다. 백엔드 .env의 OPENAPI_KAKAO_JAVASCRIPT_KEY와 Kakao Web 플랫폼 도메인을 확인하세요.'
+      'Kakao 지도를 불러오지 못했습니다. 프론트 .env의 OPENAPI_KAKAO_JAVASCRIPT_KEY와 Kakao Web 플랫폼 도메인을 확인하세요.'
   }
 }
 
@@ -353,10 +354,7 @@ watch(trades, () => {
               class="h-12 w-full border-neutral-300 text-sm font-bold"
               placeholder="아파트명 또는 지역명을 입력하세요"
             />
-            <div
-              class="grid grid-cols-2 gap-2"
-              style="grid-template-columns: repeat(2, minmax(0, 1fr))"
-            >
+            <div class="grid !grid-cols-2 gap-2">
               <select
                 v-model="condition.sidoName"
                 class="h-11 border-neutral-300 text-sm font-bold"
@@ -393,7 +391,7 @@ watch(trades, () => {
                 placeholder="거래연도"
               />
             </div>
-            <div class="grid grid-cols-[1fr_auto] gap-2" style="grid-template-columns: 1fr auto">
+            <div class="grid !grid-cols-[1fr_auto] gap-2">
               <input
                 v-model="condition.limit"
                 type="number"

@@ -59,297 +59,100 @@ async function login() {
 </script>
 
 <template>
-  <main class="login-page">
-    <section class="login-card">
-      <div class="login-form-pane">
-        <p class="login-eyebrow">Login</p>
-        <h1>로그인</h1>
-        <p v-if="error || oauthSetupMessage" class="alert error">{{ error || oauthSetupMessage }}</p>
-        <form class="auth-form login-form" @submit.prevent="login">
-          <label>이메일 <input v-model="form.email" type="email" required /></label>
-          <label>비밀번호 <input v-model="form.password" type="password" required /></label>
-          <button type="submit" class="login-submit">로그인</button>
+  <main
+    class="grid min-h-[calc(100svh-80px)] items-center bg-[#f4f0ea] px-6 py-[clamp(28px,4.8vh,56px)] max-[899px]:min-h-[calc(100svh-72px)] max-[899px]:px-4 max-[899px]:pb-10 max-[899px]:pt-6"
+  >
+    <section
+      data-testid="login-card"
+      class="mx-auto grid min-h-[min(620px,calc(100svh-132px))] w-[min(1040px,calc(100vw-48px))] grid-cols-[minmax(0,1fr)_minmax(360px,0.95fr)] overflow-hidden border border-[#e0ddd7] bg-white shadow-[0_22px_58px_rgba(23,23,23,0.12)] max-[899px]:min-h-0 max-[899px]:grid-cols-1"
+    >
+      <div
+        class="grid w-[min(100%,460px)] content-center justify-self-center px-12 py-[52px] max-[899px]:w-full max-[899px]:px-6 max-[899px]:py-[34px]"
+      >
+        <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Login</p>
+        <h1 class="mt-4 text-[clamp(38px,4vw,48px)] font-normal leading-none">로그인</h1>
+        <p
+          v-if="error || oauthSetupMessage"
+          class="mt-4 border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700"
+        >
+          {{ error || oauthSetupMessage }}
+        </p>
+        <form class="mt-[26px] grid gap-3.5" @submit.prevent="login">
+          <label class="grid gap-2 text-sm font-black text-[#171717]">
+            이메일
+            <input
+              v-model="form.email"
+              type="email"
+              required
+              class="min-h-12 border border-[#bdbdbd] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
+            />
+          </label>
+          <label class="grid gap-2 text-sm font-black text-[#171717]">
+            비밀번호
+            <input
+              v-model="form.password"
+              type="password"
+              required
+              class="min-h-12 border border-[#bdbdbd] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
+            />
+          </label>
+          <button
+            type="submit"
+            class="mt-0.5 min-h-[52px] border border-[#b4212a] bg-[#b4212a] font-black text-white hover:border-[#921b22] hover:bg-[#921b22]"
+          >
+            로그인
+          </button>
         </form>
-        <div class="oauth-panel login-oauth" aria-label="Social Login">
-          <span>Social Login</span>
-          <div class="oauth-actions">
+        <div class="mt-[22px] border-t border-neutral-200 pt-5" aria-label="Social Login">
+          <span class="block text-xs font-black uppercase tracking-[0.18em] text-[#666666]"
+            >Social Login</span
+          >
+          <div class="mt-3 grid !grid-cols-3 gap-2">
             <a
               v-for="provider in oauthProviders"
               :key="provider.id"
-              class="login-oauth-button"
-              :class="provider.id"
+              :data-testid="`oauth-${provider.id}`"
+              class="inline-flex min-h-[46px] cursor-pointer items-center justify-center gap-2 border px-3 text-[13px] font-black no-underline"
+              :class="{
+                'border-[#fee500] bg-[#fee500] text-[#171717]': provider.id === 'kakao',
+                'border-[#03c75a] bg-[#03c75a] text-white': provider.id === 'naver',
+                'border-[#d4d4d4] bg-white text-[#171717]': provider.id === 'google',
+              }"
               :href="oauthUrl(provider.id)"
               :title="provider.title"
             >
-              <span class="login-oauth-mark">{{ provider.label[0] }}</span>
+              <span
+                class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/70 text-[11px] font-black"
+                :class="{ 'border border-[#e0e0e0] text-[#4285f4]': provider.id === 'google' }"
+              >
+                {{ provider.label[0] }}
+              </span>
               {{ provider.label }}
             </a>
           </div>
         </div>
-        <div class="login-links">
-          <RouterLink to="/register">회원가입</RouterLink>
-          <RouterLink to="/home">홈으로</RouterLink>
+        <div class="mt-[22px] flex flex-wrap justify-between gap-3 text-sm font-black">
+          <RouterLink class="text-[#b4212a]" to="/register">회원가입</RouterLink>
+          <RouterLink class="text-[#b4212a]" to="/home">홈으로</RouterLink>
         </div>
       </div>
-      <aside class="login-welcome-pane">
-        <p class="login-welcome-eyebrow">Welcome Back</p>
-        <h2>다시 만나서 반가워요</h2>
-        <p>관심 매물과 주거 정보를 이어서 확인하세요.</p>
-        <RouterLink class="login-register-button" to="/register">계정이 없나요?</RouterLink>
+      <aside
+        class="grid content-center justify-items-center gap-[18px] bg-[linear-gradient(180deg,rgba(23,23,23,0.9),rgba(23,23,23,0.82)),url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center px-10 py-12 text-center text-white max-[899px]:order-[-1] max-[899px]:min-h-[220px] max-[899px]:px-6 max-[899px]:py-[34px]"
+      >
+        <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-white/75">Welcome Back</p>
+        <h2 class="m-0 text-[clamp(28px,3vw,36px)] font-normal leading-[1.08] text-white">
+          다시 만나서 반가워요
+        </h2>
+        <p class="m-0 max-w-xs text-[15px] font-extrabold leading-[1.7] text-white/80">
+          관심 매물과 주거 정보를 이어서 확인하세요.
+        </p>
+        <RouterLink
+          class="mt-1 inline-flex min-h-[42px] items-center justify-center border border-white/80 bg-white/10 px-[22px] text-sm font-black text-white"
+          to="/register"
+        >
+          계정이 없나요?
+        </RouterLink>
       </aside>
     </section>
   </main>
 </template>
-
-<style scoped>
-.login-page {
-  display: grid;
-  min-height: calc(100svh - 80px);
-  align-items: center;
-  padding: clamp(28px, 4.8vh, 56px) 24px;
-  background: #f4f0ea;
-}
-
-.login-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.95fr);
-  width: min(1040px, calc(100vw - 48px));
-  min-height: min(620px, calc(100svh - 132px));
-  margin: 0 auto;
-  overflow: hidden;
-  border: 1px solid #e0ddd7;
-  background: #ffffff;
-  box-shadow: 0 22px 58px rgba(23, 23, 23, 0.12);
-}
-
-.login-form-pane {
-  display: grid;
-  width: min(100%, 460px);
-  align-content: center;
-  justify-self: center;
-  padding: 52px 48px;
-}
-
-.login-eyebrow,
-.login-welcome-eyebrow {
-  margin: 0;
-  color: #b4212a;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-}
-
-.login-form-pane h1 {
-  margin: 16px 0 0;
-  font-size: clamp(38px, 4vw, 48px);
-  font-weight: 400;
-  line-height: 1;
-}
-
-.login-form {
-  display: grid;
-  gap: 14px;
-  margin-top: 26px;
-}
-
-.login-form label {
-  display: grid;
-  gap: 8px;
-  color: #171717;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.login-form input {
-  min-height: 48px;
-  border: 1px solid #d4d4d4;
-  border-radius: 0;
-  background: #ffffff;
-  color: #171717;
-  padding: 0 14px;
-  font: inherit;
-  outline: none;
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.login-form input:focus {
-  border-color: #b4212a;
-  box-shadow: 0 0 0 3px rgba(180, 33, 42, 0.12);
-}
-
-.login-submit {
-  min-height: 52px;
-  margin-top: 2px;
-  border: 1px solid #b4212a;
-  background: #b4212a;
-  color: #ffffff;
-  font-weight: 900;
-}
-
-.login-submit:hover {
-  border-color: #921b22;
-  background: #921b22;
-}
-
-.login-oauth {
-  margin-top: 22px;
-  border-top: 1px solid #e5e5e5;
-  padding-top: 20px;
-}
-
-.login-oauth > span {
-  display: block;
-  color: #666666;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.login-oauth .oauth-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.login-oauth-button {
-  display: inline-flex;
-  min-height: 46px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #d4d4d4;
-  background: #ffffff;
-  color: #171717;
-  gap: 8px;
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 900;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.login-oauth-mark {
-  display: inline-flex;
-  width: 20px;
-  height: 20px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.login-oauth-button.kakao {
-  border-color: #fee500;
-  background: #fee500;
-  color: #171717;
-}
-
-.login-oauth-button.naver {
-  border-color: #03c75a;
-  background: #03c75a;
-  color: #ffffff;
-}
-
-.login-oauth-button.google {
-  border-color: #d4d4d4;
-  background: #ffffff;
-  color: #171717;
-}
-
-.login-oauth-button.google .login-oauth-mark {
-  border: 1px solid #e0e0e0;
-  color: #4285f4;
-}
-
-.login-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 22px;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.login-links a {
-  color: #b4212a;
-}
-
-.login-welcome-pane {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 18px;
-  padding: 48px 40px;
-  background:
-    linear-gradient(180deg, rgba(23, 23, 23, 0.9), rgba(23, 23, 23, 0.82)),
-    url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80')
-      center/cover;
-  color: #ffffff;
-  text-align: center;
-}
-
-.login-welcome-eyebrow {
-  color: rgba(255, 255, 255, 0.74);
-}
-
-.login-welcome-pane h2 {
-  margin: 0;
-  color: #ffffff;
-  font-size: clamp(28px, 3vw, 36px);
-  font-weight: 400;
-  line-height: 1.08;
-}
-
-.login-welcome-pane p:not(.login-welcome-eyebrow) {
-  max-width: 320px;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1.7;
-}
-
-.login-register-button {
-  display: inline-flex;
-  min-height: 42px;
-  align-items: center;
-  justify-content: center;
-  margin-top: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  padding: 0 22px;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-@media (max-width: 899px) {
-  .login-page {
-    min-height: calc(100svh - 72px);
-    padding: 24px 16px 40px;
-  }
-
-  .login-card {
-    grid-template-columns: 1fr;
-    min-height: 0;
-  }
-
-  .login-form-pane {
-    width: 100%;
-    padding: 34px 24px;
-  }
-
-  .login-welcome-pane {
-    order: -1;
-    min-height: 220px;
-    padding: 34px 24px;
-  }
-}
-</style>

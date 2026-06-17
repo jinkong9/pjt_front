@@ -20,7 +20,10 @@ function isNegative(value) {
 
 <template>
   <div class="space-y-4 pb-3">
-    <section data-testid="readiness-card" class="loan-readiness-card">
+    <section
+      data-testid="readiness-card"
+      class="rounded-[18px] border border-[#f0c9cc] bg-[linear-gradient(135deg,#fff8f8_0%,#f8eee8_100%)] p-5"
+    >
       <div class="flex items-center justify-between gap-3">
         <p class="text-xs font-black uppercase tracking-[0.16em] text-[#b4212a]">내 집 마련 가능성</p>
         <span class="rounded-full bg-white px-3 py-1 text-[11px] font-black text-[#b4212a]">
@@ -34,7 +37,7 @@ function isNegative(value) {
       <p class="mt-2 text-xs font-bold text-neutral-500">목표 예상기간 · {{ duration(analysis.readiness.monthsToTarget) }}</p>
     </section>
 
-    <div class="grid grid-cols-2 gap-2">
+    <div class="grid !grid-cols-2 gap-2">
       <div v-for="item in [
         ['총 필요자금', analysis.cost.totalRequiredFunds],
         ['현재 보유자산', analysis.cost.availableAssets],
@@ -84,12 +87,3 @@ function isNegative(value) {
     <p class="text-[11px] leading-5 text-neutral-500">{{ analysis.disclaimer }}</p>
   </div>
 </template>
-
-<style scoped>
-.loan-readiness-card {
-  border: 1px solid #f0c9cc;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #fff8f8 0%, #f8eee8 100%);
-  padding: 20px;
-}
-</style>

@@ -105,7 +105,10 @@ watch(() => props.trade.no, loadAnalysis, { immediate: true })
             analysis.score.level
           }}</span>
         </div>
-        <div class="mt-4 grid grid-cols-2 gap-2">
+        <div
+          data-testid="score-grid"
+          class="mt-4 grid !grid-cols-2 gap-2"
+        >
           <div
             v-for="[label, value] in [
               ['종합 점수', analysis.score.total],
@@ -127,7 +130,9 @@ watch(() => props.trade.no, loadAnalysis, { immediate: true })
 
       <section class="border border-neutral-200 bg-white p-4">
         <h3 class="text-base font-black">상권 요약</h3>
-        <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+        <dl
+          class="mt-3 grid !grid-cols-2 gap-x-4 gap-y-3 text-sm"
+        >
           <div
             v-for="[label, value] in [
               ['전체 시설', analysis.commercialSummary.totalCount],
@@ -168,7 +173,7 @@ watch(() => props.trade.no, loadAnalysis, { immediate: true })
 
       <section class="border border-neutral-200 bg-white p-4">
         <h3 class="text-base font-black">교통 위험 요약</h3>
-        <dl class="mt-3 grid grid-cols-3 gap-2 text-center">
+        <dl class="mt-3 grid !grid-cols-3 gap-2 text-center">
           <div
             v-for="[label, value] in [
               ['교통 이벤트', analysis.trafficRiskSummary.eventCount],

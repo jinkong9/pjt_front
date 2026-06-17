@@ -114,25 +114,31 @@ async function loadAnalysis() {
         </div>
         <button
           data-testid="property-close"
-          class="property-icon-button"
+          class="grid min-h-10 w-10 flex-[0_0_40px] place-items-center rounded-xl border border-[#d4d4d4] bg-white p-0 text-[#404040] hover:border-[#b4212a] hover:bg-[#fff7f7] hover:text-[#b4212a]"
           aria-label="상세 패널 닫기"
           @click="$emit('close')"
         >
           <span class="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
-      <nav class="mt-5 grid grid-cols-2 gap-2">
+      <nav class="mt-5 grid !grid-cols-2 gap-2">
         <button
-          class="property-tab"
-          :class="{ 'property-tab-active': activeTab === 'detail' }"
+          class="min-h-11 rounded-t-xl border border-neutral-200 bg-[#fafafa] px-4 text-sm font-black text-neutral-500 hover:border-[#d7a0a4] hover:bg-[#fff7f7] hover:text-[#b4212a]"
+          :class="{
+            'border-[#b4212a] bg-[#fff1f2] text-[#b4212a] shadow-[inset_0_-3px_0_#b4212a]':
+              activeTab === 'detail',
+          }"
           @click="openDetailTab"
         >
           상세정보
         </button>
         <button
           data-testid="loan-tab"
-          class="property-tab"
-          :class="{ 'property-tab-active': activeTab === 'loan' }"
+          class="min-h-11 rounded-t-xl border border-neutral-200 bg-[#fafafa] px-4 text-sm font-black text-neutral-500 hover:border-[#d7a0a4] hover:bg-[#fff7f7] hover:text-[#b4212a]"
+          :class="{
+            'border-[#b4212a] bg-[#fff1f2] text-[#b4212a] shadow-[inset_0_-3px_0_#b4212a]':
+              activeTab === 'loan',
+          }"
           @click="openLoanTab"
         >
           대출 계산
@@ -146,7 +152,7 @@ async function loadAnalysis() {
           <p class="text-xs font-black text-neutral-500">거래 가격</p>
           <strong class="mt-2 block text-3xl text-[#b4212a]">{{ trade.dealAmount }}만원</strong>
         </div>
-        <dl class="grid grid-cols-2 gap-4 text-sm">
+        <dl class="grid !grid-cols-2 gap-4 text-sm">
           <div>
             <dt class="text-xs font-black text-neutral-500">전용면적</dt>
             <dd class="mt-1 font-bold">{{ trade.exclusiveArea }}㎡</dd>
