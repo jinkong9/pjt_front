@@ -8,6 +8,7 @@ defineProps({
 </script>
 
 <template>
-  <p class="panel muted">{{ message }}</p>
+  <p class="panel muted border border-neutral-200 bg-white p-6 text-sm font-bold text-neutral-500">
+    {{ message }}
+  </p>
 </template>
-

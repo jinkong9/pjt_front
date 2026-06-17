@@ -91,33 +91,45 @@ async function analyze() {
 </script>
 
 <template>
-  <main class="shell page-shell">
-    <div class="section-head">
+  <main class="shell page-shell mx-auto w-[min(1480px,calc(100%_-_48px))] py-28">
+    <div class="section-head mb-8 flex items-end justify-between gap-6">
       <div>
-        <p class="eyebrow">Life Analysis</p>
-        <h1 class="page-title">생활권 분석</h1>
-        <p class="muted">동네 이름과 생활 반경만 고르면 상권과 교통 환경을 빠르게 비교합니다.</p>
+        <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
+          Life Analysis
+        </p>
+        <h1 class="page-title mt-3 max-w-4xl text-[clamp(42px,6vw,76px)] font-black leading-none">
+          생활권 분석
+        </h1>
+        <p class="muted mt-3 text-sm font-bold leading-7 text-neutral-500">
+          동네 이름과 생활 반경만 고르면 상권과 교통 환경을 빠르게 비교합니다.
+        </p>
       </div>
     </div>
 
-    <section class="analysis-workspace">
-      <article class="panel analysis-quick-form">
-        <p class="eyebrow">Start</p>
-        <h2>어디를 볼까요?</h2>
-        <form class="analysis-form" @submit.prevent="analyze">
-          <label>
+    <section class="analysis-workspace grid grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] gap-5">
+      <article class="panel analysis-quick-form border border-neutral-200 bg-white p-6">
+        <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Start</p>
+        <h2 class="mt-2 text-[34px] font-black text-[#171717]">어디를 볼까요?</h2>
+        <form class="analysis-form mt-6 grid gap-4" @submit.prevent="analyze">
+          <label class="grid gap-2 text-sm font-black">
             <span>동네 이름</span>
-            <input v-model="form.label" placeholder="예: 관악구 봉천동" required />
+            <input
+              v-model="form.label"
+              class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold text-[#171717] outline-0"
+              placeholder="예: 관악구 봉천동"
+              required
+            />
           </label>
 
-          <div class="analysis-option-group">
-            <span>생활 반경</span>
-            <div class="analysis-segments">
+          <div class="analysis-option-group grid gap-2">
+            <span class="text-sm font-black">생활 반경</span>
+            <div class="analysis-segments grid grid-cols-3 gap-2">
               <button
                 v-for="option in radiusOptions"
                 :key="option.value"
                 type="button"
-                :class="{ active: form.radius === option.value }"
+                class="min-h-11 border border-neutral-200 bg-white px-3 text-sm font-black text-[#171717]"
+                :class="{ 'active border-[#b4212a] bg-[#b4212a] text-white': form.radius === option.value }"
                 @click="form.radius = option.value"
               >
                 {{ option.label }}
@@ -125,14 +137,15 @@ async function analyze() {
             </div>
           </div>
 
-          <div class="analysis-option-group">
-            <span>중요한 기준</span>
-            <div class="analysis-segments">
+          <div class="analysis-option-group grid gap-2">
+            <span class="text-sm font-black">중요한 기준</span>
+            <div class="analysis-segments grid grid-cols-3 gap-2">
               <button
                 v-for="option in priorityOptions"
                 :key="option.value"
                 type="button"
-                :class="{ active: form.priority === option.value }"
+                class="min-h-11 border border-neutral-200 bg-white px-3 text-sm font-black text-[#171717]"
+                :class="{ 'active border-[#b4212a] bg-[#b4212a] text-white': form.priority === option.value }"
                 @click="form.priority = option.value"
               >
                 {{ option.label }}
@@ -140,84 +153,120 @@ async function analyze() {
             </div>
           </div>
 
-          <details class="analysis-advanced">
-            <summary>고급 좌표 설정</summary>
-            <div class="analysis-coordinate-grid">
-              <label>
+          <details class="analysis-advanced border border-neutral-200 bg-[#f7f4ef] p-4">
+            <summary class="cursor-pointer text-sm font-black">고급 좌표 설정</summary>
+            <div class="analysis-coordinate-grid mt-4 grid grid-cols-2 gap-3">
+              <label class="grid gap-2 text-sm font-black">
                 <span>경도</span>
-                <input v-model.number="form.longitude" type="number" step="0.0001" />
+                <input
+                  v-model.number="form.longitude"
+                  class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold text-[#171717] outline-0"
+                  type="number"
+                  step="0.0001"
+                />
               </label>
-              <label>
+              <label class="grid gap-2 text-sm font-black">
                 <span>위도</span>
-                <input v-model.number="form.latitude" type="number" step="0.0001" />
+                <input
+                  v-model.number="form.latitude"
+                  class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold text-[#171717] outline-0"
+                  type="number"
+                  step="0.0001"
+                />
               </label>
             </div>
           </details>
 
-          <button type="submit" class="button primary">{{ loading ? '분석 중' : '분석하기' }}</button>
+          <button
+            type="submit"
+            class="button primary inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] font-black text-white"
+          >
+            {{ loading ? '분석 중' : '분석하기' }}
+          </button>
         </form>
 
-        <div class="analysis-presets">
-          <span>빠른 선택</span>
-          <button v-for="preset in presets" :key="preset.label" type="button" @click="applyPreset(preset)">
+        <div class="analysis-presets mt-5 flex flex-wrap items-center gap-2">
+          <span class="text-xs font-black uppercase tracking-[0.14em] text-neutral-500">빠른 선택</span>
+          <button
+            v-for="preset in presets"
+            :key="preset.label"
+            type="button"
+            class="min-h-9 border border-neutral-200 bg-white px-3 text-xs font-black text-[#171717]"
+            @click="applyPreset(preset)"
+          >
             {{ preset.label }}
           </button>
         </div>
       </article>
 
-      <article class="panel analysis-preview">
-        <p class="eyebrow">Result</p>
+      <article
+        class="panel analysis-preview grid content-center border border-neutral-200 bg-[#171717] p-8 text-white"
+      >
+        <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-white/70">Result</p>
         <template v-if="analysis">
-          <strong>{{ analysis.score.total }}</strong>
-          <h2>{{ resultSummary }}</h2>
-          <p class="muted">{{ form.label }} · {{ analysis.radiusMeters }}m 기준 · {{ analysis.score.level }}</p>
+          <strong class="mt-6 text-7xl font-black text-[#b4212a]">{{ analysis.score.total }}</strong>
+          <h2 class="mt-4 text-3xl font-black text-white">{{ resultSummary }}</h2>
+          <p class="muted mt-3 text-sm font-bold leading-7 text-white/70">
+            {{ form.label }} · {{ analysis.radiusMeters }}m 기준 · {{ analysis.score.level }}
+          </p>
         </template>
         <template v-else>
-          <strong>?</strong>
-          <h2>분석 결과가 여기에 표시됩니다</h2>
-          <p class="muted">동네를 입력하고 분석하기를 누르면 상권과 교통 정보를 한눈에 보여드려요.</p>
+          <strong class="mt-6 text-7xl font-black text-[#b4212a]">?</strong>
+          <h2 class="mt-4 text-3xl font-black text-white">분석 결과가 여기에 표시됩니다</h2>
+          <p class="muted mt-3 text-sm font-bold leading-7 text-white/70">
+            동네를 입력하고 분석하기를 누르면 상권과 교통 정보를 한눈에 보여드려요.
+          </p>
         </template>
       </article>
     </section>
 
-    <section v-if="analysis" class="analysis-result-grid">
-      <article class="panel metric analysis-metric">
-        <p class="eyebrow">상권</p>
-        <strong>{{ analysis.commercialSummary.totalCount }}</strong>
-        <span>주변 편의시설</span>
+    <section v-if="analysis" class="analysis-result-grid mt-5 grid grid-cols-3 gap-4">
+      <article class="panel metric analysis-metric border border-neutral-200 bg-white p-6">
+        <p class="eyebrow text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">상권</p>
+        <strong class="mt-3 block text-4xl font-black">{{ analysis.commercialSummary.totalCount }}</strong>
+        <span class="text-sm font-bold text-neutral-500">주변 편의시설</span>
       </article>
-      <article class="panel metric analysis-metric">
-        <p class="eyebrow">교통</p>
-        <strong>{{ analysis.trafficRiskSummary.eventCount }}</strong>
-        <span>{{ analysis.trafficRiskSummary.riskLevel }}</span>
+      <article class="panel metric analysis-metric border border-neutral-200 bg-white p-6">
+        <p class="eyebrow text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">교통</p>
+        <strong class="mt-3 block text-4xl font-black">{{ analysis.trafficRiskSummary.eventCount }}</strong>
+        <span class="text-sm font-bold text-neutral-500">{{ analysis.trafficRiskSummary.riskLevel }}</span>
       </article>
-      <article class="panel metric analysis-metric">
-        <p class="eyebrow">반경</p>
-        <strong>{{ analysis.radiusMeters }}</strong>
-        <span>meter</span>
+      <article class="panel metric analysis-metric border border-neutral-200 bg-white p-6">
+        <p class="eyebrow text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">반경</p>
+        <strong class="mt-3 block text-4xl font-black">{{ analysis.radiusMeters }}</strong>
+        <span class="text-sm font-bold text-neutral-500">meter</span>
       </article>
     </section>
 
-    <section v-if="analysis" class="split analysis-lists">
-      <article class="panel">
-        <h2>가까운 생활 시설</h2>
-        <ul class="clean-list">
-          <li v-for="place in analysis.places" :key="`${place.name}-${place.address}`">
-            <strong>{{ place.name }}</strong>
-            <span>{{ place.largeCategory }} / {{ place.middleCategory }} · {{ place.address }}</span>
+    <section v-if="analysis" class="split analysis-lists mt-5 grid grid-cols-2 gap-5">
+      <article class="panel border border-neutral-200 bg-white p-6">
+        <h2 class="text-[34px] font-black text-[#171717]">가까운 생활 시설</h2>
+        <ul class="clean-list mt-4 grid gap-4">
+          <li
+            v-for="place in analysis.places"
+            :key="`${place.name}-${place.address}`"
+            class="border-b border-neutral-100 pb-4 last:border-0"
+          >
+            <strong class="block font-black">{{ place.name }}</strong>
+            <span class="mt-1 block text-sm font-bold text-neutral-500"
+              >{{ place.largeCategory }} / {{ place.middleCategory }} · {{ place.address }}</span
+            >
           </li>
         </ul>
       </article>
-      <article class="panel">
-        <h2>교통 체크 포인트</h2>
-        <ul class="clean-list">
-          <li v-for="event in analysis.trafficEvents" :key="`${event.type}-${event.message}`">
-            <strong>{{ event.type }}</strong>
-            <span>{{ event.message }}</span>
+      <article class="panel border border-neutral-200 bg-white p-6">
+        <h2 class="text-[34px] font-black text-[#171717]">교통 체크 포인트</h2>
+        <ul class="clean-list mt-4 grid gap-4">
+          <li
+            v-for="event in analysis.trafficEvents"
+            :key="`${event.type}-${event.message}`"
+            class="border-b border-neutral-100 pb-4 last:border-0"
+          >
+            <strong class="block font-black">{{ event.type }}</strong>
+            <span class="mt-1 block text-sm font-bold text-neutral-500">{{ event.message }}</span>
           </li>
         </ul>
       </article>
     </section>
   </main>
 </template>
-

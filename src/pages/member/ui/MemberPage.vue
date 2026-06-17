@@ -77,51 +77,91 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="shell page-shell">
-    <section v-if="!memberStore.isLoggedIn" class="panel">
-      <p class="eyebrow">Member</p>
-      <h1 class="page-title">로그인이 필요합니다</h1>
-      <RouterLink class="button primary" to="/login">로그인</RouterLink>
+  <main class="shell page-shell mx-auto w-[min(1480px,calc(100%_-_48px))] py-28">
+    <section v-if="!memberStore.isLoggedIn" class="panel border border-neutral-200 bg-white p-6">
+      <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Member</p>
+      <h1 class="page-title mt-3 max-w-4xl text-[clamp(42px,6vw,76px)] font-black leading-none">
+        로그인이 필요합니다
+      </h1>
+      <RouterLink
+        class="button primary mt-6 inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] font-black text-white"
+        to="/login"
+        >로그인</RouterLink
+      >
     </section>
 
     <template v-else>
-      <div class="section-head">
+      <div class="section-head mb-8 flex items-end justify-between gap-6">
         <div>
-          <p class="eyebrow">My Page</p>
-          <h1 class="page-title">{{ memberStore.current.name }}님</h1>
-          <p class="muted">{{ memberStore.current.email }} · {{ memberStore.current.phone }}</p>
+          <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">My Page</p>
+          <h1 class="page-title mt-3 max-w-4xl text-[clamp(42px,6vw,76px)] font-black leading-none">
+            {{ memberStore.current.name }}님
+          </h1>
+          <p class="muted mt-3 text-sm font-bold leading-7 text-neutral-500">
+            {{ memberStore.current.email }} · {{ memberStore.current.phone }}
+          </p>
         </div>
       </div>
 
-      <section class="split">
-        <article class="panel">
-          <h2>회원 정보 수정</h2>
-          <p v-if="message" class="alert">{{ message }}</p>
-          <form class="auth-form" @submit.prevent="updateMe">
-            <label>새 비밀번호 <input v-model="form.password" type="password" placeholder="변경 시 입력" /></label>
-            <label>이름 <input v-model="form.name" required /></label>
-            <label>이메일 <input v-model="form.email" type="email" required /></label>
-            <label>전화번호 <input v-model="form.phone" required /></label>
-            <button type="submit">수정하기</button>
+      <section class="split grid grid-cols-2 gap-5">
+        <article class="panel border border-neutral-200 bg-white p-6">
+          <h2 class="text-[34px] font-black text-[#171717]">회원 정보 수정</h2>
+          <p v-if="message" class="alert mt-4 border border-emerald-200 bg-emerald-50 p-3 text-sm font-black text-emerald-700">
+            {{ message }}
+          </p>
+          <form class="auth-form mt-5 grid gap-4" @submit.prevent="updateMe">
+            <label class="grid gap-2 text-sm font-black"
+              >새 비밀번호
+              <input
+                v-model="form.password"
+                class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold outline-0"
+                type="password"
+                placeholder="변경 시 입력"
+              />
+            </label>
+            <label class="grid gap-2 text-sm font-black"
+              >이름
+              <input v-model="form.name" class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold outline-0" required />
+            </label>
+            <label class="grid gap-2 text-sm font-black"
+              >이메일
+              <input v-model="form.email" class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold outline-0" type="email" required />
+            </label>
+            <label class="grid gap-2 text-sm font-black"
+              >전화번호
+              <input v-model="form.phone" class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold outline-0" required />
+            </label>
+            <button
+              type="submit"
+              class="inline-flex min-h-11 items-center justify-center border border-[#171717] bg-[#171717] px-[18px] font-black text-white"
+            >
+              수정하기
+            </button>
           </form>
         </article>
 
-        <article class="panel">
-          <h2>관심 실거래</h2>
+        <article class="panel border border-neutral-200 bg-white p-6">
+          <h2 class="text-[34px] font-black text-[#171717]">관심 실거래</h2>
           <EmptyState v-if="!favorites.length" message="저장한 관심 실거래가 없습니다." />
-          <ul v-else class="clean-list">
-            <li v-for="deal in favorites" :key="deal.no">
-              <strong>{{ deal.aptName }}</strong>
-              <span>{{ deal.address }} · {{ deal.dealAmount }}만원</span>
+          <ul v-else class="clean-list mt-5 grid gap-4">
+            <li v-for="deal in favorites" :key="deal.no" class="border-b border-neutral-100 pb-4">
+              <strong class="block font-black">{{ deal.aptName }}</strong>
+              <span class="mt-1 block text-sm font-bold text-neutral-500"
+                >{{ deal.address }} · {{ deal.dealAmount }}만원</span
+              >
             </li>
           </ul>
         </article>
       </section>
 
-      <section v-if="financialProfileLoaded" class="panel mt-6">
-        <h2>금융 프로필</h2>
-        <p class="muted">실거래 지도 대출 계산에 사용할 자산과 상환 정보를 관리합니다.</p>
-        <p v-if="financialMessage" class="alert">{{ financialMessage }}</p>
+      <section v-if="financialProfileLoaded" class="panel mt-6 border border-neutral-200 bg-white p-6">
+        <h2 class="text-[34px] font-black text-[#171717]">금융 프로필</h2>
+        <p class="muted mt-2 text-sm font-bold leading-7 text-neutral-500">
+          실거래 지도 대출 계산에 사용할 자산과 상환 정보를 관리합니다.
+        </p>
+        <p v-if="financialMessage" class="alert mt-4 border border-emerald-200 bg-emerald-50 p-3 text-sm font-black text-emerald-700">
+          {{ financialMessage }}
+        </p>
         <div class="mt-5 max-w-xl">
           <FinancialProfileForm
             :initial-value="financialProfile"

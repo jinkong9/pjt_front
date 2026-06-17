@@ -103,7 +103,7 @@ async function loadAnalysis() {
 <template>
   <aside
     data-testid="property-detail-panel"
-    class="absolute bottom-0 left-0 top-20 z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:bottom-0 md:left-[544px] md:top-24 md:my-6 md:w-[430px] md:border md:border-neutral-200"
+    class="property-detail-panel absolute bottom-0 left-0 top-20 z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:border md:border-neutral-200"
   >
     <header class="border-b border-neutral-200 p-5">
       <div class="flex items-start justify-between gap-4">
@@ -220,3 +220,62 @@ async function loadAnalysis() {
     </div>
   </aside>
 </template>
+
+<style scoped>
+.property-detail-panel {
+  max-width: var(--price-panel-width, 520px);
+}
+
+@media (min-width: 768px) {
+  .property-detail-panel {
+    top: 6rem;
+    bottom: 1.5rem;
+    left: calc(1.5rem + var(--price-panel-width, 520px));
+    width: var(--price-panel-width, 520px);
+    max-width: none;
+  }
+}
+
+.property-icon-button {
+  display: grid;
+  width: 40px;
+  min-height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border: 1px solid #d4d4d4;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #404040;
+  padding: 0;
+}
+
+.property-icon-button:hover {
+  border-color: #b4212a;
+  background: #fff7f7;
+  color: #b4212a;
+}
+
+.property-tab {
+  min-height: 44px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px 12px 0 0;
+  background: #fafafa;
+  color: #737373;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.property-tab:hover {
+  border-color: #d7a0a4;
+  background: #fff7f7;
+  color: #b4212a;
+}
+
+.property-tab-active {
+  border-color: #b4212a;
+  background: #fff1f2;
+  color: #b4212a;
+  box-shadow: inset 0 -3px 0 #b4212a;
+}
+</style>
