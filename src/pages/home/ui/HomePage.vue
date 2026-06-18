@@ -177,7 +177,10 @@ onBeforeUnmount(() => {
           공공 데이터를 기반으로 아파트 실거래 정보와 지역별 주택 흐름을 빠르게 확인하세요.
         </p>
 
-        <form class="main-search mt-9 inline-flex w-fit bg-transparent shadow-none" @submit.prevent="search">
+        <form
+          class="main-search mt-9 inline-flex w-fit bg-transparent shadow-none"
+          @submit.prevent="search"
+        >
           <button
             type="submit"
             class="inline-flex min-h-[76px] items-center justify-center border border-[#b4212a] bg-[#b4212a] px-10 font-black text-white"
@@ -215,7 +218,10 @@ onBeforeUnmount(() => {
 
         <LoadingState v-if="loading && !rentalNotices.length" />
         <EmptyState v-else-if="!rentalNotices.length" message="표시할 LH 공고가 없습니다." />
-        <div v-else class="rental-slider-shell relative grid grid-cols-[52px_minmax(0,1fr)_52px] items-center gap-3.5">
+        <div
+          v-else
+          class="rental-slider-shell relative grid grid-cols-[52px_minmax(0,1fr)_52px] items-center gap-3.5"
+        >
           <button
             type="button"
             class="rental-window-button rental-window-prev inline-flex min-h-[52px] w-[52px] items-center justify-center border border-[#171717] bg-white p-0 text-xl font-black text-[#171717]"
@@ -249,10 +255,11 @@ onBeforeUnmount(() => {
                 }}</span>
                 <strong class="text-[22px] font-black leading-tight">{{ notice.title }}</strong>
                 <small class="text-[13px] font-extrabold text-neutral-500"
-                  >{{ notice.regionName }} · {{ notice.noticeType }} · {{ notice.detailType }}</small
+                  >{{ notice.regionName }} · {{ notice.noticeType }} ·
+                  {{ notice.detailType }}</small
                 >
                 <em class="text-[13px] font-black not-italic text-[#171717]"
-                  >접수 {{ notice.applyStartDate || '-' }} -
+                  >접수 {{ notice.noticeDate || '-' }} ~
                   {{ notice.applyEndDate || notice.closeDate || '-' }}</em
                 >
               </RouterLink>
@@ -265,7 +272,9 @@ onBeforeUnmount(() => {
           >
             →
           </button>
-          <div class="rental-swiper-pagination col-start-2 flex min-h-3.5 justify-center gap-2"></div>
+          <div
+            class="rental-swiper-pagination col-start-2 flex min-h-3.5 justify-center gap-2"
+          ></div>
         </div>
       </div>
     </section>
@@ -283,7 +292,9 @@ onBeforeUnmount(() => {
             <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
               Services
             </p>
-            <h2 class="mt-2 text-[34px] font-black text-[#171717]">필요한 주거 기능을 바로 선택하세요</h2>
+            <h2 class="mt-2 text-[34px] font-black text-[#171717]">
+              필요한 주거 기능을 바로 선택하세요
+            </h2>
           </div>
         </div>
         <div class="feature-rail grid grid-cols-4 gap-4">
@@ -291,24 +302,53 @@ onBeforeUnmount(() => {
             class="feature-panel grid min-h-[260px] content-between border border-neutral-200 bg-white p-[26px] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]"
             to="/rentals"
           >
-            <span class="tag w-fit bg-[#f7f4ef] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">Public Rental</span>
+            <span
+              class="tag w-fit bg-[#f7f4ef] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]"
+              >Public Rental</span
+            >
             <strong class="mt-10 block text-[26px] font-black leading-tight">공공임대 일정</strong>
-            <small class="block text-sm font-bold leading-6 text-neutral-500">LH 공고 목록과 상세 공급 정보를 확인합니다.</small>
+            <small class="block text-sm font-bold leading-6 text-neutral-500"
+              >LH 공고 목록과 상세 공급 정보를 확인합니다.</small
+            >
           </RouterLink>
-          <RouterLink class="feature-panel grid min-h-[260px] content-between border border-neutral-200 bg-white p-[26px] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]" to="/lh-calendar">
-            <span class="tag w-fit bg-[#f7f4ef] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">LH Calendar</span>
+          <RouterLink
+            class="feature-panel grid min-h-[260px] content-between border border-neutral-200 bg-white p-[26px] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]"
+            to="/lh-calendar"
+          >
+            <span
+              class="tag w-fit bg-[#f7f4ef] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]"
+              >LH Calendar</span
+            >
             <strong class="mt-10 block text-[26px] font-black leading-tight">LH 캘린더</strong>
-            <small class="block text-sm font-bold leading-6 text-neutral-500">공고일, 접수 시작, 접수 마감일을 월간 일정으로 봅니다.</small>
+            <small class="block text-sm font-bold leading-6 text-neutral-500"
+              >공고일, 접수 시작, 접수 마감일을 월간 일정으로 봅니다.</small
+            >
           </RouterLink>
-          <RouterLink class="feature-panel grid min-h-[260px] content-between border border-neutral-200 bg-white p-[26px] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]" to="/transfers">
-            <span class="tag w-fit bg-[#f7f4ef] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">Transfer</span>
+          <RouterLink
+            class="feature-panel grid min-h-[260px] content-between border border-neutral-200 bg-white p-[26px] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]"
+            to="/transfers"
+          >
+            <span
+              class="tag w-fit bg-[#f7f4ef] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]"
+              >Transfer</span
+            >
             <strong class="mt-10 block text-[26px] font-black leading-tight">양도 게시판</strong>
-            <small class="block text-sm font-bold leading-6 text-neutral-500">계약 기간이 남은 전월세 양도글을 확인합니다.</small>
+            <small class="block text-sm font-bold leading-6 text-neutral-500"
+              >계약 기간이 남은 전월세 양도글을 확인합니다.</small
+            >
           </RouterLink>
-          <RouterLink class="feature-panel grid min-h-[260px] content-between border border-neutral-200 bg-white p-[26px] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]" to="/analysis">
-            <span class="tag w-fit bg-[#f7f4ef] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">Life Analysis</span>
+          <RouterLink
+            class="feature-panel grid min-h-[260px] content-between border border-neutral-200 bg-white p-[26px] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]"
+            to="/analysis"
+          >
+            <span
+              class="tag w-fit bg-[#f7f4ef] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]"
+              >Life Analysis</span
+            >
             <strong class="mt-10 block text-[26px] font-black leading-tight">생활권 분석</strong>
-            <small class="block text-sm font-bold leading-6 text-neutral-500">상권과 교통 이벤트를 기준으로 후보지를 비교합니다.</small>
+            <small class="block text-sm font-bold leading-6 text-neutral-500"
+              >상권과 교통 이벤트를 기준으로 후보지를 비교합니다.</small
+            >
           </RouterLink>
         </div>
       </div>

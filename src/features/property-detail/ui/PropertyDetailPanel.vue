@@ -2,12 +2,8 @@
 import { ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/shared/api/client'
-import {
-  getFinancialProfile,
-  saveFinancialProfile,
-} from '@/entities/member/api/financialProfileApi'
+import { getFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import { analyzePropertyLoan } from '@/entities/loan/api/loanAnalysisApi'
-import FinancialProfileForm from './FinancialProfileForm.vue'
 import LoanAnalysisResult from './LoanAnalysisResult.vue'
 import PropertyNeighborhoodAnalysis from './PropertyNeighborhoodAnalysis.vue'
 
@@ -25,7 +21,6 @@ const profile = ref(null)
 const profileLoaded = ref(false)
 const analysis = ref(null)
 const loading = ref(false)
-const saving = ref(false)
 const error = ref('')
 
 watch(
@@ -66,20 +61,6 @@ async function openLoanTab() {
     }
   } finally {
     loading.value = false
-  }
-}
-
-async function saveProfile(payload) {
-  saving.value = true
-  error.value = ''
-  try {
-    profile.value = await saveFinancialProfile(payload)
-    profileLoaded.value = true
-    await loadAnalysis()
-  } catch {
-    error.value = '금융정보를 저장하지 못했습니다.'
-  } finally {
-    saving.value = false
   }
 }
 
@@ -209,11 +190,27 @@ async function loadAnalysis() {
         <p v-else-if="loading && !profileLoaded" class="text-sm font-bold text-neutral-500">
           금융정보를 불러오는 중입니다.
         </p>
-        <FinancialProfileForm
+        <div
           v-else-if="profileLoaded && !profile"
-          :saving="saving"
-          @save="saveProfile"
-        />
+          class="border border-[#f0c9cc] bg-[linear-gradient(135deg,#fff8f8_0%,#f8eee8_100%)] p-5"
+        >
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">
+            MyData Required
+          </p>
+          <h3 class="mt-2 text-xl font-black text-neutral-900">
+            마이데이터를 입력하면 예상 월 납부액을 바로 계산할 수 있습니다.
+          </h3>
+          <p class="mt-2 text-xs font-bold leading-5 text-neutral-500">
+            보유자산, 연소득, 월 저축액, 기존 대출 정보를 저장한 뒤 이 매물의 대출 분석 결과를 확인하세요.
+          </p>
+          <RouterLink
+            data-testid="mydata-link"
+            to="/mydata"
+            class="mt-4 block bg-[#b4212a] px-4 py-3 text-center text-sm font-black text-white"
+          >
+            마이데이터 입력하러 가기
+          </RouterLink>
+        </div>
         <LoanAnalysisResult v-else-if="analysis" :analysis="analysis" />
         <p v-if="error" class="mt-4 text-sm font-bold text-red-700">{{ error }}</p>
       </section>
