@@ -5,6 +5,8 @@ import {
   createTransferPayload,
   deleteTransfer,
   fetchTransfers,
+  normalizeTransfer,
+  resolveTransferImageUrl,
   updateTransfer,
 } from '@/entities/transfer/api/transferApi'
 import { api } from '@/shared/api/client'
@@ -66,6 +68,26 @@ describe('transferApi', () => {
       }),
     ])
     expect(api.get).toHaveBeenCalledWith('/transfers', { params: { keyword: '강남' } })
+  })
+
+  it('normalizes transfer image URLs from backend variants', () => {
+    expect(resolveTransferImageUrl('/uploads/room.jpg')).toBe('/api/uploads/room.jpg')
+    expect(resolveTransferImageUrl('uploads/room.jpg')).toBe('/api/uploads/room.jpg')
+    expect(resolveTransferImageUrl('https://cdn.example.com/room.jpg')).toBe(
+      'https://cdn.example.com/room.jpg',
+    )
+
+    expect(
+      normalizeTransfer({
+        transfer_id: 11,
+        image_url: '/uploads/one.jpg',
+        image_urls: 'uploads/two.jpg, https://cdn.example.com/three.jpg',
+      }).imageUrls,
+    ).toEqual([
+      '/api/uploads/one.jpg',
+      '/api/uploads/two.jpg',
+      'https://cdn.example.com/three.jpg',
+    ])
   })
 
   it('propagates backend errors instead of serving sample transfer data', async () => {
