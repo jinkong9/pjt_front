@@ -1,6 +1,32 @@
 import { api, toQuery } from '@/shared/api/client'
 
-function normalizeTransfer(post) {
+function splitImageUrls(value) {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+  return String(value)
+    .split(',')
+    .map((imageUrl) => imageUrl.trim())
+    .filter(Boolean)
+}
+
+export function resolveTransferImageUrl(imageUrl) {
+  if (!imageUrl) return ''
+  if (/^(https?:)?\/\//.test(imageUrl) || imageUrl.startsWith('data:') || imageUrl.startsWith('blob:')) {
+    return imageUrl
+  }
+
+  const normalized = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`
+  return normalized.startsWith('/api/') ? normalized : `/api${normalized}`
+}
+
+export function normalizeTransfer(post) {
+  const imageCandidates = [
+    ...splitImageUrls(post.imageUrl ?? post.image_url),
+    ...splitImageUrls(post.thumbnailUrl ?? post.thumbnail_url),
+    ...splitImageUrls(post.imageUrls ?? post.image_urls ?? post.images),
+  ]
+  const imageUrls = [...new Set(imageCandidates.map(resolveTransferImageUrl).filter(Boolean))]
+
   return {
     transferId: post.transferId ?? post.transfer_id,
     writerId: post.writerId ?? post.writer_id,
@@ -18,7 +44,7 @@ function normalizeTransfer(post) {
     moveInDate: post.moveInDate ?? post.move_in_date,
     contactPhone: post.contactPhone ?? post.contact_phone,
     status: post.status,
-    imageUrls: post.imageUrls ?? post.image_urls ?? [],
+    imageUrls,
     viewCount: post.viewCount ?? post.view_count,
     createdAt: post.createdAt ?? post.created_at,
   }

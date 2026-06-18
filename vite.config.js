@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  envPrefix: ['VITE_', 'OPENAPI_'],
   plugins: [vue(), tailwindcss()],
   server: {
     proxy: {

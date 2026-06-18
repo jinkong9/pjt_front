@@ -115,11 +115,53 @@ function isSampleTrade(trade) {
   )
 }
 
+function pickFirst(...values) {
+  return values.find((value) => value !== undefined && value !== null && value !== '')
+}
+
+function composeAddress(trade) {
+  return [
+    pickFirst(trade.sidoName, trade.sido_name),
+    pickFirst(trade.gugunName, trade.gugun_name),
+    pickFirst(trade.dongName, trade.dong_name, trade.umdName, trade.umd_nm),
+    pickFirst(trade.jibun),
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
+
+function composeDealDate(trade) {
+  const dealYear = pickFirst(trade.dealYear, trade.deal_year)
+  const dealMonth = pickFirst(trade.dealMonth, trade.deal_month)
+  const dealDay = pickFirst(trade.dealDay, trade.deal_day)
+  if (!dealYear || !dealMonth || !dealDay) return ''
+  return `${dealYear}-${String(dealMonth).padStart(2, '0')}-${String(dealDay).padStart(2, '0')}`
+}
+
+function normalizeTrade(trade) {
+  return {
+    ...trade,
+    no: pickFirst(trade.no, trade.dealNo, trade.deal_no),
+    aptSeq: pickFirst(trade.aptSeq, trade.apt_seq),
+    aptName: pickFirst(trade.aptName, trade.apt_nm, trade.apt_name),
+    sidoName: pickFirst(trade.sidoName, trade.sido_name),
+    gugunName: pickFirst(trade.gugunName, trade.gugun_name),
+    dongName: pickFirst(trade.dongName, trade.dong_name, trade.umdName, trade.umd_nm),
+    address: pickFirst(trade.address, composeAddress(trade)),
+    latitude: pickFirst(trade.latitude, trade.lat),
+    longitude: pickFirst(trade.longitude, trade.lng, trade.lon),
+    exclusiveArea: pickFirst(trade.exclusiveArea, trade.exclu_use_ar, trade.exclusive_area),
+    dealAmount: pickFirst(trade.dealAmount, trade.deal_amount),
+    dealDate: pickFirst(trade.dealDate, trade.deal_date, composeDealDate(trade)),
+    floor: pickFirst(trade.floor),
+  }
+}
+
 async function loadTrades() {
   loading.value = true
   try {
     const { data } = await api.get('/houses', { params: toQuery(condition) })
-    const realTrades = data.filter((trade) => !isSampleTrade(trade))
+    const realTrades = data.map(normalizeTrade).filter((trade) => !isSampleTrade(trade))
     trades.value = realTrades
     selectedTrade.value = null
     restorePropertyContext()
