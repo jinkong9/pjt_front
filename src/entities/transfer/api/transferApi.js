@@ -16,7 +16,7 @@ export function resolveTransferImageUrl(imageUrl) {
   }
 
   const normalized = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`
-  return normalized.startsWith('/api/') ? normalized : `/api${normalized}`
+  return normalized
 }
 
 export function normalizeTransfer(post) {
