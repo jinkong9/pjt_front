@@ -274,7 +274,7 @@ async function renderMap() {
     } else if (shouldFocusSearchResult() && firstSearchPoint) {
       focusMap(firstSearchPoint, 4)
     } else if (visibleTrades.length) {
-      kakaoMap.setBounds(markerBounds)
+      kakaoMap.setLevel(defaultMapLevel)
     } else {
       kakaoMap.setCenter(fallbackCenter)
       kakaoMap.setLevel(defaultMapLevel)

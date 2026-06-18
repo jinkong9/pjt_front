@@ -84,7 +84,7 @@ async function loadAnalysis() {
 <template>
   <aside
     data-testid="property-detail-panel"
-    class="property-detail-panel absolute bottom-0 left-0 top-20 z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:border md:border-neutral-200"
+    class="property-detail-panel absolute bottom-0 left-0 top-20 z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:bottom-0 md:left-[544px] md:my-6 md:border md:border-neutral-200"
   >
     <header class="border-b border-neutral-200 p-5">
       <div class="flex items-start justify-between gap-4">
