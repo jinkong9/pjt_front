@@ -9,6 +9,8 @@ export default defineConfig({
   envPrefix: ['VITE_', 'OPENAPI_'],
   plugins: [vue(), tailwindcss()],
   server: {
+    port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

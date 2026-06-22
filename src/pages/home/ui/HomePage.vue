@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { A11y, Navigation, Pagination } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -15,17 +15,51 @@ const router = useRouter()
 const loading = ref(true)
 const rentalNotices = ref([])
 const popups = ref([])
+const dismissedPopupIds = ref([])
 const activeSection = ref(0)
 let sectionObserver
 let scrollContainer
 let wheelCleanup
 let isSectionScrolling = false
 const rentalSwiperModules = [Navigation, Pagination, A11y]
+const noticePopupStorageKey = 'happyhome.noticePopupHiddenUntil'
 const defaultPriceMapQuery = {
   mode: 'region',
   sidoName: '서울특별시',
   gugunName: '강남구',
   limit: 20,
+}
+
+const visiblePopup = computed(() =>
+  popups.value.find((popup) => !dismissedPopupIds.value.includes(String(popup.noticeId))),
+)
+
+function readHiddenPopupMap() {
+  try {
+    return JSON.parse(localStorage.getItem(noticePopupStorageKey) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function refreshHiddenPopups() {
+  const now = Date.now()
+  dismissedPopupIds.value = Object.entries(readHiddenPopupMap())
+    .filter(([, hiddenUntil]) => Number(hiddenUntil) > now)
+    .map(([noticeId]) => noticeId)
+}
+
+function closeNoticePopup() {
+  if (!visiblePopup.value) return
+  dismissedPopupIds.value = [...dismissedPopupIds.value, String(visiblePopup.value.noticeId)]
+}
+
+function hideNoticePopupToday() {
+  if (!visiblePopup.value) return
+  const hiddenPopupMap = readHiddenPopupMap()
+  hiddenPopupMap[String(visiblePopup.value.noticeId)] = Date.now() + 24 * 60 * 60 * 1000
+  localStorage.setItem(noticePopupStorageKey, JSON.stringify(hiddenPopupMap))
+  closeNoticePopup()
 }
 
 async function loadHome() {
@@ -111,6 +145,7 @@ function bindFullpageWheel() {
 
 onMounted(() => {
   document.title = 'SSAFY Home'
+  refreshHiddenPopups()
   loadHome()
   nextTick(() => {
     if (!window.IntersectionObserver) {
@@ -149,13 +184,71 @@ onBeforeUnmount(() => {
   <main
     class="home-page fullpage-scroll h-screen overflow-y-auto scroll-smooth bg-[#f4f0ea] [scroll-snap-type:y_mandatory]"
   >
-    <section
-      v-if="popups.length"
-      class="notice-strip fixed left-1/2 top-24 z-20 flex -translate-x-1/2 items-center gap-3 border border-white/20 bg-black/45 px-5 py-3 text-sm font-black text-white backdrop-blur"
+    <div
+      v-if="visiblePopup"
+      class="home-notice-popup fixed inset-0 z-40 grid place-items-center bg-black/68 px-4"
+      data-testid="notice-popup"
     >
-      <strong>공지</strong>
-      <RouterLink :to="`/notices/${popups[0].noticeId}`">{{ popups[0].title }}</RouterLink>
-    </section>
+      <section
+        class="w-[min(460px,calc(100vw-32px))] border border-neutral-200 bg-white text-[#171717] shadow-[0_24px_80px_rgba(0,0,0,0.34)]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="home-notice-popup-title"
+      >
+        <div class="flex items-start justify-between gap-5 border-b border-neutral-200 px-6 py-5">
+          <div>
+            <p class="m-0 text-[11px] font-black uppercase tracking-[0.28em] text-[#b4212a]">
+              Notice
+            </p>
+            <h2
+              id="home-notice-popup-title"
+              class="mt-2 text-[26px] font-black leading-tight text-[#171717]"
+            >
+              {{ visiblePopup.title }}
+            </h2>
+          </div>
+          <button
+            type="button"
+            class="grid min-h-9 w-9 shrink-0 place-items-center border border-neutral-200 bg-white p-0 text-sm font-black text-neutral-500 hover:border-[#171717] hover:text-[#171717]"
+            aria-label="공지 닫기"
+            data-testid="notice-close"
+            @click="closeNoticePopup"
+          >
+            X
+          </button>
+        </div>
+        <div class="px-6 py-6">
+          <p class="m-0 text-sm font-bold leading-7 text-neutral-600">
+            {{ visiblePopup.content || '서버 안정화를 위해 점검이 시작됩니다.' }}
+          </p>
+          <RouterLink
+            class="mt-6 inline-flex min-h-11 items-center justify-center bg-[#171717] px-5 text-sm font-black text-white hover:bg-[#333333]"
+            :to="`/notices/${visiblePopup.noticeId}`"
+          >
+            공지사항 보기
+            <span class="ml-2 text-base leading-none">→</span>
+          </RouterLink>
+        </div>
+        <div class="flex items-center justify-between gap-4 border-t border-neutral-200 bg-[#f7f4ef] px-6 py-4">
+          <button
+            type="button"
+            class="min-h-10 border border-neutral-300 bg-white px-4 text-sm font-black text-neutral-600 hover:border-neutral-500"
+            data-testid="notice-hide-today"
+            @click="hideNoticePopupToday"
+          >
+            하루동안 보지 않기
+          </button>
+          <button
+            type="button"
+            class="min-h-10 bg-[#b4212a] px-5 text-sm font-black text-white hover:bg-[#921b22]"
+            data-testid="notice-close-bottom"
+            @click="closeNoticePopup"
+          >
+            닫기
+          </button>
+        </div>
+      </section>
+    </div>
 
     <section
       class="main-hero home-hero fullpage-section relative grid h-screen min-h-screen items-center overflow-hidden bg-[linear-gradient(90deg,rgba(0,0,0,0.62),rgba(0,0,0,0.28)),linear-gradient(180deg,rgba(0,0,0,0.18),rgba(0,0,0,0.45)),url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2400&q=90')] bg-cover bg-center text-white [scroll-snap-align:start] [scroll-snap-stop:always]"
