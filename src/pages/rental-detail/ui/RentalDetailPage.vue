@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
-import { fetchRentalDetail } from '@/entities/rental/api/rentalApi'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { fetchRentalDetail, toggleFavoriteRentalNotice } from '@/entities/rental/api/rentalApi'
 import {
   evaluateRentalEligibility,
   readStoredMyDataProfile,
@@ -11,9 +11,12 @@ import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
+const router = useRouter()
 const loading = ref(true)
 const detail = ref(null)
 const error = ref('')
+const favorite = ref(false)
+const favoriteLoading = ref(false)
 const myDataProfile = ref(readStoredMyDataProfile())
 const selectedSupply = ref(null)
 const mapEl = ref(null)
@@ -148,6 +151,7 @@ async function loadDetail(noticeId) {
   let shouldRenderMap = false
   try {
     detail.value = await fetchRentalDetail(noticeId)
+    favorite.value = false
     selectedSupply.value = detail.value.supplies[0] ?? null
     document.title = `${detail.value.notice.title} | SSAFY Home`
     shouldRenderMap = true
@@ -158,6 +162,26 @@ async function loadDetail(noticeId) {
   }
   if (shouldRenderMap) {
     await renderMap()
+  }
+}
+
+async function toggleFavorite() {
+  if (!detail.value || favoriteLoading.value) return
+  favoriteLoading.value = true
+  try {
+    const result = await toggleFavoriteRentalNotice(detail.value.notice.rentalNoticeId)
+    favorite.value = Boolean(result.favorite)
+  } catch (err) {
+    if (err.response?.status === 401) {
+      await router.push({
+        path: '/login',
+        query: { redirect: `/rentals/${detail.value.notice.rentalNoticeId}` },
+      })
+      return
+    }
+    error.value = '관심 공고 상태를 변경하지 못했습니다.'
+  } finally {
+    favoriteLoading.value = false
   }
 }
 
@@ -194,15 +218,26 @@ onBeforeUnmount(() => {
               {{ detail.notice.detailType }} · {{ detail.notice.status }}
             </p>
           </div>
-          <a
-            v-if="detail.notice.detailUrl"
-            class="inline-flex min-h-11 items-center justify-center bg-[#b4212a] px-[18px] font-black text-white"
-            :href="detail.notice.detailUrl"
-            target="_blank"
-            rel="noreferrer"
-          >
-            원문 보기
-          </a>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              data-testid="rental-favorite-toggle"
+              class="inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-white px-[18px] font-black text-[#b4212a] disabled:cursor-wait disabled:opacity-60"
+              :disabled="favoriteLoading"
+              @click="toggleFavorite"
+            >
+              {{ favorite ? '관심 공고 해제' : '관심 공고 등록' }}
+            </button>
+            <a
+              v-if="detail.notice.detailUrl"
+              class="inline-flex min-h-11 items-center justify-center bg-[#b4212a] px-[18px] font-black text-white"
+              :href="detail.notice.detailUrl"
+              target="_blank"
+              rel="noreferrer"
+            >
+              원문 보기
+            </a>
+          </div>
         </header>
 
         <section class="mt-8 grid gap-4 lg:grid-cols-[1.45fr_1fr]">

@@ -1,7 +1,11 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { fetchRentalNotices } from '@/entities/rental/api/rentalApi'
+import {
+  fetchRentalNotices,
+  fetchRentalRecommendations,
+  toggleFavoriteRentalNotice,
+} from '@/entities/rental/api/rentalApi'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
@@ -9,6 +13,10 @@ const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
 const notices = ref([])
+const recommendations = ref([])
+const recommendationLoading = ref(false)
+const recommendationError = ref('')
+const recommendationFavoriteMessage = ref('')
 const condition = reactive({
   keyword: '',
   regionCode: '',
@@ -53,6 +61,44 @@ async function loadRentals() {
   }
 }
 
+async function loadRecommendations() {
+  recommendationLoading.value = true
+  recommendationError.value = ''
+  try {
+    recommendations.value = await fetchRentalRecommendations(10)
+  } catch (err) {
+    recommendations.value = []
+    if (err.response?.status === 401) {
+      recommendationError.value = 'login'
+    } else if (err.response?.status === 409) {
+      recommendationError.value = 'profile'
+    } else {
+      recommendationError.value = 'unknown'
+    }
+  } finally {
+    recommendationLoading.value = false
+  }
+}
+
+async function toggleRecommendationFavorite(noticeId) {
+  recommendationFavoriteMessage.value = ''
+  try {
+    const result = await toggleFavoriteRentalNotice(noticeId)
+    recommendationFavoriteMessage.value = result.favorite
+      ? '관심 공고로 등록했습니다.'
+      : '관심 공고에서 해제했습니다.'
+  } catch (err) {
+    if (err.response?.status === 401) {
+      await router.push({
+        path: '/login',
+        query: { redirect: '/rentals' },
+      })
+      return
+    }
+    recommendationFavoriteMessage.value = '관심 공고 상태를 변경하지 못했습니다.'
+  }
+}
+
 async function search() {
   condition.page = 1
   await router.push({ path: '/rentals', query: { ...condition } })
@@ -62,7 +108,7 @@ async function search() {
 onMounted(async () => {
   document.title = '공공임대 공고 | SSAFY Home'
   syncFromRoute()
-  await loadRentals()
+  await Promise.all([loadRecommendations(), loadRentals()])
 })
 </script>
 
@@ -81,6 +127,89 @@ onMounted(async () => {
         </p>
       </div>
     </div>
+
+    <section class="mb-6 border border-neutral-200 bg-white p-5">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.2em] text-[#b4212a]">
+            Recommendation
+          </p>
+          <h2 class="mt-2 text-[28px] font-black text-[#171717]">나에게 맞는 LH 추천</h2>
+        </div>
+        <p
+          v-if="recommendationFavoriteMessage"
+          class="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700"
+        >
+          {{ recommendationFavoriteMessage }}
+        </p>
+      </div>
+
+      <p v-if="recommendationLoading" class="mt-4 text-sm font-black text-neutral-500">
+        추천 공고를 불러오는 중입니다.
+      </p>
+      <div v-else-if="recommendationError === 'login'" class="mt-4 flex flex-wrap items-center justify-between gap-4 bg-[#faf8f5] p-4">
+        <p class="text-sm font-bold text-neutral-600">로그인하면 맞춤 LH 추천을 볼 수 있습니다.</p>
+        <RouterLink
+          class="inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-4 text-sm font-black text-white"
+          :to="{ path: '/login', query: { redirect: '/rentals' } }"
+        >
+          로그인
+        </RouterLink>
+      </div>
+      <div v-else-if="recommendationError === 'profile'" class="mt-4 flex flex-wrap items-center justify-between gap-4 bg-[#faf8f5] p-4">
+        <p class="text-sm font-bold text-neutral-600">금융 프로필을 먼저 입력해 주세요.</p>
+        <RouterLink
+          class="inline-flex min-h-10 items-center justify-center border border-[#171717] bg-[#171717] px-4 text-sm font-black text-white"
+          to="/member"
+        >
+          프로필 입력
+        </RouterLink>
+      </div>
+      <p v-else-if="recommendationError" class="mt-4 text-sm font-black text-red-700">
+        추천 공고를 불러오지 못했습니다.
+      </p>
+      <div v-else-if="recommendations.length" class="mt-4 grid gap-4 lg:grid-cols-2">
+        <article
+          v-for="item in recommendations"
+          :key="item.notice.rentalNoticeId"
+          class="border border-neutral-200 bg-[#fafafa] p-4"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <span class="tag bg-[#f7f4ef] px-3 py-1 text-xs font-black text-[#b4212a]">
+                {{ item.notice.status || '공고' }}
+              </span>
+              <h3 class="mt-3 text-xl font-black">{{ item.notice.title }}</h3>
+              <p class="mt-1 text-sm font-bold text-neutral-500">{{ item.notice.regionName }}</p>
+            </div>
+            <strong class="text-2xl font-black text-[#b4212a]">{{ item.score }}</strong>
+          </div>
+          <ul class="mt-4 grid gap-1 text-sm font-bold text-neutral-600">
+            <li v-for="reason in item.reasons" :key="reason">{{ reason }}</li>
+          </ul>
+          <p v-if="item.supplies[0]" class="mt-3 text-sm font-bold text-neutral-500">
+            {{ item.supplies[0].area || '-' }}m² · {{ item.supplies[0].expectedAmount || '-' }}
+          </p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <RouterLink
+              class="inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-4 text-sm font-black text-white"
+              :to="`/rentals/${item.notice.rentalNoticeId}`"
+            >
+              상세 보기
+            </RouterLink>
+            <button
+              type="button"
+              :data-testid="`recommendation-favorite-${item.notice.rentalNoticeId}`"
+              class="inline-flex min-h-10 items-center justify-center border border-neutral-300 bg-white px-4 text-sm font-black text-neutral-700"
+              @click="toggleRecommendationFavorite(item.notice.rentalNoticeId)"
+            >
+              관심 등록
+            </button>
+          </div>
+        </article>
+      </div>
+      <p v-else class="mt-4 text-sm font-bold text-neutral-500">현재 추천할 LH 공고가 없습니다.</p>
+    </section>
 
     <form
       class="search mb-6 grid gap-3 border border-neutral-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_auto]"
