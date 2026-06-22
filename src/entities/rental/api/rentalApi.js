@@ -47,10 +47,17 @@ export function normalizeRentalDetail(payload = {}) {
     supplies: (payload.supplies ?? payload.supplyList ?? []).map((supply) => ({
       usage: valueOf(supply, 'usage') || '-',
       address: valueOf(supply, 'address') || '-',
+      lotNumber: valueOf(supply, 'lotNumber', 'lot_number') || '-',
       area: valueOf(supply, 'area') || '-',
       expectedAmount: valueOf(supply, 'expectedAmount', 'expected_amount') || '-',
+      expectedAmountRaw: valueOf(supply, 'expectedAmountRaw', 'expected_amount_raw') || '',
       houseType: valueOf(supply, 'houseType', 'house_type') || '-',
       householdCount: valueOf(supply, 'householdCount', 'household_count') || '-',
+      internetApplyStatus: valueOf(supply, 'internetApplyStatus', 'internet_apply_status') || '-',
+      mapAddress: valueOf(supply, 'mapAddress', 'map_address') || valueOf(supply, 'address') || '',
+      mapUrl: valueOf(supply, 'mapUrl', 'map_url') || '',
+      latitude: valueOf(supply, 'latitude', 'lat'),
+      longitude: valueOf(supply, 'longitude', 'lng', 'lon'),
     })),
   }
 }

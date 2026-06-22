@@ -7,6 +7,7 @@ const memberStore = useMemberStore()
 const route = useRoute()
 const router = useRouter()
 const isHome = computed(() => route.name === 'home')
+const isNoticeLayout = computed(() => ['notices', 'notice-detail'].includes(route.name))
 const sidebarOpen = ref(false)
 
 const sidebarLinks = computed(() => [
@@ -44,6 +45,26 @@ async function logout() {
 
 <template>
   <header
+    v-if="isNoticeLayout"
+    class="site-header border-b border-neutral-200 bg-white text-[#171717]"
+  >
+    <nav
+      class="relative mx-auto flex min-h-[64px] w-[min(1480px,calc(100%_-_48px))] items-center justify-center"
+    >
+      <RouterLink
+        class="text-sm font-black uppercase tracking-[0.28em]"
+        to="/home"
+      >
+        SSAFY Home
+      </RouterLink>
+      <div class="absolute right-0 flex items-center gap-8 text-sm font-black">
+        <RouterLink class="hover:text-[#b4212a]" to="/prices">실거래 지도</RouterLink>
+        <RouterLink class="text-[#b4212a]" to="/notices">공지사항</RouterLink>
+      </div>
+    </nav>
+  </header>
+  <header
+    v-else
     class="site-header border-b border-neutral-200 bg-white"
     :class="{
       'hero-header home-nav-dark-text fixed inset-x-0 top-0 z-10 text-[#171717]':
