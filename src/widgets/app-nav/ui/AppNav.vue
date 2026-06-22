@@ -7,7 +7,9 @@ const memberStore = useMemberStore()
 const route = useRoute()
 const router = useRouter()
 const isHome = computed(() => route.name === 'home')
-const isNoticeLayout = computed(() => ['notices', 'notice-detail'].includes(route.name))
+const isBoardLayout = computed(() => ['notices', 'notice-detail', 'lh-calendar'].includes(route.name))
+const isNoticeRoute = computed(() => ['notices', 'notice-detail'].includes(route.name))
+const isCalendarRoute = computed(() => route.name === 'lh-calendar')
 const sidebarOpen = ref(false)
 
 const sidebarLinks = computed(() => [
@@ -45,7 +47,7 @@ async function logout() {
 
 <template>
   <header
-    v-if="isNoticeLayout"
+    v-if="isBoardLayout"
     class="site-header border-b border-neutral-200 bg-white text-[#171717]"
   >
     <nav
@@ -59,7 +61,16 @@ async function logout() {
       </RouterLink>
       <div class="absolute right-0 flex items-center gap-8 text-sm font-black">
         <RouterLink class="hover:text-[#b4212a]" to="/prices">실거래 지도</RouterLink>
-        <RouterLink class="text-[#b4212a]" to="/notices">공지사항</RouterLink>
+        <RouterLink
+          class="hover:text-[#b4212a]"
+          :class="{ 'text-[#b4212a]': isNoticeRoute }"
+          to="/notices"
+        >공지사항</RouterLink>
+        <RouterLink
+          class="hover:text-[#b4212a]"
+          :class="{ 'text-[#b4212a]': isCalendarRoute }"
+          to="/lh-calendar"
+        >LH 캘린더</RouterLink>
       </div>
     </nav>
   </header>

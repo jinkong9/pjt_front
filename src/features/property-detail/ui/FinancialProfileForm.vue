@@ -21,6 +21,16 @@ function submit() {
     Object.fromEntries(Object.entries(form).map(([key, value]) => [key, Number(value || 0)])),
   )
 }
+
+function formatNumber(value) {
+  const number = Number(String(value ?? '').replace(/[^\d]/g, ''))
+  if (!Number.isFinite(number)) return ''
+  return number.toLocaleString('ko-KR')
+}
+
+function updateMoneyField(key, value) {
+  form[key] = String(value ?? '').replace(/[^\d]/g, '')
+}
 </script>
 
 <template>
@@ -38,7 +48,14 @@ function submit() {
       ['existingMonthlyDebtPayment', '기존 월 상환액'],
     ]" :key="field[0]" class="block text-xs font-black text-neutral-600">
       {{ field[1] }} (원)
-      <input v-model="form[field[0]]" type="number" min="0" class="mt-2 h-11 w-full border-neutral-300 text-sm font-bold" />
+      <input
+        :value="formatNumber(form[field[0]])"
+        type="text"
+        inputmode="numeric"
+        :data-testid="`financial-field-${field[0]}`"
+        class="mt-2 h-11 w-full border-neutral-300 text-sm font-bold"
+        @input="updateMoneyField(field[0], $event.target.value)"
+      />
     </label>
     <button
       class="min-h-12 w-full rounded-xl border border-[#b4212a] bg-[#b4212a] text-sm font-black text-white hover:bg-[#941b23] disabled:cursor-wait disabled:opacity-65"

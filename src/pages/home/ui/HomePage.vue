@@ -289,15 +289,15 @@ onBeforeUnmount(() => {
       data-section-index="1"
     >
       <div
-        class="shell fullpage-reveal mx-auto w-[min(1480px,calc(100%_-_48px))] py-9"
+        class="shell fullpage-reveal mx-auto w-[min(1720px,calc(100%_-_72px))] py-6"
         :class="{ 'is-visible': activeSection === 1 }"
       >
-        <div class="section-head rental-section-head mb-5 flex items-center justify-between gap-6">
+        <div class="section-head rental-section-head mb-8 flex items-center justify-between gap-6">
           <div>
             <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
               Public Rental
             </p>
-            <h2 class="mt-2 text-[clamp(28px,3vw,42px)] font-black text-[#171717]">LH 공고</h2>
+            <h2 class="mt-2 text-[clamp(30px,2.7vw,44px)] font-black text-[#171717]">LH 공고</h2>
             <p class="muted mt-2.5 text-sm font-bold leading-7 text-neutral-500">
               접수 일정과 지역을 빠르게 훑고 관심 공고의 상세 정보를 확인합니다.
             </p>
@@ -313,54 +313,61 @@ onBeforeUnmount(() => {
         <EmptyState v-else-if="!rentalNotices.length" message="표시할 LH 공고가 없습니다." />
         <div
           v-else
-          class="rental-slider-shell relative grid grid-cols-[52px_minmax(0,1fr)_52px] items-center gap-3.5"
+          class="rental-slider-shell relative grid grid-cols-[68px_minmax(0,1fr)_68px] items-center gap-5"
         >
           <button
             type="button"
-            class="rental-window-button rental-window-prev inline-flex min-h-[52px] w-[52px] items-center justify-center border border-[#171717] bg-white p-0 text-xl font-black text-[#171717]"
+            class="rental-window-button rental-window-prev inline-flex min-h-[68px] w-[68px] items-center justify-center border border-[#171717] bg-white p-0 text-2xl font-black text-[#171717]"
             aria-label="이전 LH 공고"
           >
             ←
           </button>
           <Swiper
-            class="rental-swiper w-full overflow-hidden border border-neutral-200 bg-white p-[18px]"
+            class="rental-swiper w-full overflow-hidden border border-neutral-200 bg-white p-[28px]"
             :modules="rentalSwiperModules"
             :slides-per-view="3"
             :slides-per-group="3"
-            :space-between="14"
+            :space-between="22"
             :rewind="true"
             :navigation="{ prevEl: '.rental-window-prev', nextEl: '.rental-window-next' }"
             :pagination="{ clickable: true, el: '.rental-swiper-pagination' }"
             :a11y="{ prevSlideMessage: '이전 LH 공고', nextSlideMessage: '다음 LH 공고' }"
             :breakpoints="{
-              0: { slidesPerView: 1, slidesPerGroup: 1, spaceBetween: 12 },
-              720: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 14 },
-              1100: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 14 },
+              0: { slidesPerView: 1, slidesPerGroup: 1, spaceBetween: 14 },
+              720: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 18 },
+              1100: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 22 },
             }"
           >
             <SwiperSlide v-for="notice in rentalNotices" :key="notice.noticeId">
               <RouterLink
-                class="rental-slide-card grid min-h-[220px] content-between gap-3.5 border border-neutral-200 bg-white p-[22px] text-[#171717]"
+                class="rental-slide-card grid min-h-[310px] content-between gap-5 border border-neutral-200 bg-white p-[34px] text-[#171717]"
                 :to="`/rentals/${notice.noticeId}`"
               >
-                <span class="text-xs font-black uppercase tracking-[0.2em] text-[#b4212a]">{{
+                <span class="text-sm font-black uppercase tracking-[0.2em] text-[#b4212a]">{{
                   notice.status || 'LH'
                 }}</span>
-                <strong class="text-[22px] font-black leading-tight">{{ notice.title }}</strong>
-                <small class="text-[13px] font-extrabold text-neutral-500"
+                <strong class="text-[clamp(24px,1.45vw,30px)] font-black leading-tight">{{ notice.title }}</strong>
+                <small class="text-[15px] font-extrabold leading-6 text-neutral-500"
                   >{{ notice.regionName }} · {{ notice.noticeType }} ·
                   {{ notice.detailType }}</small
                 >
-                <em class="text-[13px] font-black not-italic text-[#171717]"
-                  >접수 {{ notice.noticeDate || '-' }} ~
-                  {{ notice.applyEndDate || notice.closeDate || '-' }}</em
-                >
+                <div class="mt-2 flex items-end justify-between gap-4">
+                  <em class="text-[15px] font-black not-italic text-[#171717]"
+                    >접수 {{ notice.noticeDate || '-' }} ~
+                    {{ notice.applyEndDate || notice.closeDate || '-' }}</em
+                  >
+                  <span
+                    class="inline-flex min-h-10 shrink-0 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-4 text-xs font-black text-white"
+                  >
+                    바로가기
+                  </span>
+                </div>
               </RouterLink>
             </SwiperSlide>
           </Swiper>
           <button
             type="button"
-            class="rental-window-button rental-window-next inline-flex min-h-[52px] w-[52px] items-center justify-center border border-[#171717] bg-white p-0 text-xl font-black text-[#171717]"
+            class="rental-window-button rental-window-next inline-flex min-h-[68px] w-[68px] items-center justify-center border border-[#171717] bg-white p-0 text-2xl font-black text-[#171717]"
             aria-label="다음 LH 공고"
           >
             →

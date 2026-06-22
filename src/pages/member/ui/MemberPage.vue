@@ -9,6 +9,7 @@ import { getFinancialProfile, saveFinancialProfile } from '@/entities/member/api
 
 const memberStore = useMemberStore()
 const favorites = ref([])
+const favoriteTab = ref('deals')
 const message = ref('')
 const financialProfile = ref(null)
 const financialProfileLoaded = ref(false)
@@ -20,6 +21,11 @@ const form = reactive({
   email: '',
   phone: '',
 })
+const favoriteTabs = [
+  { key: 'deals', label: '실거래' },
+  { key: 'transfers', label: '양도' },
+  { key: 'rentals', label: 'LH' },
+]
 
 watchEffect(() => {
   if (memberStore.current) {
@@ -66,6 +72,12 @@ async function updateFinancialProfile(payload) {
   } finally {
     financialSaving.value = false
   }
+}
+
+function formatMoney(value) {
+  const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''))
+  if (!Number.isFinite(number)) return value ?? '-'
+  return number.toLocaleString('ko-KR')
 }
 
 onMounted(async () => {
@@ -141,16 +153,40 @@ onMounted(async () => {
         </article>
 
         <article class="panel border border-neutral-200 bg-white p-6">
-          <h2 class="text-[34px] font-black text-[#171717]">관심 실거래</h2>
-          <EmptyState v-if="!favorites.length" message="저장한 관심 실거래가 없습니다." />
-          <ul v-else class="clean-list mt-5 grid gap-4">
-            <li v-for="deal in favorites" :key="deal.no" class="border-b border-neutral-100 pb-4">
-              <strong class="block font-black">{{ deal.aptName }}</strong>
-              <span class="mt-1 block text-sm font-bold text-neutral-500"
-                >{{ deal.address }} · {{ deal.dealAmount }}만원</span
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <h2 class="text-[34px] font-black text-[#171717]">관심 목록</h2>
+            <div class="grid grid-cols-3 border border-neutral-200 bg-white">
+              <button
+                v-for="tab in favoriteTabs"
+                :key="tab.key"
+                type="button"
+                :data-testid="`favorite-tab-${tab.key}`"
+                class="min-h-10 border-r border-neutral-200 px-5 text-sm font-black transition last:border-r-0"
+                :class="
+                  favoriteTab === tab.key
+                    ? 'bg-[#f7f4ef] text-[#b4212a]'
+                    : 'bg-white text-neutral-600 hover:bg-[#faf8f5] hover:text-[#171717]'
+                "
+                @click="favoriteTab = tab.key"
               >
-            </li>
-          </ul>
+                {{ tab.label }}
+              </button>
+            </div>
+          </div>
+
+          <template v-if="favoriteTab === 'deals'">
+            <EmptyState v-if="!favorites.length" message="저장한 관심 실거래가 없습니다." />
+            <ul v-else class="clean-list mt-5 grid gap-4">
+              <li v-for="deal in favorites" :key="deal.no" class="border-b border-neutral-100 pb-4">
+                <strong class="block font-black">{{ deal.aptName }}</strong>
+                <span class="mt-1 block text-sm font-bold text-neutral-500">
+                  {{ deal.address }} · {{ formatMoney(deal.dealAmount) }}만원
+                </span>
+              </li>
+            </ul>
+          </template>
+          <EmptyState v-else-if="favoriteTab === 'transfers'" message="저장한 관심 양도글이 없습니다." />
+          <EmptyState v-else message="저장한 관심 LH 공고가 없습니다." />
         </article>
       </section>
 

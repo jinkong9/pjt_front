@@ -20,6 +20,7 @@ const mapMessage = ref('')
 let kakaoMap = null
 let markerBounds = null
 let kakaoSdkPromise = null
+let mapRenderSequence = 0
 const markers = []
 const defaultMapLevel = 6
 const defaultPriceCondition = {
@@ -237,10 +238,12 @@ async function loadKakaoSdk() {
 }
 
 async function renderMap() {
+  const renderSequence = ++mapRenderSequence
   await nextTick()
   if (!mapEl.value) return
   try {
     const kakao = await loadKakaoSdk()
+    if (renderSequence !== mapRenderSequence) return
     const fallbackCenter = new kakao.maps.LatLng(37.5172, 127.0473)
     if (!kakaoMap) {
       kakaoMap = new kakao.maps.Map(mapEl.value, {
@@ -324,9 +327,7 @@ onMounted(async () => {
     memberStore.fetchMe()
   }
   syncFromRoute()
-  await loadRegions()
-  await loadDependentRegions()
-  await loadTrades()
+  await Promise.allSettled([renderMap(), loadRegions(), loadDependentRegions(), loadTrades()])
 })
 
 onBeforeUnmount(() => {
@@ -335,7 +336,7 @@ onBeforeUnmount(() => {
 
 watch(trades, () => {
   renderMap()
-})
+}, { flush: 'post' })
 </script>
 
 <template>
@@ -532,12 +533,15 @@ watch(trades, () => {
 
 <style scoped>
 .price-map-shell {
-  --price-panel-width: min(520px, calc((100vw - 48px) / 2));
+  --price-panel-left: 1.5rem;
   --price-panel-top: 6rem;
   --price-panel-bottom: 1.5rem;
+  --price-panel-gap: 0px;
+  --price-panel-width: min(520px, calc((100vw - (var(--price-panel-left) * 2)) / 2));
 }
 
 .price-search-panel {
+  box-sizing: border-box;
   max-width: var(--price-panel-width);
 }
 
@@ -545,7 +549,7 @@ watch(trades, () => {
   .price-search-panel {
     top: var(--price-panel-top);
     bottom: var(--price-panel-bottom);
-    left: 1.5rem;
+    left: var(--price-panel-left);
     width: var(--price-panel-width);
     max-width: none;
     max-height: calc(100vh - 7.5rem);
