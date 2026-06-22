@@ -384,7 +384,7 @@ watch(trades, () => {
       ></div>
 
       <aside
-        class="price-search-panel absolute bottom-0 left-0 top-20 z-20 flex w-full flex-col bg-white/95 shadow-2xl backdrop-blur md:border md:border-white/70"
+        class="price-search-panel price-panel-frame absolute bottom-0 left-0 top-20 z-20 flex w-full flex-col bg-white/95 shadow-2xl backdrop-blur md:border md:border-white/70"
       >
         <section class="border-b border-neutral-200 p-5">
           <p class="text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">

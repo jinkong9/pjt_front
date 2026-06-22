@@ -219,11 +219,11 @@ onBeforeUnmount(() => {
               </div>
               <div class="border-b border-neutral-100 pb-3">
                 <dt class="text-xs font-black text-neutral-500">신청 시작</dt>
-                <dd class="mt-1 font-black">{{ value(detail.detail.applyStartDate) }}</dd>
+                <dd class="mt-1 font-black">{{ value(detail.detail.noticeDate) }}</dd>
               </div>
               <div class="border-b border-neutral-100 pb-3">
                 <dt class="text-xs font-black text-neutral-500">신청 마감</dt>
-                <dd class="mt-1 font-black">{{ value(detail.detail.applyEndDate) }}</dd>
+                <dd class="mt-1 font-black">{{ value(detail.detail.closeDate) }}</dd>
               </div>
               <div class="border-b border-neutral-100 pb-3">
                 <dt class="text-xs font-black text-neutral-500">계약 장소</dt>
