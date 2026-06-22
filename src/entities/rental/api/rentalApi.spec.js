@@ -26,42 +26,57 @@ describe('rentalApi normalization', () => {
     })
   })
 
-  it('keeps notice region and supply address separated in detail responses', () => {
+  it('keeps notice region and maps supply land fields for detail responses', () => {
     expect(
       normalizeRentalDetail({
         notice: {
           notice_id: 'N-2',
-          title: '부산 매입임대',
-          region_name: '부산광역시',
+          title: '화성동탄 근린생활시설용지 공급',
+          region_name: '경기도',
         },
         detail: {
-          contract_address: '부산시청',
+          contract_address: '경기도 화성시 동탄구 노작로 10',
+          contract_detail_address: '오산동탄사업본부 1층',
           apply_start_date: '2026-07-01',
           contact: '1600-1004',
         },
         supplies: [
           {
-            usage: '주거',
-            address: '부산 해운대구 공급주소',
-            expected_amount: '보증금 500만원',
-            household_count: '20호',
+            usage: '근린생활시설',
+            address: '경기도 화성시 동탄구 반송동',
+            lot_number: '61-3',
+            area: '493.4',
+            expected_amount: '2,605,152,000',
+            expected_amount_raw: '2605152000',
+            internet_apply_status: '입찰신청전',
+            map_address: '경기도 화성시 동탄구 반송동 61-3',
+            map_url: 'https://map.naver.com/v5/search/example',
+            household_count: '20',
           },
         ],
       }),
     ).toMatchObject({
       notice: {
-        regionName: '부산광역시',
+        regionName: '경기도',
       },
       detail: {
-        contractAddress: '부산시청',
+        contractAddress: '경기도 화성시 동탄구 노작로 10',
+        contractDetailAddress: '오산동탄사업본부 1층',
         applyStartDate: '2026-07-01',
         contact: '1600-1004',
       },
       supplies: [
         {
-          address: '부산 해운대구 공급주소',
-          expectedAmount: '보증금 500만원',
-          householdCount: '20호',
+          usage: '근린생활시설',
+          address: '경기도 화성시 동탄구 반송동',
+          lotNumber: '61-3',
+          area: '493.4',
+          expectedAmount: '2,605,152,000',
+          expectedAmountRaw: '2605152000',
+          internetApplyStatus: '입찰신청전',
+          mapAddress: '경기도 화성시 동탄구 반송동 61-3',
+          mapUrl: 'https://map.naver.com/v5/search/example',
+          householdCount: '20',
         },
       ],
     })
