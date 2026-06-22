@@ -383,7 +383,7 @@ watch(trades, () => {
       ></div>
 
       <aside
-        class="price-search-panel absolute bottom-0 left-0 top-20 z-20 flex w-full flex-col bg-white/95 shadow-2xl backdrop-blur md:border md:border-white/70"
+        class="price-search-panel price-panel-frame absolute bottom-0 left-0 top-20 z-20 flex w-full flex-col bg-white/95 shadow-2xl backdrop-blur md:border md:border-white/70"
       >
         <section class="border-b border-neutral-200 p-5">
           <p class="text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
@@ -533,6 +533,8 @@ watch(trades, () => {
 <style scoped>
 .price-map-shell {
   --price-panel-width: min(520px, calc((100vw - 48px) / 2));
+  --price-panel-top: 6rem;
+  --price-panel-bottom: 1.5rem;
 }
 
 .price-search-panel {
@@ -541,8 +543,8 @@ watch(trades, () => {
 
 @media (min-width: 768px) {
   .price-search-panel {
-    top: 6rem;
-    bottom: 1.5rem;
+    top: var(--price-panel-top);
+    bottom: var(--price-panel-bottom);
     left: 1.5rem;
     width: var(--price-panel-width);
     max-width: none;

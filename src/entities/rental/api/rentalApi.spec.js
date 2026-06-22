@@ -62,7 +62,7 @@ describe('rentalApi normalization', () => {
       detail: {
         contractAddress: '경기도 화성시 동탄구 노작로 10',
         contractDetailAddress: '오산동탄사업본부 1층',
-        applyStartDate: '2026-07-01',
+        noticeDate: '2026-07-01',
         contact: '1600-1004',
       },
       supplies: [
@@ -79,6 +79,33 @@ describe('rentalApi normalization', () => {
           householdCount: '20',
         },
       ],
+    })
+  })
+
+  it('maps basic detail dates from the notice JSON fields', () => {
+    expect(
+      normalizeRentalDetail({
+        notice: {
+          noticeId: 'BN-0007655',
+          regionName: '경기도',
+          detailType: '토지',
+          noticeDate: '2026.06.22',
+          closeDate: '2026.07.07',
+        },
+        detail: {
+          contact: '1600-1004',
+        },
+      }),
+    ).toMatchObject({
+      notice: {
+        regionName: '경기도',
+        detailType: '토지',
+      },
+      detail: {
+        noticeDate: '2026.06.22',
+        closeDate: '2026.07.07',
+        contact: '1600-1004',
+      },
     })
   })
 })
