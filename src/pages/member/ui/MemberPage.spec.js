@@ -8,7 +8,18 @@ import { getFinancialProfile } from '@/entities/member/api/financialProfileApi'
 
 vi.mock('@/shared/api/client', () => ({
   api: {
-    get: vi.fn(() => Promise.resolve({ data: [] })),
+    get: vi.fn(() =>
+      Promise.resolve({
+        data: [
+          {
+            no: 1,
+            aptName: '역삼동하나빌',
+            address: '서울특별시 강남구 역삼동 681-26',
+            dealAmount: '70000',
+          },
+        ],
+      }),
+    ),
   },
 }))
 
@@ -44,5 +55,16 @@ describe('MemberPage', () => {
 
     expect(wrapper.text()).toContain('금융 프로필')
     expect(wrapper.text()).toContain('보유자산')
+    expect(wrapper.get('[data-testid="financial-field-availableAssets"]').element.value).toBe(
+      '100,000,000',
+    )
+    expect(wrapper.text()).toContain('관심 목록')
+    expect(wrapper.text()).toContain('실거래')
+    expect(wrapper.text()).toContain('양도')
+    expect(wrapper.text()).toContain('LH')
+    expect(wrapper.text()).toContain('70,000만원')
+
+    await wrapper.get('[data-testid="favorite-tab-transfers"]').trigger('click')
+    expect(wrapper.text()).toContain('저장한 관심 양도글이 없습니다.')
   })
 })

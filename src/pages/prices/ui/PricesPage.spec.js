@@ -174,11 +174,11 @@ describe('PricesPage', () => {
 
     await wrapper.get('[data-testid="open-detail-11"]').trigger('click')
     expect(wrapper.find('[data-testid="property-detail-panel"]').exists()).toBe(true)
-    expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).toContain(
+    expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).not.toContain(
       'md:left-[544px]',
     )
     expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).toContain('md:bottom-0')
-    expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).toContain('md:my-6')
+    expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).not.toContain('md:my-6')
     expect(wrapper.text()).toContain('관심 매물 등록')
     expect(wrapper.get('[data-testid="property-close"]').classes()).toContain('rounded-xl')
     expect(wrapper.get('[data-testid="loan-tab"]').classes()).toContain('min-h-11')
