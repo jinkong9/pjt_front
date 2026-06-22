@@ -338,9 +338,13 @@ onBeforeUnmount(() => {
               1100: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 22 },
             }"
           >
-            <SwiperSlide v-for="notice in rentalNotices" :key="notice.noticeId">
+            <SwiperSlide
+              v-for="notice in rentalNotices"
+              :key="notice.noticeId"
+              class="h-auto"
+            >
               <RouterLink
-                class="rental-slide-card grid min-h-[310px] content-between gap-5 border border-neutral-200 bg-white p-[34px] text-[#171717]"
+                class="rental-slide-card grid h-full min-h-[310px] content-between gap-5 border border-neutral-200 bg-white p-[34px] text-[#171717]"
                 :to="`/rentals/${notice.noticeId}`"
               >
                 <span class="text-sm font-black uppercase tracking-[0.2em] text-[#b4212a]">{{
@@ -483,6 +487,10 @@ onBeforeUnmount(() => {
 
 :deep(.rental-swiper .swiper-wrapper) {
   align-items: stretch;
+}
+
+:deep(.rental-swiper .swiper-slide) {
+  height: auto;
 }
 
 :deep(.rental-swiper-pagination .swiper-pagination-bullet) {
