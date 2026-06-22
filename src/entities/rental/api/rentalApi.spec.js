@@ -1,8 +1,32 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { normalizeRentalDetail, normalizeRentalNotice } from './rentalApi'
+import { api } from '@/shared/api/client'
+import {
+  fetchFavoriteRentalNotices,
+  fetchRentalRecommendations,
+  normalizeRentalDetail,
+  normalizeRentalNotice,
+  normalizeRentalRecommendation,
+  sendFavoriteRentalNoticeEmails,
+  toggleFavoriteRentalNotice,
+} from './rentalApi'
+
+vi.mock('@/shared/api/client', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+  },
+  toQuery: (params) =>
+    Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ''),
+    ),
+}))
 
 describe('rentalApi normalization', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('maps LH notice fields from camelCase and snake_case responses', () => {
     expect(
       normalizeRentalNotice({
@@ -107,5 +131,88 @@ describe('rentalApi normalization', () => {
         contact: '1600-1004',
       },
     })
+  })
+
+  it('normalizes LH recommendation responses with notice, score, reasons, and supplies', () => {
+    expect(
+      normalizeRentalRecommendation({
+        notice: {
+          notice_id: 'LH-REC-1',
+          title: '서울 행복주택',
+          region_name: '서울',
+          status: '접수예정',
+        },
+        score: 87.5,
+        reasons: ['소득 기준에 적합', '자산 기준에 적합'],
+        supplies: [
+          {
+            area: '46.2',
+            expected_amount: '120,000,000',
+            household_count: '12',
+          },
+        ],
+      }),
+    ).toMatchObject({
+      notice: {
+        rentalNoticeId: 'LH-REC-1',
+        title: '서울 행복주택',
+        regionName: '서울',
+        status: '접수예정',
+      },
+      score: 87.5,
+      reasons: ['소득 기준에 적합', '자산 기준에 적합'],
+      supplies: [
+        {
+          area: '46.2',
+          expectedAmount: '120,000,000',
+          householdCount: '12',
+        },
+      ],
+    })
+  })
+
+  it('loads favorite LH notices through the favorites endpoint', async () => {
+    api.get.mockResolvedValueOnce({
+      data: [
+        {
+          notice: {
+            noticeId: 'LH-FAV-1',
+            title: '관심 LH 공고',
+            regionName: '경기',
+          },
+        },
+      ],
+    })
+
+    await expect(fetchFavoriteRentalNotices()).resolves.toMatchObject([
+      {
+        notice: {
+          rentalNoticeId: 'LH-FAV-1',
+          title: '관심 LH 공고',
+          regionName: '경기',
+        },
+      },
+    ])
+    expect(api.get).toHaveBeenCalledWith('/rentals/favorites')
+  })
+
+  it('uses backend paths for toggling favorites, recommendations, and email sending', async () => {
+    api.post.mockResolvedValueOnce({ data: { favorite: true } })
+    await expect(toggleFavoriteRentalNotice('LH-1')).resolves.toEqual({ favorite: true })
+    expect(api.post).toHaveBeenCalledWith('/rentals/LH-1/favorite/toggle')
+
+    api.get.mockResolvedValueOnce({ data: [] })
+    await expect(fetchRentalRecommendations(3)).resolves.toEqual([])
+    expect(api.get).toHaveBeenCalledWith('/rentals/recommendations', { params: { limit: 3 } })
+
+    api.post.mockResolvedValueOnce({
+      data: { sentCount: 1, skippedCount: 0, missingMemberCount: 0 },
+    })
+    await expect(sendFavoriteRentalNoticeEmails()).resolves.toEqual({
+      sentCount: 1,
+      skippedCount: 0,
+      missingMemberCount: 0,
+    })
+    expect(api.post).toHaveBeenCalledWith('/rentals/favorites/emails/send')
   })
 })

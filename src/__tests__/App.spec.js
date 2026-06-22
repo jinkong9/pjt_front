@@ -1,12 +1,18 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 
 import App from '@/app/App.vue'
 import router from '@/app/router'
 import { useMemberStore } from '@/entities/member/model/member'
+import { clearAuthToken, saveAuthToken } from '@/shared/api/authToken'
 
 describe('App', () => {
+  afterEach(() => {
+    clearAuthToken()
+    localStorage.clear()
+  })
+
   it('renders the application navigation', async () => {
     router.push('/home')
     await router.isReady()
@@ -56,6 +62,7 @@ describe('App', () => {
     const memberStore = useMemberStore(pinia)
     memberStore.current = { userId: 'ssafy', name: '싸피' }
     memberStore.loaded = true
+    saveAuthToken({ accessToken: 'token' })
 
     const wrapper = mount(App, {
       global: {

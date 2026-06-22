@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
+import { getAccessToken } from '@/shared/api/authToken'
 
 const memberStore = useMemberStore()
 const route = useRoute()
@@ -10,6 +11,7 @@ const isHome = computed(() => route.name === 'home')
 const isBoardLayout = computed(() => ['notices', 'notice-detail'].includes(route.name))
 const isNoticeRoute = computed(() => ['notices', 'notice-detail'].includes(route.name))
 const isCalendarRoute = computed(() => route.name === 'lh-calendar')
+const isAuthenticated = computed(() => memberStore.isLoggedIn && Boolean(getAccessToken()))
 const sidebarOpen = ref(false)
 
 const sidebarLinks = computed(() => [
@@ -100,7 +102,7 @@ async function logout() {
         class="nav-links flex flex-wrap items-center justify-end gap-x-[18px] gap-y-3.5 text-sm font-black"
       >
         <RouterLink
-          v-if="!memberStore.isLoggedIn"
+          v-if="!isAuthenticated"
           class="nav-login-link inline-flex items-center justify-center border-0 bg-transparent p-0 text-center text-sm font-black text-inherit hover:text-[#b4212a]"
           :class="{ 'hover:text-[#b4212a]': isHome }"
           to="/login"
@@ -164,13 +166,13 @@ async function logout() {
           >{{ link.label }}</RouterLink
         >
         <RouterLink
-          v-if="!memberStore.isLoggedIn"
+          v-if="!isAuthenticated"
           class="flex min-h-[58px] items-center border-b border-neutral-100 px-7 text-lg font-black hover:bg-[#f4f0ea]"
           to="/register"
           >회원가입</RouterLink
         >
         <RouterLink
-          v-if="memberStore.isLoggedIn"
+          v-if="isAuthenticated"
           class="flex min-h-[58px] items-center border-b border-neutral-100 px-7 text-lg font-black hover:bg-[#f4f0ea]"
           to="/member"
           >회원정보</RouterLink

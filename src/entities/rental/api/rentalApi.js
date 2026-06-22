@@ -69,6 +69,29 @@ export function normalizeRentalDetail(payload = {}) {
   }
 }
 
+export function normalizeRentalRecommendation(payload = {}) {
+  return {
+    notice: normalizeRentalNotice(payload.notice ?? payload),
+    score: valueOf(payload, 'score') ?? 0,
+    reasons: valueOf(payload, 'reasons') ?? [],
+    supplies: (payload.supplies ?? payload.supplyList ?? []).map((supply) => ({
+      usage: valueOf(supply, 'usage') || '-',
+      address: valueOf(supply, 'address') || '-',
+      lotNumber: valueOf(supply, 'lotNumber', 'lot_number') || '-',
+      area: valueOf(supply, 'area') || '-',
+      expectedAmount: valueOf(supply, 'expectedAmount', 'expected_amount') || '-',
+      expectedAmountRaw: valueOf(supply, 'expectedAmountRaw', 'expected_amount_raw') || '',
+      houseType: valueOf(supply, 'houseType', 'house_type') || '-',
+      householdCount: valueOf(supply, 'householdCount', 'household_count') || '-',
+      internetApplyStatus: valueOf(supply, 'internetApplyStatus', 'internet_apply_status') || '-',
+      mapAddress: valueOf(supply, 'mapAddress', 'map_address') || valueOf(supply, 'address') || '',
+      mapUrl: valueOf(supply, 'mapUrl', 'map_url') || '',
+      latitude: valueOf(supply, 'latitude', 'lat'),
+      longitude: valueOf(supply, 'longitude', 'lng', 'lon'),
+    })),
+  }
+}
+
 export async function fetchRentalNotices(params = {}) {
   const { data } = await api.get('/rentals', { params: toQuery(params) })
   return data.map(normalizeRentalNotice)
@@ -77,4 +100,24 @@ export async function fetchRentalNotices(params = {}) {
 export async function fetchRentalDetail(noticeId) {
   const { data } = await api.get(`/rentals/${noticeId}`)
   return normalizeRentalDetail(data)
+}
+
+export async function fetchFavoriteRentalNotices() {
+  const { data } = await api.get('/rentals/favorites')
+  return data.map(normalizeRentalDetail)
+}
+
+export async function toggleFavoriteRentalNotice(noticeId) {
+  const { data } = await api.post(`/rentals/${noticeId}/favorite/toggle`)
+  return data
+}
+
+export async function fetchRentalRecommendations(limit = 10) {
+  const { data } = await api.get('/rentals/recommendations', { params: { limit } })
+  return data.map(normalizeRentalRecommendation)
+}
+
+export async function sendFavoriteRentalNoticeEmails() {
+  const { data } = await api.post('/rentals/favorites/emails/send')
+  return data
 }
