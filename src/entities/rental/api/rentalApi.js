@@ -34,14 +34,21 @@ export function normalizeRentalNotice(notice) {
 
 export function normalizeRentalDetail(payload = {}) {
   const detail = payload.detail ?? {}
+  const notice = normalizeRentalNotice(payload.notice ?? payload)
 
   return {
-    notice: normalizeRentalNotice(payload.notice ?? payload),
+    notice,
     detail: {
       contractAddress: valueOf(detail, 'contractAddress', 'contract_address') || '-',
       contractDetailAddress: valueOf(detail, 'contractDetailAddress', 'contract_detail_address') || '-',
-      applyStartDate: valueOf(detail, 'applyStartDate', 'apply_start_date') || '-',
-      applyEndDate: valueOf(detail, 'applyEndDate', 'apply_end_date') || '-',
+      noticeDate:
+        valueOf(detail, 'noticeDate', 'notice_date', 'applyStartDate', 'apply_start_date') ||
+        notice.noticeDate ||
+        '-',
+      closeDate:
+        valueOf(detail, 'closeDate', 'close_date', 'applyEndDate', 'apply_end_date') ||
+        notice.closeDate ||
+        '-',
       contact: valueOf(detail, 'contact') || '-',
     },
     supplies: (payload.supplies ?? payload.supplyList ?? []).map((supply) => ({
