@@ -109,4 +109,29 @@ describe('HomePage', () => {
     expect(hiddenUntil['11']).toBeGreaterThan(Date.now())
     expect(wrapper.find('[data-testid="notice-popup"]').exists()).toBe(false)
   })
+
+  it('stretches all three rental notice cards to the same slide height', async () => {
+    const { fetchRentalNotices } = await import('@/entities/rental/api/rentalApi')
+    fetchRentalNotices.mockResolvedValueOnce([
+      { noticeId: 1, title: '매우 긴 공고 제목이 여러 줄로 표시되는 공고' },
+      { noticeId: 2, title: '짧은 공고' },
+      { noticeId: 3, title: '중간 길이 공고 제목' },
+    ])
+
+    const wrapper = mount(HomePage, {
+      global: {
+        stubs: {
+          RouterLink: true,
+          Swiper: { template: '<div><slot /></div>' },
+          SwiperSlide: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+    await flushPromises()
+
+    const cards = wrapper.findAll('.rental-slide-card')
+    expect(cards).toHaveLength(3)
+    cards.forEach((card) => expect(card.classes()).toContain('h-full'))
+    cards.forEach((card) => expect(card.element.parentElement.classList).toContain('h-auto'))
+  })
 })
