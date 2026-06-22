@@ -46,13 +46,13 @@ async function logout() {
   <header
     class="site-header border-b border-neutral-200 bg-white"
     :class="{
-      'hero-header fixed inset-x-0 top-0 z-10 border-white/15 bg-[linear-gradient(180deg,rgba(0,0,0,0.34),rgba(0,0,0,0))] text-white':
+      'hero-header home-nav-dark-text fixed inset-x-0 top-0 z-10 text-[#171717]':
         isHome,
     }"
   >
     <nav
       class="nav mx-auto flex min-h-20 w-[min(1480px,calc(100%_-_48px))] items-center justify-between"
-      :class="{ 'border-b border-white/20': isHome }"
+      :class="{ 'border-b border-black/20': isHome }"
     >
       <RouterLink
         class="brand flex items-center gap-3 text-sm font-black uppercase tracking-[0.22em]"
@@ -70,7 +70,7 @@ async function logout() {
         <RouterLink
           v-if="!memberStore.isLoggedIn"
           class="nav-login-link inline-flex items-center justify-center border-0 bg-transparent p-0 text-center text-sm font-black text-inherit hover:text-[#b4212a]"
-          :class="{ 'hover:text-white/70': isHome }"
+          :class="{ 'hover:text-[#b4212a]': isHome }"
           to="/login"
           >로그인</RouterLink
         >
@@ -78,7 +78,7 @@ async function logout() {
           v-else
           type="button"
           class="nav-login-link inline-flex min-h-0 items-center justify-center border-0 bg-transparent p-0 text-center text-sm font-black text-inherit hover:text-[#b4212a]"
-          :class="{ 'hover:text-white/70': isHome }"
+          :class="{ 'hover:text-[#b4212a]': isHome }"
           @click="logout"
         >
           로그아웃
@@ -147,3 +147,18 @@ async function logout() {
     </aside>
   </header>
 </template>
+
+<style scoped>
+.home-nav-dark-text {
+  color: #171717 !important;
+}
+
+.home-nav-dark-text .nav-login-link:hover {
+  color: #b4212a !important;
+}
+
+.home-nav-dark-text .menu-toggle,
+.home-nav-dark-text .brand-mark {
+  border-color: #171717 !important;
+}
+</style>

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { api } from '@/shared/api/client'
+import { clearAuthToken, saveAuthToken } from '@/shared/api/authToken'
 
 export const useMemberStore = defineStore('member', {
   state: () => ({
@@ -22,9 +23,10 @@ export const useMemberStore = defineStore('member', {
     },
     async login(payload) {
       const { data } = await api.post('/members/login', payload)
-      this.current = data
+      saveAuthToken(data)
+      this.current = data.member
       this.loaded = true
-      return data
+      return data.member
     },
     async register(payload) {
       const { data } = await api.post('/members/register', payload)
@@ -41,6 +43,7 @@ export const useMemberStore = defineStore('member', {
       } catch {
         // Local session state should still clear if the backend session is already gone.
       }
+      clearAuthToken()
       this.current = null
       this.loaded = true
     },

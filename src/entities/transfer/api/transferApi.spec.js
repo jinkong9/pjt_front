@@ -71,8 +71,8 @@ describe('transferApi', () => {
   })
 
   it('normalizes transfer image URLs from backend variants', () => {
-    expect(resolveTransferImageUrl('/uploads/room.jpg')).toBe('/api/uploads/room.jpg')
-    expect(resolveTransferImageUrl('uploads/room.jpg')).toBe('/api/uploads/room.jpg')
+    expect(resolveTransferImageUrl('/uploads/room.jpg')).toBe('/uploads/room.jpg')
+    expect(resolveTransferImageUrl('uploads/room.jpg')).toBe('/uploads/room.jpg')
     expect(resolveTransferImageUrl('https://cdn.example.com/room.jpg')).toBe(
       'https://cdn.example.com/room.jpg',
     )
@@ -84,8 +84,8 @@ describe('transferApi', () => {
         image_urls: 'uploads/two.jpg, https://cdn.example.com/three.jpg',
       }).imageUrls,
     ).toEqual([
-      '/api/uploads/one.jpg',
-      '/api/uploads/two.jpg',
+      '/uploads/one.jpg',
+      '/uploads/two.jpg',
       'https://cdn.example.com/three.jpg',
     ])
   })
