@@ -1,14 +1,20 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { api } from '@/shared/api/client'
 
+const route = useRoute()
 const loading = ref(false)
 const analysis = ref(null)
+const busStops = ref([])
+const subwayStations = ref([])
+const selectedFacilityFilter = ref('all')
+
 const form = reactive({
-  label: '관악구 봉천동',
-  longitude: 126.9413,
-  latitude: 37.4826,
-  radius: 1000,
+  label: queryString('label', '관악구 봉천동'),
+  longitude: queryNumber('longitude', 126.9413),
+  latitude: queryNumber('latitude', 37.4826),
+  radius: queryNumber('radius', 1000),
   priority: 'balanced',
 })
 
@@ -30,6 +36,15 @@ const priorityOptions = [
   { label: '교통 안전', value: 'traffic' },
 ]
 
+const facilityFilters = [
+  { key: 'all', label: '전체' },
+  { key: 'food', label: '음식' },
+  { key: 'cafe', label: '카페' },
+  { key: 'medical', label: '의료' },
+  { key: 'convenience', label: '편의' },
+  { key: 'life', label: '생활' },
+]
+
 const resultSummary = computed(() => {
   if (!analysis.value) return null
   const score = analysis.value.score?.total ?? 0
@@ -37,6 +52,44 @@ const resultSummary = computed(() => {
   if (score >= 60) return '무난한 생활권입니다.'
   return '조건을 조금 더 확인해보세요.'
 })
+
+const facilityCounts = computed(() => {
+  const counts = Object.fromEntries(facilityFilters.map((filter) => [filter.key, 0]))
+  const items = analysis.value?.places ?? []
+  counts.all = items.length
+  for (const place of items) {
+    counts[facilityCategory(place)] += 1
+  }
+  return counts
+})
+
+const filteredPlaces = computed(() => {
+  const items = analysis.value?.places ?? []
+  if (selectedFacilityFilter.value === 'all') return items
+  return items.filter((place) => facilityCategory(place) === selectedFacilityFilter.value)
+})
+
+function queryString(key, fallback) {
+  const value = route.query?.[key]
+  if (Array.isArray(value)) return value[0] || fallback
+  return value || fallback
+}
+
+function queryNumber(key, fallback) {
+  const number = Number(queryString(key, fallback))
+  return Number.isFinite(number) ? number : fallback
+}
+
+function facilityCategory(place) {
+  const text = `${place.largeCategory ?? ''} ${place.middleCategory ?? ''}`
+  if (text.includes('카페') || text.includes('커피')) return 'cafe'
+  if (text.includes('음식') || text.includes('식당') || text.includes('한식')) return 'food'
+  if (text.includes('의료') || text.includes('병원') || text.includes('의원') || text.includes('약국')) {
+    return 'medical'
+  }
+  if (text.includes('편의') || text.includes('편의점')) return 'convenience'
+  return 'life'
+}
 
 function applyPreset(preset) {
   form.label = preset.place
@@ -70,20 +123,21 @@ function createFallbackAnalysis() {
         address: `${form.label} 생활권`,
       },
     ],
-    trafficEvents: [
-      { type: '혼잡', message: '출퇴근 시간대 주요 도로 혼잡 가능성이 있습니다.' },
-      { type: '주의', message: '공사 또는 교통 이벤트는 방문 전 한 번 더 확인하세요.' },
-    ],
   }
 }
 
 async function analyze() {
   loading.value = true
+  selectedFacilityFilter.value = 'all'
   try {
     const { data } = await api.get('/analysis', { params: form })
     analysis.value = data
+    busStops.value = data.busStops ?? []
+    subwayStations.value = data.subwayStations ?? []
   } catch {
     analysis.value = createFallbackAnalysis()
+    busStops.value = []
+    subwayStations.value = []
   } finally {
     loading.value = false
   }
@@ -172,7 +226,7 @@ async function analyze() {
                   v-model.number="form.longitude"
                   class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold text-[#171717] outline-0"
                   type="number"
-                  step="0.0001"
+                  step="any"
                 />
               </label>
               <label class="grid gap-2 text-sm font-black">
@@ -181,7 +235,7 @@ async function analyze() {
                   v-model.number="form.latitude"
                   class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold text-[#171717] outline-0"
                   type="number"
-                  step="0.0001"
+                  step="any"
                 />
               </label>
             </div>
@@ -237,45 +291,95 @@ async function analyze() {
         <span class="text-sm font-bold text-neutral-500">주변 편의시설</span>
       </article>
       <article class="panel metric analysis-metric border border-neutral-200 bg-white p-6">
-        <p class="eyebrow text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">교통</p>
-        <strong class="mt-3 block text-4xl font-black">{{ analysis.trafficRiskSummary.eventCount }}</strong>
-        <span class="text-sm font-bold text-neutral-500">{{ analysis.trafficRiskSummary.riskLevel }}</span>
+        <p class="eyebrow text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">버스</p>
+        <strong class="mt-3 block text-4xl font-black">{{ busStops.length }}</strong>
+        <span data-testid="analysis-bus-radius-label" class="text-sm font-bold text-neutral-500">
+          {{ form.radius }}m 이내 정류장
+        </span>
       </article>
       <article class="panel metric analysis-metric border border-neutral-200 bg-white p-6">
-        <p class="eyebrow text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">반경</p>
-        <strong class="mt-3 block text-4xl font-black">{{ analysis.radiusMeters }}</strong>
-        <span class="text-sm font-bold text-neutral-500">meter</span>
+        <p class="eyebrow text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">지하철</p>
+        <strong class="mt-3 block text-4xl font-black">{{ subwayStations.length }}</strong>
+        <span class="text-sm font-bold text-neutral-500">{{ form.radius }}m 이내 역</span>
       </article>
     </section>
 
-    <section v-if="analysis" class="split analysis-lists mt-5 grid grid-cols-2 gap-5">
+    <section v-if="analysis" class="analysis-lists mt-5 grid grid-cols-2 gap-5">
       <article class="panel border border-neutral-200 bg-white p-6">
-        <h2 class="text-[34px] font-black text-[#171717]">가까운 생활 시설</h2>
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-[34px] font-black text-[#171717]">가까운 생활시설</h2>
+          <span class="text-sm font-black text-neutral-500">{{ filteredPlaces.length }}곳</span>
+        </div>
+        <div class="mt-4 flex gap-2 overflow-x-auto pb-1">
+          <button
+            v-for="filter in facilityFilters"
+            :key="filter.key"
+            type="button"
+            :data-testid="`analysis-facility-filter-${filter.key}`"
+            class="min-h-10 flex-[0_0_auto] border border-neutral-200 bg-white px-3 text-xs font-black text-[#171717]"
+            :class="{
+              'border-[#b4212a] bg-[#fff1f2] text-[#b4212a]': selectedFacilityFilter === filter.key,
+            }"
+            @click="selectedFacilityFilter = filter.key"
+          >
+            {{ filter.label }} {{ facilityCounts[filter.key] ?? 0 }}
+          </button>
+        </div>
         <ul class="clean-list mt-4 grid gap-4">
           <li
-            v-for="place in analysis.places"
+            v-for="place in filteredPlaces"
             :key="`${place.name}-${place.address}`"
             class="border-b border-neutral-100 pb-4 last:border-0"
           >
             <strong class="block font-black">{{ place.name }}</strong>
-            <span class="mt-1 block text-sm font-bold text-neutral-500"
-              >{{ place.largeCategory }} / {{ place.middleCategory }} · {{ place.address }}</span
-            >
+            <span class="mt-1 block text-sm font-bold text-neutral-500">
+              {{ place.largeCategory }} / {{ place.middleCategory }} · {{ place.address }}
+            </span>
           </li>
         </ul>
       </article>
+
       <article class="panel border border-neutral-200 bg-white p-6">
-        <h2 class="text-[34px] font-black text-[#171717]">교통 체크 포인트</h2>
-        <ul class="clean-list mt-4 grid gap-4">
-          <li
-            v-for="event in analysis.trafficEvents"
-            :key="`${event.type}-${event.message}`"
-            class="border-b border-neutral-100 pb-4 last:border-0"
-          >
-            <strong class="block font-black">{{ event.type }}</strong>
-            <span class="mt-1 block text-sm font-bold text-neutral-500">{{ event.message }}</span>
-          </li>
-        </ul>
+        <h2 class="text-[34px] font-black text-[#171717]">근처 대중교통</h2>
+        <div class="mt-4 grid gap-5">
+          <section>
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-black">근처 버스정류장</h3>
+              <span class="text-sm font-black text-[#b4212a]">{{ busStops.length }}곳</span>
+            </div>
+            <ul class="clean-list mt-3 grid gap-3">
+              <li
+                v-for="stop in busStops"
+                :key="stop.nodeId"
+                class="border-b border-neutral-100 pb-3 last:border-0"
+              >
+                <strong class="block font-black">{{ stop.nodeName }}</strong>
+                <span class="mt-1 block text-sm font-bold text-neutral-500">
+                  정류장 번호 {{ stop.nodeNo || '-' }}
+                </span>
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-black">근처 지하철역</h3>
+              <span class="text-sm font-black text-[#b4212a]">{{ subwayStations.length }}곳</span>
+            </div>
+            <ul class="clean-list mt-3 grid gap-3">
+              <li
+                v-for="station in subwayStations"
+                :key="station.id"
+                class="border-b border-neutral-100 pb-3 last:border-0"
+              >
+                <strong class="block font-black">{{ station.name }}</strong>
+                <span class="mt-1 block text-sm font-bold text-neutral-500">
+                  {{ station.distanceMeters }}m · {{ station.address || '주소 정보 없음' }}
+                </span>
+              </li>
+            </ul>
+          </section>
+        </div>
       </article>
     </section>
   </main>
