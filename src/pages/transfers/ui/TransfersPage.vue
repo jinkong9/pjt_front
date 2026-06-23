@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
 import { toggleFavoriteTransfer } from '@/entities/transfer/api/transferApi'
 import { transferKeys, transferQueryOptions } from '@/entities/transfer/model/transferQueries'
+import { formatManwonToKoreanMoney } from '@/shared/lib/formatMoney'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
@@ -28,8 +29,7 @@ const loading = computed(() => transfersQuery.isPending.value)
 const availableCount = computed(() => transfers.value.filter((post) => post.status === '양도가능').length)
 
 function formatMoney(value) {
-  if (value === undefined || value === null || value === '') return '-'
-  return `${Number(value).toLocaleString()}만원`
+  return formatManwonToKoreanMoney(value)
 }
 
 function markBrokenImage(transferId) {
@@ -53,7 +53,7 @@ async function toggleFavorite(transferId) {
 }
 
 onMounted(() => {
-  document.title = '양도 게시판 | SSAFY Home'
+  document.title = '양도 게시판 | HOME FIT'
   loadTransfers()
 })
 </script>

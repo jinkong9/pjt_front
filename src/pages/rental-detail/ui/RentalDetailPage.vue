@@ -202,7 +202,7 @@ watch(detail, async (nextDetail) => {
   favorite.value = false
   selectedSupply.value = nextDetail?.supplies?.[0] ?? null
   if (nextDetail?.notice?.title) {
-    document.title = `${nextDetail.notice.title} | SSAFY Home`
+    document.title = `${nextDetail.notice.title} | HOME FIT`
     await renderMap()
   }
 }, { immediate: true })

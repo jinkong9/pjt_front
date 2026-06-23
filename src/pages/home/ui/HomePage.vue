@@ -36,6 +36,50 @@ const popupsQuery = useQuery(appQueryOptions.noticePopups(3))
 const rentalNotices = computed(() => homeRentalsQuery.data.value ?? [])
 const popups = computed(() => popupsQuery.data.value ?? [])
 const loading = computed(() => homeRentalsQuery.isPending.value)
+const serviceStories = [
+  {
+    eyebrow: 'Price Map',
+    title: '실거래가를 지도에서 바로 읽고',
+    copy: '아파트 이름을 몰라도 지역을 기준으로 최근 거래 흐름을 먼저 확인합니다. 가격은 억 단위로 읽기 쉽게 정리하고, 선택한 매물은 상세 분석으로 이어집니다.',
+    to: '/prices',
+    cta: '실거래 지도 보기',
+    stat: '3.5억',
+    statLabel: '최근 거래가',
+    rows: [
+      ['강남구 대치동', '84㎡ · 12층'],
+      ['송파구 잠실동', '59㎡ · 8층'],
+      ['마포구 아현동', '74㎡ · 5층'],
+    ],
+  },
+  {
+    eyebrow: 'LH Match',
+    title: '내 조건에 맞는 LH 공고를 놓치지 않게',
+    copy: '금융 프로필과 희망 지역, 세대 조건을 기반으로 볼 만한 공공임대 공고를 먼저 보여줍니다. 관심 등록한 공고는 마이페이지에서 다시 확인할 수 있습니다.',
+    to: '/rentals',
+    cta: 'LH 공고 보기',
+    stat: '92',
+    statLabel: '추천 점수',
+    rows: [
+      ['임대주택', '행복주택 · 청년'],
+      ['희망 지역', '서울 · 경기'],
+      ['접수 일정', '마감 전 알림'],
+    ],
+  },
+  {
+    eyebrow: 'Transfer Board',
+    title: '양도 매물까지 한 흐름으로 비교하고',
+    copy: '보증금, 월세, 관리비, 양도비를 같은 기준으로 읽고 상세 화면으로 바로 이동합니다. 실거래와 양도 매물을 번갈아 보며 현실적인 선택지를 좁힙니다.',
+    to: '/transfers',
+    cta: '양도 게시판 보기',
+    stat: '1억',
+    statLabel: '보증금',
+    rows: [
+      ['월세', '3,000만원'],
+      ['양도비', '3.5억'],
+      ['상태', '양도가능'],
+    ],
+  },
+]
 
 function readHiddenPopupMap() {
   try {
@@ -130,7 +174,7 @@ function bindFullpageWheel() {
 }
 
 onMounted(() => {
-  document.title = 'SSAFY Home'
+  document.title = 'HOME FIT'
   refreshHiddenPopups()
   nextTick(() => {
     if (!window.IntersectionObserver) {
@@ -151,7 +195,7 @@ onMounted(() => {
       },
       {
         root: document.querySelector('.fullpage-scroll'),
-        threshold: [0.58, 0.78],
+        threshold: [0.24, 0.48, 0.72],
       },
     )
     sections.forEach((section) => sectionObserver.observe(section))
@@ -270,12 +314,75 @@ onBeforeUnmount(() => {
     </section>
 
     <section
+      v-for="(story, index) in serviceStories"
+      :key="story.eyebrow"
+      class="home-story-section fullpage-section grid h-screen min-h-screen content-center overflow-hidden [scroll-snap-align:start] [scroll-snap-stop:always]"
+      :class="index % 2 === 0 ? 'bg-white' : 'bg-[#f4f0ea]'"
+      :data-section-index="index + 1"
+      data-testid="home-service-story"
+    >
+      <div
+        class="home-story-grid fullpage-reveal mx-auto grid w-[min(1480px,calc(100%_-_48px))] items-center gap-12 py-12 lg:grid-cols-[minmax(0,0.88fr)_minmax(460px,1fr)]"
+        :class="[
+          { 'is-visible': activeSection === index + 1 },
+          index % 2 === 1 ? 'lg:[&_.home-story-visual]:order-first' : '',
+        ]"
+      >
+        <div class="home-story-copy">
+          <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
+            {{ story.eyebrow }}
+          </p>
+          <h2 class="mt-5 max-w-[760px] text-[clamp(42px,5.5vw,82px)] font-black leading-[1.02] text-[#171717]">
+            {{ story.title }}
+          </h2>
+          <p class="mt-7 max-w-[620px] text-[17px] font-bold leading-8 text-neutral-500">
+            {{ story.copy }}
+          </p>
+          <RouterLink
+            class="mt-9 inline-flex min-h-12 items-center justify-center border border-[#171717] bg-[#171717] px-6 text-sm font-black text-white transition hover:bg-[#b4212a]"
+            :to="story.to"
+          >
+            {{ story.cta }}
+          </RouterLink>
+        </div>
+
+        <div class="home-story-visual relative">
+          <div class="home-product-shell border border-neutral-200 bg-[#171717] p-5 text-white shadow-[0_30px_80px_rgba(23,23,23,0.18)]">
+            <div class="flex items-center justify-between border-b border-white/10 pb-5">
+              <span class="text-[11px] font-black uppercase tracking-[0.24em] text-white/55">HOME FIT</span>
+              <span class="border border-white/20 px-3 py-1 text-xs font-black text-white/80">Live</span>
+            </div>
+            <div class="py-8">
+              <span class="text-sm font-black text-white/50">{{ story.statLabel }}</span>
+              <strong class="home-product-stat mt-3 block text-[clamp(54px,7vw,92px)] font-black leading-none text-white">
+                {{ story.stat }}
+              </strong>
+            </div>
+            <div class="grid gap-3">
+              <div
+                v-for="row in story.rows"
+                :key="row[0]"
+                class="home-product-row flex items-center justify-between gap-5 border border-white/10 bg-white/[0.06] px-5 py-4"
+              >
+                <span class="text-sm font-black text-white/50">{{ row[0] }}</span>
+                <strong class="text-right text-base font-black text-white">{{ row[1] }}</strong>
+              </div>
+            </div>
+          </div>
+          <div class="home-product-note mt-5 border border-neutral-200 bg-white px-5 py-4 text-sm font-black text-[#171717]">
+            공공 데이터, 관심 매물, 금융 프로필을 한 화면 흐름으로 연결합니다.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section
       class="home-section home-rental-section fullpage-section grid h-screen min-h-screen content-center bg-[#f4f0ea] [scroll-snap-align:start] [scroll-snap-stop:always]"
-      data-section-index="1"
+      data-section-index="4"
     >
       <div
         class="shell fullpage-reveal mx-auto w-[min(1720px,calc(100%_-_72px))] py-6"
-        :class="{ 'is-visible': activeSection === 1 }"
+        :class="{ 'is-visible': activeSection === 4 }"
       >
         <div class="section-head rental-section-head mb-8 flex items-center justify-between gap-6">
           <div>
@@ -370,11 +477,11 @@ onBeforeUnmount(() => {
 
     <section
       class="home-section home-feature-section fullpage-section grid h-screen min-h-screen content-center bg-white [scroll-snap-align:start] [scroll-snap-stop:always]"
-      data-section-index="2"
+      data-section-index="5"
     >
       <div
         class="shell fullpage-reveal mx-auto w-[min(1480px,calc(100%_-_48px))] py-9"
-        :class="{ 'is-visible': activeSection === 2 }"
+        :class="{ 'is-visible': activeSection === 5 }"
       >
         <div class="section-head mb-8 flex items-end justify-between gap-6">
           <div>
@@ -470,6 +577,32 @@ onBeforeUnmount(() => {
   transform: translateY(0);
 }
 
+.home-story-section {
+  color: #171717;
+}
+
+.home-story-visual {
+  transform: translateY(24px) scale(0.98);
+  opacity: 0;
+  transition:
+    opacity 0.9s ease 0.48s,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.48s;
+}
+
+.fullpage-reveal.is-visible .home-story-visual {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.home-product-shell,
+.home-product-note {
+  border-radius: 0;
+}
+
+.home-product-row {
+  min-height: 64px;
+}
+
 :deep(.rental-swiper .swiper-wrapper) {
   align-items: stretch;
 }
@@ -500,6 +633,62 @@ onBeforeUnmount(() => {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  .home-story-visual {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .home-story-section {
+    min-height: auto;
+    height: auto;
+  }
+
+  .home-story-grid {
+    min-height: 100vh;
+    align-content: center;
+    padding-top: 112px;
+    padding-bottom: 64px;
+  }
+}
+
+@media (max-width: 680px) {
+  .home-page {
+    scroll-snap-type: y proximity;
+    scroll-padding-top: 96px;
+  }
+
+  .home-story-grid {
+    width: min(100% - 32px, 1480px);
+    gap: 28px;
+    padding-top: 132px;
+  }
+
+  .home-story-copy h2 {
+    font-size: clamp(34px, 11vw, 46px);
+    line-height: 1.05;
+  }
+
+  .home-story-copy p {
+    font-size: 15px;
+    line-height: 1.85;
+  }
+
+  .home-product-shell {
+    padding: 16px;
+  }
+
+  .home-product-stat {
+    font-size: clamp(48px, 18vw, 72px);
+  }
+
+  .home-product-row {
+    min-height: 54px;
+    padding: 12px 112px 12px 14px;
   }
 }
 </style>

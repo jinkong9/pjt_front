@@ -6,6 +6,7 @@ import { api } from '@/shared/api/client'
 import { getFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import { analyzePropertyLoan } from '@/entities/loan/api/loanAnalysisApi'
 import { memberKeys } from '@/entities/member/model/memberQueries'
+import { formatManwonToKoreanMoney } from '@/shared/lib/formatMoney'
 import LoanAnalysisResult from './LoanAnalysisResult.vue'
 import PropertyNeighborhoodAnalysis from './PropertyNeighborhoodAnalysis.vue'
 
@@ -93,6 +94,10 @@ async function loadAnalysis() {
     loading.value = false
   }
 }
+
+function formatMoney(value) {
+  return formatManwonToKoreanMoney(value)
+}
 </script>
 
 <template>
@@ -164,7 +169,7 @@ async function loadAnalysis() {
       <section v-if="activeTab === 'detail'" class="space-y-5">
         <div class="bg-[#f7f4ef] p-5">
           <p class="text-xs font-black text-neutral-500">거래 가격</p>
-          <strong class="mt-2 block text-3xl text-[#b4212a]">{{ trade.dealAmount }}만원</strong>
+          <strong class="mt-2 block text-3xl text-[#b4212a]">{{ formatMoney(trade.dealAmount) }}</strong>
         </div>
         <dl class="grid grid-cols-1 gap-4 text-sm sm:!grid-cols-2">
           <div>

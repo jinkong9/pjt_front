@@ -123,7 +123,7 @@ function syncCalendarMonth(rentalNotices) {
 }
 
 onMounted(() => {
-  document.title = 'LH 캘린더 | SSAFY Home'
+  document.title = 'LH 캘린더 | HOME FIT'
   syncCalendarMonth(notices.value)
 })
 

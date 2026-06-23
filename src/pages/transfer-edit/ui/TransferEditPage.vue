@@ -24,7 +24,7 @@ const updateMutation = useMutation({
 const submitting = computed(() => updateMutation.isPending.value)
 
 watch(post, (nextPost) => {
-  if (nextPost?.title) document.title = `${nextPost.title} 수정 | SSAFY Home`
+  if (nextPost?.title) document.title = `${nextPost.title} 수정 | HOME FIT`
 }, { immediate: true })
 
 async function submitTransfer({ fields, images }) {

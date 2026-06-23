@@ -6,6 +6,7 @@ import {
   createTransferComment,
   deleteTransfer,
   deleteTransferComment,
+  fetchFavoriteTransfers,
   fetchTransfers,
   fetchTransferComments,
   normalizeTransfer,
@@ -128,6 +129,17 @@ describe('transferApi', () => {
     await expect(toggleFavoriteTransfer(7)).resolves.toEqual({ favorite: true })
 
     expect(api.post).toHaveBeenCalledWith('/transfers/7/favorite/toggle')
+  })
+
+  it('loads favorite transfers through the backend favorites endpoint', async () => {
+    api.get.mockResolvedValueOnce({
+      data: [{ transfer_id: 7, title: '관심 양도글' }],
+    })
+
+    await expect(fetchFavoriteTransfers()).resolves.toEqual([
+      expect.objectContaining({ transferId: 7, title: '관심 양도글' }),
+    ])
+    expect(api.get).toHaveBeenCalledWith('/transfers/favorites')
   })
 
   it('loads and mutates transfer comments through the backend', async () => {

@@ -1,16 +1,17 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
 
 import MemberPage from './MemberPage.vue'
 import { useMemberStore } from '@/entities/member/model/member'
-import { getFinancialProfile } from '@/entities/member/api/financialProfileApi'
+import { getFinancialProfile, saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import {
   fetchFavoriteRentalNotices,
   sendFavoriteRentalNoticeEmails,
   toggleFavoriteRentalNotice,
 } from '@/entities/rental/api/rentalApi'
+import { fetchFavoriteTransfers } from '@/entities/transfer/api/transferApi'
 
 vi.mock('@/shared/api/client', () => ({
   api: {
@@ -40,6 +41,10 @@ vi.mock('@/entities/rental/api/rentalApi', () => ({
   toggleFavoriteRentalNotice: vi.fn(),
 }))
 
+vi.mock('@/entities/transfer/api/transferApi', () => ({
+  fetchFavoriteTransfers: vi.fn(),
+}))
+
 async function mountMemberPage() {
   const pinia = createPinia()
   setActivePinia(pinia)
@@ -51,7 +56,9 @@ async function mountMemberPage() {
     history: createWebHistory(),
     routes: [
       { path: '/login', component: { template: '<div />' } },
+      { path: '/prices', component: { template: '<div />' } },
       { path: '/rentals/:noticeId', component: { template: '<div />' } },
+      { path: '/transfers/:transferId', component: { template: '<div />' } },
     ],
   })
   await router.push('/')
@@ -62,7 +69,45 @@ async function mountMemberPage() {
   return wrapper
 }
 
+async function mountLoggedOutMemberPage() {
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const memberStore = useMemberStore()
+  memberStore.current = null
+  memberStore.loaded = true
+  memberStore.fetchMe = vi.fn()
+  const router = createRouter({
+    history: createWebHistory(),
+    routes: [
+      { path: '/login', component: { template: '<div />' } },
+      { path: '/', component: { template: '<div />' } },
+    ],
+  })
+  await router.push('/')
+  await router.isReady()
+
+  const wrapper = mount(MemberPage, { global: { plugins: [pinia, router] } })
+  await flushPromises()
+  return { wrapper, router }
+}
+
 describe('MemberPage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+    fetchFavoriteTransfers.mockResolvedValue([])
+  })
+
+  it('alerts and redirects to login instead of rendering the logged-out member panel', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+
+    const { wrapper, router } = await mountLoggedOutMemberPage()
+
+    expect(alertSpy).toHaveBeenCalledWith('로그인이 필요합니다.')
+    expect(router.currentRoute.value.path).toBe('/login')
+    expect(wrapper.text()).not.toContain('로그인이 필요합니다')
+  })
+
   it('shows the saved financial profile editor and default deal favorites', async () => {
     getFinancialProfile.mockResolvedValue({
       availableAssets: 100000000,
@@ -72,17 +117,96 @@ describe('MemberPage', () => {
       existingMonthlyDebtPayment: 0,
     })
     fetchFavoriteRentalNotices.mockResolvedValue([])
+    fetchFavoriteTransfers.mockResolvedValue([])
 
     const wrapper = await mountMemberPage()
 
     expect(wrapper.get('[data-testid="financial-field-availableAssets"]').element.value).toBe(
       '100,000,000',
     )
+    expect(wrapper.get('[data-testid="mydata-field-householdMembers"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="mydata-field-isHomeless"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="mydata-field-desiredRegion"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('LH')
-    expect(wrapper.text()).toContain('70,000')
+    expect(wrapper.text()).toContain('7억')
 
     await wrapper.get('[data-testid="favorite-tab-transfers"]').trigger('click')
     expect(wrapper.text()).toContain('관심')
+  })
+
+  it('saves backend financial fields and local LH recommendation profile from the large form', async () => {
+    getFinancialProfile.mockResolvedValue({
+      availableAssets: 30000000,
+      annualIncome: 50000000,
+      monthlySavings: 1200000,
+      existingLoanBalance: 0,
+      existingMonthlyDebtPayment: 0,
+    })
+    saveFinancialProfile.mockResolvedValue({
+      availableAssets: 30000000,
+      annualIncome: 50000000,
+      monthlySavings: 1200000,
+      existingLoanBalance: 0,
+      existingMonthlyDebtPayment: 0,
+    })
+    fetchFavoriteRentalNotices.mockResolvedValue([])
+
+    const wrapper = await mountMemberPage()
+
+    await wrapper.get('[data-testid="mydata-field-householdMembers"]').setValue('2')
+    await wrapper.get('[data-testid="mydata-field-isHomeless"]').setValue('yes')
+    await wrapper.get('[data-testid="mydata-field-desiredRegion"]').setValue('서울')
+    await wrapper.get('[data-testid="mydata-add-region"]').trigger('click')
+    await wrapper.get('[data-testid="mydata-rental-type-행복주택"]').trigger('click')
+    await wrapper.get('[data-testid="financial-profile-form"]').trigger('submit')
+    await flushPromises()
+
+    expect(saveFinancialProfile).toHaveBeenCalledWith({
+      availableAssets: 30000000,
+      annualIncome: 50000000,
+      monthlySavings: 1200000,
+      existingLoanBalance: 0,
+      existingMonthlyDebtPayment: 0,
+    })
+    expect(JSON.parse(localStorage.getItem('happyhome.mydata.profile'))).toMatchObject({
+      householdMembers: 2,
+      isHomeless: 'yes',
+      desiredRegions: ['서울'],
+      rentalTypes: ['행복주택'],
+    })
+  })
+
+  it('loads transfer favorites and links favorites to detail screens', async () => {
+    getFinancialProfile.mockResolvedValue(null)
+    fetchFavoriteRentalNotices.mockResolvedValue([])
+    fetchFavoriteTransfers.mockResolvedValue([
+      {
+        transferId: 7,
+        title: '강남 원룸 양도',
+        address: '서울 강남구',
+        depositAmount: 10000,
+        monthlyRentAmount: 3000,
+        transferFee: 35000,
+      },
+    ])
+
+    const wrapper = await mountMemberPage()
+
+    const dealLink = wrapper.get('[data-testid="favorite-deal-detail-1"]')
+    expect(dealLink.attributes('href')).toContain('/prices')
+    expect(wrapper.text()).toContain('7억')
+
+    await wrapper.get('[data-testid="favorite-tab-transfers"]').trigger('click')
+    await flushPromises()
+
+    expect(fetchFavoriteTransfers).toHaveBeenCalled()
+    expect(wrapper.text()).toContain('강남 원룸 양도')
+    expect(wrapper.text()).toContain('보증금 1억')
+    expect(wrapper.text()).toContain('월세 3,000만원')
+    expect(wrapper.text()).toContain('양도비 3.5억')
+    expect(wrapper.get('[data-testid="favorite-transfer-detail-7"]').attributes('href')).toBe(
+      '/transfers/7',
+    )
   })
 
   it('renders LH favorite notices and removes a notice after toggling', async () => {
