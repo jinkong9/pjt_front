@@ -90,6 +90,11 @@ export async function fetchTransferDetail(transferId) {
   return normalizeTransfer(data)
 }
 
+export async function fetchFavoriteTransfers() {
+  const { data } = await api.get('/transfers/favorites')
+  return data.map(normalizeTransfer)
+}
+
 export async function createTransfer(fields, images = []) {
   const { data } = await api.post('/transfers', createTransferPayload(fields, images), {
     headers: { 'Content-Type': 'multipart/form-data' },

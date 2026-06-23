@@ -18,7 +18,7 @@ async function submitTransfer({ fields, images }) {
 }
 
 onMounted(() => {
-  document.title = '양도글 작성 | SSAFY Home'
+  document.title = '양도글 작성 | HOME FIT'
 })
 </script>
 

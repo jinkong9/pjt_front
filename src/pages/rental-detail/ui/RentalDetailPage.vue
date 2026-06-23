@@ -1,7 +1,9 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { fetchRentalDetail, toggleFavoriteRentalNotice } from '@/entities/rental/api/rentalApi'
+import { toggleFavoriteRentalNotice } from '@/entities/rental/api/rentalApi'
+import { rentalKeys, rentalQueryOptions } from '@/entities/rental/model/rentalQueries'
 import {
   evaluateRentalEligibility,
   readStoredMyDataProfile,
@@ -12,8 +14,7 @@ import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
 const router = useRouter()
-const loading = ref(true)
-const detail = ref(null)
+const queryClient = useQueryClient()
 const error = ref('')
 const favorite = ref(false)
 const favoriteLoading = ref(false)
@@ -25,6 +26,18 @@ let kakaoSdkPromise = null
 let kakaoMap = null
 let kakaoMarker = null
 let kakaoInfoWindow = null
+const noticeId = computed(() => route.params.noticeId)
+const detailQuery = useQuery(computed(() => rentalQueryOptions.detail(noticeId.value)))
+const detail = computed(() => detailQuery.data.value)
+const loading = computed(() => detailQuery.isPending.value)
+const favoriteMutation = useMutation({
+  mutationFn: (id) => toggleFavoriteRentalNotice(id),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: rentalKeys.favorites() })
+    queryClient.invalidateQueries({ queryKey: rentalKeys.detail(noticeId.value) })
+    queryClient.invalidateQueries({ queryKey: rentalKeys.all })
+  },
+})
 
 function mapError(code, message) {
   const error = new Error(message)
@@ -161,31 +174,11 @@ async function renderMap() {
   }
 }
 
-async function loadDetail(noticeId) {
-  loading.value = true
-  error.value = ''
-  let shouldRenderMap = false
-  try {
-    detail.value = await fetchRentalDetail(noticeId)
-    favorite.value = false
-    selectedSupply.value = detail.value.supplies[0] ?? null
-    document.title = `${detail.value.notice.title} | SSAFY Home`
-    shouldRenderMap = true
-  } catch {
-    error.value = '공고 상세 정보를 불러오지 못했습니다.'
-  } finally {
-    loading.value = false
-  }
-  if (shouldRenderMap) {
-    await renderMap()
-  }
-}
-
 async function toggleFavorite() {
   if (!detail.value || favoriteLoading.value) return
   favoriteLoading.value = true
   try {
-    const result = await toggleFavoriteRentalNotice(detail.value.notice.rentalNoticeId)
+    const result = await favoriteMutation.mutateAsync(detail.value.notice.rentalNoticeId)
     favorite.value = Boolean(result.favorite)
   } catch (err) {
     if (err.response?.status === 401) {
@@ -201,11 +194,18 @@ async function toggleFavorite() {
   }
 }
 
-watch(
-  () => route.params.noticeId,
-  (noticeId) => loadDetail(noticeId),
-  { immediate: true },
-)
+watch(detailQuery.error, (nextError) => {
+  error.value = nextError ? '공고 상세 정보를 불러오지 못했습니다.' : ''
+})
+
+watch(detail, async (nextDetail) => {
+  favorite.value = false
+  selectedSupply.value = nextDetail?.supplies?.[0] ?? null
+  if (nextDetail?.notice?.title) {
+    document.title = `${nextDetail.notice.title} | HOME FIT`
+    await renderMap()
+  }
+}, { immediate: true })
 
 onBeforeUnmount(() => {
   kakaoMarker?.setMap(null)

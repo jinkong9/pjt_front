@@ -118,4 +118,55 @@ describe('RentalsPage recommendations', () => {
     expect(toggleFavoriteRentalNotice).toHaveBeenCalledWith('LH-LIST-1')
     expect(wrapper.text()).toContain('관심 공고로 등록했습니다.')
   })
+
+  it('uses rental type filters instead of status filters', async () => {
+    fetchRentalRecommendations.mockResolvedValue([])
+    fetchRentalNotices.mockResolvedValue([
+      {
+        rentalNoticeId: 'LAND-1',
+        title: '토지 공급 공고',
+        regionName: '인천광역시',
+        status: '공고중',
+        noticeType: '토지',
+        detailType: '토지',
+        applicationPeriod: '2026.07.09',
+        noticeDate: '2026.06.23',
+      },
+      {
+        rentalNoticeId: 'HOUSE-1',
+        title: '행복주택 입주자 모집',
+        regionName: '경상북도',
+        status: '공고중',
+        noticeType: '임대주택',
+        detailType: '행복주택',
+        applicationPeriod: '2026.07.02',
+        noticeDate: '2026.06.22',
+      },
+      {
+        rentalNoticeId: 'SHOP-1',
+        title: '상가 입점자 모집',
+        regionName: '강원특별자치도',
+        status: '공고중',
+        noticeType: '상가',
+        detailType: '임대상가(추첨)',
+        applicationPeriod: '2026.07.03',
+        noticeDate: '2026.06.23',
+      },
+    ])
+
+    const { wrapper } = await mountRentalsPage()
+
+    expect(wrapper.get('[data-testid="rental-type-select"]').text()).toContain('유형 전체')
+    expect(wrapper.text()).not.toContain('상태 전체')
+    expect(wrapper.get('[data-testid="rental-type-tab-all"]').text()).toContain('전체')
+    expect(wrapper.get('[data-testid="rental-type-tab-토지"]').text()).toContain('토지')
+    expect(wrapper.get('[data-testid="rental-type-tab-임대주택"]').text()).toContain('임대주택')
+    expect(wrapper.get('[data-testid="rental-type-tab-상가"]').text()).toContain('상가')
+
+    await wrapper.get('[data-testid="rental-type-tab-임대주택"]').trigger('click')
+
+    expect(wrapper.text()).toContain('행복주택 입주자 모집')
+    expect(wrapper.text()).not.toContain('토지 공급 공고')
+    expect(wrapper.text()).not.toContain('상가 입점자 모집')
+  })
 })

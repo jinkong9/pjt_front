@@ -61,6 +61,25 @@ describe('HomePage', () => {
     })
   })
 
+  it('introduces the service with scroll-reveal story sections', () => {
+    const wrapper = mount(HomePage, {
+      global: {
+        stubs: {
+          RouterLink: true,
+          Swiper: { template: '<div><slot /></div>' },
+          SwiperSlide: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+
+    const stories = wrapper.findAll('[data-testid="home-service-story"]')
+
+    expect(stories).toHaveLength(3)
+    expect(wrapper.text()).toContain('실거래가를 지도에서 바로 읽고')
+    expect(wrapper.text()).toContain('내 조건에 맞는 LH 공고를 놓치지 않게')
+    expect(wrapper.text()).toContain('양도 매물까지 한 흐름으로 비교하고')
+  })
+
   it('closes the notice popup for the current page view', async () => {
     const { api } = await import('@/shared/api/client')
     api.get.mockResolvedValueOnce({

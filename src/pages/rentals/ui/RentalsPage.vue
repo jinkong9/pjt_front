@@ -1,29 +1,26 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
-  fetchRentalNotices,
-  fetchRentalRecommendations,
   toggleFavoriteRentalNotice,
 } from '@/entities/rental/api/rentalApi'
+import { rentalKeys, rentalQueryOptions } from '@/entities/rental/model/rentalQueries'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
 const router = useRouter()
-const loading = ref(false)
-const notices = ref([])
-const recommendations = ref([])
-const recommendationLoading = ref(false)
-const recommendationError = ref('')
+const queryClient = useQueryClient()
 const recommendationFavoriteMessage = ref('')
 const condition = reactive({
   keyword: '',
   regionCode: '',
-  status: '',
+  type: '',
   page: 1,
-  size: 12,
+  size: 60,
 })
+const submittedCondition = ref({ ...condition })
 
 const regions = [
   { label: '전체', value: '' },
@@ -49,41 +46,52 @@ const regions = [
 function syncFromRoute() {
   condition.keyword = route.query.keyword || ''
   condition.regionCode = route.query.regionCode || ''
-  condition.status = route.query.status || ''
+  condition.type = route.query.type || ''
 }
 
 async function loadRentals() {
-  loading.value = true
-  try {
-    notices.value = await fetchRentalNotices(condition)
-  } finally {
-    loading.value = false
-  }
+  submittedCondition.value = { ...condition }
 }
 
-async function loadRecommendations() {
-  recommendationLoading.value = true
-  recommendationError.value = ''
-  try {
-    recommendations.value = await fetchRentalRecommendations(10)
-  } catch (err) {
-    recommendations.value = []
-    if (err.response?.status === 401) {
-      recommendationError.value = 'login'
-    } else if (err.response?.status === 409) {
-      recommendationError.value = 'profile'
-    } else {
-      recommendationError.value = 'unknown'
-    }
-  } finally {
-    recommendationLoading.value = false
+const noticesQuery = useQuery(computed(() => rentalQueryOptions.list(submittedCondition.value)))
+const recommendationsQuery = useQuery(rentalQueryOptions.recommendations(10))
+const favoriteMutation = useMutation({
+  mutationFn: (noticeId) => toggleFavoriteRentalNotice(noticeId),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: rentalKeys.favorites() })
+    queryClient.invalidateQueries({ queryKey: rentalKeys.recommendations(10) })
+    queryClient.invalidateQueries({ queryKey: rentalKeys.all })
+  },
+})
+
+const allNotices = computed(() => noticesQuery.data.value ?? [])
+const rentalTypes = computed(() => [
+  '전체',
+  ...new Set(allNotices.value.map((notice) => notice.noticeType).filter((type) => type && type !== '-')),
+])
+const notices = computed(() => {
+  if (!condition.type) return allNotices.value
+  return allNotices.value.filter((notice) => notice.noticeType === condition.type)
+})
+const loading = computed(() => noticesQuery.isPending.value)
+const recommendations = computed(() => recommendationsQuery.data.value ?? [])
+const recommendationLoading = computed(() => recommendationsQuery.isPending.value)
+const recommendationError = computed(() => {
+  const err = recommendationsQuery.error.value
+  if (!err) return ''
+  if (err.response?.status === 401) {
+    return 'login'
   }
-}
+  if (err.response?.status === 409) {
+    return 'profile'
+  }
+  return 'unknown'
+})
 
 async function toggleRecommendationFavorite(noticeId) {
   recommendationFavoriteMessage.value = ''
   try {
-    const result = await toggleFavoriteRentalNotice(noticeId)
+    const result = await favoriteMutation.mutateAsync(noticeId)
     recommendationFavoriteMessage.value = result.favorite
       ? '관심 공고로 등록했습니다.'
       : '관심 공고에서 해제했습니다.'
@@ -102,7 +110,7 @@ async function toggleRecommendationFavorite(noticeId) {
 async function toggleNoticeFavorite(noticeId) {
   recommendationFavoriteMessage.value = ''
   try {
-    const result = await toggleFavoriteRentalNotice(noticeId)
+    const result = await favoriteMutation.mutateAsync(noticeId)
     recommendationFavoriteMessage.value = result.favorite
       ? '관심 공고로 등록했습니다.'
       : '관심 공고에서 해제했습니다.'
@@ -124,10 +132,15 @@ async function search() {
   await loadRentals()
 }
 
+async function selectRentalType(type) {
+  condition.type = type === '전체' ? '' : type
+  await search()
+}
+
 onMounted(async () => {
-  document.title = '공공임대 공고 | SSAFY Home'
+  document.title = '공공임대 공고 | HOME FIT'
   syncFromRoute()
-  await Promise.all([loadRecommendations(), loadRentals()])
+  await loadRentals()
 })
 </script>
 
@@ -142,7 +155,7 @@ onMounted(async () => {
           공공임대 공고
         </h1>
         <p class="muted mt-3 text-sm font-bold leading-7 text-neutral-500">
-          LH 공공임대 공고를 지역, 유형, 접수 상태 기준으로 확인합니다.
+          LH 공공임대 공고를 지역과 유형 기준으로 확인합니다.
         </p>
       </div>
     </div>
@@ -231,7 +244,7 @@ onMounted(async () => {
     </section>
 
     <form
-      class="search mb-6 grid gap-3 border border-neutral-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_auto]"
+      class="search mb-4 grid gap-3 border border-neutral-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_auto]"
       @submit.prevent="search"
     >
       <input
@@ -246,13 +259,18 @@ onMounted(async () => {
         <option v-for="region in regions" :key="region.value" :value="region.value">{{ region.label }}</option>
       </select>
       <select
-        v-model="condition.status"
+        v-model="condition.type"
+        data-testid="rental-type-select"
         class="min-h-11 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold text-[#171717] outline-0"
       >
-        <option value="">상태 전체</option>
-        <option value="공고중">공고중</option>
-        <option value="접수예정">접수예정</option>
-        <option value="마감">마감</option>
+        <option value="">유형 전체</option>
+        <option
+          v-for="type in rentalTypes.filter((item) => item !== '전체')"
+          :key="type"
+          :value="type"
+        >
+          {{ type }}
+        </option>
       </select>
       <button
         type="submit"
@@ -261,6 +279,22 @@ onMounted(async () => {
         조회
       </button>
     </form>
+
+    <nav class="mb-6 flex flex-wrap gap-2" aria-label="공공임대 유형">
+      <button
+        v-for="type in rentalTypes"
+        :key="type"
+        type="button"
+        :data-testid="`rental-type-tab-${type === '전체' ? 'all' : type}`"
+        class="inline-flex min-h-10 items-center justify-center border px-4 text-sm font-black transition"
+        :class="(type === '전체' && !condition.type) || condition.type === type
+          ? 'border-[#b4212a] bg-[#b4212a] text-white'
+          : 'border-neutral-200 bg-white text-[#171717] hover:border-[#b4212a]'"
+        @click="selectRentalType(type)"
+      >
+        {{ type }}
+      </button>
+    </nav>
 
     <LoadingState v-if="loading" />
     <EmptyState v-else-if="!notices.length" message="조회된 공고가 없습니다." />

@@ -1,8 +1,10 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { RouterLink, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
-import { getFinancialProfile, saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
+import { saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
+import { memberKeys, memberQueryOptions } from '@/entities/member/model/memberQueries'
 import {
   buildFinancialPayload,
   normalizeMyDataProfile,
@@ -12,13 +14,25 @@ import {
 } from '@/entities/mydata/model/myDataProfile'
 
 const memberStore = useMemberStore()
+const router = useRouter()
+const queryClient = useQueryClient()
 const loaded = ref(false)
-const saving = ref(false)
 const message = ref('')
 const error = ref('')
 const form = reactive(normalizeMyDataProfile())
 const validationErrors = ref({})
 const regionInput = ref('')
+const financialProfileQuery = useQuery({
+  ...memberQueryOptions.financialProfile(),
+  enabled: () => memberStore.isLoggedIn,
+})
+const saveFinancialMutation = useMutation({
+  mutationFn: saveFinancialProfile,
+  onSuccess: (profile) => {
+    queryClient.setQueryData(memberKeys.financialProfile(), profile)
+  },
+})
+const saving = computed(() => saveFinancialMutation.isPending.value)
 
 const completion = computed(() => {
   const requiredFields = ['birthDate', 'householdMembers', 'isHomeless', 'annualIncome', 'totalAssets']
@@ -51,7 +65,7 @@ async function loadMyData() {
   applyProfile(readStoredMyDataProfile())
 
   try {
-    const financialProfile = await getFinancialProfile()
+    const { data: financialProfile } = await financialProfileQuery.refetch()
     if (financialProfile) {
       applyProfile({ ...form, ...financialProfile })
     }
@@ -74,16 +88,13 @@ async function saveMyData() {
     return
   }
 
-  saving.value = true
   try {
     const storedProfile = saveStoredMyDataProfile({ ...form })
-    const financialProfile = await saveFinancialProfile(buildFinancialPayload(storedProfile))
+    const financialProfile = await saveFinancialMutation.mutateAsync(buildFinancialPayload(storedProfile))
     applyProfile({ ...storedProfile, ...financialProfile })
     message.value = '마이데이터가 저장되었습니다.'
   } catch {
     error.value = '마이데이터를 저장하지 못했습니다.'
-  } finally {
-    saving.value = false
   }
 }
 
@@ -95,20 +106,21 @@ function startWizard() {
 }
 
 onMounted(async () => {
-  document.title = '마이데이터 | SSAFY Home'
+  document.title = '마이데이터 | HOME FIT'
   if (!memberStore.loaded) {
     await memberStore.fetchMe()
   }
   if (memberStore.isLoggedIn) {
     await loadMyData()
   } else {
-    loaded.value = true
+    window.alert('로그인이 필요합니다.')
+    await router.replace('/login')
   }
 })
 </script>
 
 <template>
-  <main class="shell page-shell mx-auto w-[min(1480px,calc(100%_-_48px))] py-24">
+  <main v-if="loaded" class="shell page-shell mx-auto w-[min(1480px,calc(100%_-_48px))] py-24">
     <section v-if="!memberStore.isLoggedIn" class="panel border border-neutral-200 bg-white p-6">
       <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
         MyData

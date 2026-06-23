@@ -59,7 +59,7 @@ async function logout() {
         class="text-sm font-black uppercase tracking-[0.28em]"
         to="/home"
       >
-        SSAFY Home
+        HOME FIT
       </RouterLink>
       <div class="absolute right-0 flex items-center gap-8 text-sm font-black">
         <RouterLink class="hover:text-[#b4212a]" to="/prices">실거래 지도</RouterLink>
@@ -96,7 +96,7 @@ async function logout() {
           class="brand-mark grid h-10 w-16 place-items-center border border-current text-[10px] font-black leading-none tracking-[0.12em] [text-indent:0.12em] whitespace-nowrap"
           >HOME</span
         >
-        <strong>SSAFY Home</strong>
+        <strong>HOME FIT</strong>
       </RouterLink>
       <div
         class="nav-links flex flex-wrap items-center justify-end gap-x-[18px] gap-y-3.5 text-sm font-black"
@@ -109,7 +109,7 @@ async function logout() {
           >로그인</RouterLink
         >
         <button
-          v-else
+          v-if="isAuthenticated"
           type="button"
           class="nav-login-link inline-flex min-h-0 items-center justify-center border-0 bg-transparent p-0 text-center text-sm font-black text-inherit hover:text-[#b4212a]"
           :class="{ 'hover:text-[#b4212a]': isHome }"
@@ -117,6 +117,13 @@ async function logout() {
         >
           로그아웃
         </button>
+        <RouterLink
+          v-if="isAuthenticated"
+          class="nav-login-link inline-flex items-center justify-center border-0 bg-transparent p-0 text-center text-sm font-black text-inherit hover:text-[#b4212a]"
+          :class="{ 'hover:text-[#b4212a]': isHome }"
+          to="/member"
+          >나의 정보</RouterLink
+        >
         <button
           type="button"
           class="menu-toggle inline-flex min-h-10 items-center justify-center gap-[5px] border border-current bg-transparent px-3 text-inherit"

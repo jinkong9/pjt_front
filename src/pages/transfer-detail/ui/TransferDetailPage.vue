@@ -1,37 +1,62 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 import {
   createTransferComment,
   deleteTransfer,
   deleteTransferComment,
-  fetchTransferComments,
-  fetchTransferDetail,
   toggleFavoriteTransfer,
   updateTransferComment,
 } from '@/entities/transfer/api/transferApi'
+import { transferKeys, transferQueryOptions } from '@/entities/transfer/model/transferQueries'
+import { formatManwonToKoreanMoney } from '@/shared/lib/formatMoney'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
 const router = useRouter()
 const memberStore = useMemberStore()
-const loading = ref(true)
-const post = ref(null)
+const queryClient = useQueryClient()
 const failedImages = ref(new Set())
 const favorite = ref(false)
-const comments = ref([])
 const commentContent = ref('')
 const commentLoading = ref(false)
 const commentError = ref('')
 const editingCommentId = ref(null)
 const editingContent = ref('')
+const transferId = computed(() => route.params.transferId)
+const detailQuery = useQuery(computed(() => transferQueryOptions.detail(transferId.value)))
+const commentsQuery = useQuery(computed(() => transferQueryOptions.comments(transferId.value)))
+const post = computed(() => detailQuery.data.value)
+const comments = computed(() => commentsQuery.data.value ?? [])
+const loading = computed(() => detailQuery.isPending.value || commentsQuery.isPending.value)
+
+const deleteTransferMutation = useMutation({
+  mutationFn: () => deleteTransfer(transferId.value),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: transferKeys.all }),
+})
+const favoriteMutation = useMutation({
+  mutationFn: () => toggleFavoriteTransfer(transferId.value),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: transferKeys.all }),
+})
+const createCommentMutation = useMutation({
+  mutationFn: (content) => createTransferComment(transferId.value, content),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: transferKeys.comments(transferId.value) }),
+})
+const updateCommentMutation = useMutation({
+  mutationFn: ({ commentId, content }) => updateTransferComment(commentId, content),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: transferKeys.comments(transferId.value) }),
+})
+const deleteCommentMutation = useMutation({
+  mutationFn: (commentId) => deleteTransferComment(commentId),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: transferKeys.comments(transferId.value) }),
+})
 
 const currentUserId = computed(() => memberStore.current?.userId ?? '')
 
 function formatMoney(value) {
-  if (value === undefined || value === null || value === '') return '-'
-  return `${Number(value).toLocaleString()}만원`
+  return formatManwonToKoreanMoney(value)
 }
 
 function markFailedImage(imageUrl) {
@@ -47,29 +72,22 @@ function formatDate(value) {
   return String(value).replace('T', ' ').slice(0, 16)
 }
 
-async function loadComments() {
-  comments.value = await fetchTransferComments(route.params.transferId)
-}
+onMounted(() => {
+  document.title = '양도 상세 | HOME FIT'
+})
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    post.value = await fetchTransferDetail(route.params.transferId)
-    await loadComments()
-    document.title = `${post.value.title} | SSAFY Home`
-  } finally {
-    loading.value = false
-  }
+watch(post, (nextPost) => {
+  if (nextPost?.title) document.title = `${nextPost.title} | HOME FIT`
 })
 
 async function removeTransfer() {
   if (!window.confirm('양도글을 삭제할까요?')) return
-  await deleteTransfer(route.params.transferId)
+  await deleteTransferMutation.mutateAsync()
   router.push('/transfers')
 }
 
 async function toggleFavorite() {
-  const result = await toggleFavoriteTransfer(route.params.transferId)
+  const result = await favoriteMutation.mutateAsync()
   favorite.value = Boolean(result.favorite)
 }
 
@@ -80,9 +98,8 @@ async function submitComment() {
   commentLoading.value = true
   commentError.value = ''
   try {
-    await createTransferComment(route.params.transferId, content)
+    await createCommentMutation.mutateAsync(content)
     commentContent.value = ''
-    await loadComments()
   } catch {
     commentError.value = '댓글을 등록하지 못했습니다.'
   } finally {
@@ -107,9 +124,8 @@ async function saveComment(comment) {
   commentLoading.value = true
   commentError.value = ''
   try {
-    await updateTransferComment(comment.commentId, content)
+    await updateCommentMutation.mutateAsync({ commentId: comment.commentId, content })
     cancelEdit()
-    await loadComments()
   } catch {
     commentError.value = '댓글을 수정하지 못했습니다.'
   } finally {
@@ -123,11 +139,10 @@ async function removeComment(comment) {
   commentLoading.value = true
   commentError.value = ''
   try {
-    await deleteTransferComment(comment.commentId)
+    await deleteCommentMutation.mutateAsync(comment.commentId)
     if (editingCommentId.value === comment.commentId) {
       cancelEdit()
     }
-    await loadComments()
   } catch {
     commentError.value = '댓글을 삭제하지 못했습니다.'
   } finally {

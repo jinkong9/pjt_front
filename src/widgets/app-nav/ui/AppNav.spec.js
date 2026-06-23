@@ -62,11 +62,14 @@ describe('AppNav', () => {
     expect(wrapper.find('a.nav-login-link').exists()).toBe(true)
   })
 
-  it('shows logout only when member data and an auth token both exist', async () => {
+  it('shows my info and logout when member data and an auth token both exist', async () => {
     saveAuthToken({ accessToken: 'token' })
     const router = createRouter({
       history: createMemoryHistory(),
-      routes: [{ path: '/home', name: 'home', component: { template: '<div />' } }],
+      routes: [
+        { path: '/home', name: 'home', component: { template: '<div />' } },
+        { path: '/member', name: 'member', component: { template: '<div />' } },
+      ],
     })
     await router.push('/home')
     await router.isReady()
@@ -83,6 +86,6 @@ describe('AppNav', () => {
     })
 
     expect(wrapper.find('button.nav-login-link').exists()).toBe(true)
-    expect(wrapper.find('a.nav-login-link').exists()).toBe(false)
+    expect(wrapper.find('a.nav-login-link[href="/member"]').text()).toBe('나의 정보')
   })
 })

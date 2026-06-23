@@ -1,18 +1,16 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { api, toQuery } from '@/shared/api/client'
+import { toQuery } from '@/shared/api/client'
 import { useMemberStore } from '@/entities/member/model/member'
 import PropertyDetailPanel from '@/features/property-detail/ui/PropertyDetailPanel.vue'
+import { appQueryOptions } from '@/shared/query/appQueries'
+import { formatManwonToKoreanMoney } from '@/shared/lib/formatMoney'
 
 const route = useRoute()
 const router = useRouter()
 const memberStore = useMemberStore()
-const loading = ref(false)
-const trades = ref([])
-const sidos = ref([])
-const guguns = ref([])
-const dongs = ref([])
 const selectedTrade = ref(null)
 const selectedTab = ref('detail')
 const mapEl = ref(null)
@@ -41,6 +39,16 @@ const condition = reactive({
   dealYear: '',
   limit: defaultPriceCondition.limit,
 })
+const submittedCondition = ref({ ...condition })
+const sidosQuery = useQuery(appQueryOptions.sidos())
+const gugunsQuery = useQuery(computed(() => appQueryOptions.guguns(condition.sidoName)))
+const dongsQuery = useQuery(computed(() => appQueryOptions.dongs(condition.sidoName, condition.gugunName)))
+const tradesQuery = useQuery(computed(() => appQueryOptions.houseList(toQuery(submittedCondition.value))))
+const loading = computed(() => tradesQuery.isPending.value)
+const trades = computed(() => (tradesQuery.data.value ?? []).map(normalizeTrade).filter((trade) => !isSampleTrade(trade)))
+const sidos = computed(() => sidosQuery.data.value ?? [])
+const guguns = computed(() => gugunsQuery.data.value ?? [])
+const dongs = computed(() => dongsQuery.data.value ?? [])
 
 const statusText = computed(() => {
   if (loading.value) return '거래 정보를 불러오는 중입니다.'
@@ -88,26 +96,6 @@ function syncFromRoute() {
     dealYear: route.query.dealYear || defaults.dealYear,
     limit: route.query.limit || defaults.limit,
   })
-}
-
-async function loadRegions() {
-  const { data } = await api.get('/regions/sidos')
-  sidos.value = data
-}
-
-async function loadDependentRegions() {
-  guguns.value = []
-  dongs.value = []
-  if (condition.sidoName) {
-    const { data } = await api.get('/regions/guguns', { params: { sidoName: condition.sidoName } })
-    guguns.value = data
-  }
-  if (condition.sidoName && condition.gugunName) {
-    const { data } = await api.get('/regions/dongs', {
-      params: { sidoName: condition.sidoName, gugunName: condition.gugunName },
-    })
-    dongs.value = data
-  }
 }
 
 function isSampleTrade(trade) {
@@ -158,17 +146,15 @@ function normalizeTrade(trade) {
   }
 }
 
+function formatMoney(value) {
+  return formatManwonToKoreanMoney(value)
+}
+
 async function loadTrades() {
-  loading.value = true
-  try {
-    const { data } = await api.get('/houses', { params: toQuery(condition) })
-    const realTrades = data.map(normalizeTrade).filter((trade) => !isSampleTrade(trade))
-    trades.value = realTrades
-    selectedTrade.value = null
-    restorePropertyContext()
-  } finally {
-    loading.value = false
-  }
+  submittedCondition.value = { ...condition }
+  selectedTrade.value = null
+  await tradesQuery.refetch()
+  restorePropertyContext()
 }
 
 function restorePropertyContext() {
@@ -299,14 +285,12 @@ async function onSidoChange() {
   condition.mode = 'region'
   condition.gugunName = ''
   condition.dongName = ''
-  await loadDependentRegions()
   await search()
 }
 
 async function onGugunChange() {
   condition.mode = 'region'
   condition.dongName = ''
-  await loadDependentRegions()
   await search()
 }
 
@@ -322,12 +306,12 @@ async function logout() {
 }
 
 onMounted(async () => {
-  document.title = '실거래 지도 | SSAFY Home'
+  document.title = '실거래 지도 | HOME FIT'
   if (!memberStore.loaded) {
     memberStore.fetchMe()
   }
   syncFromRoute()
-  await Promise.allSettled([renderMap(), loadRegions(), loadDependentRegions(), loadTrades()])
+  await Promise.allSettled([renderMap(), loadTrades()])
 })
 
 onBeforeUnmount(() => {
@@ -335,6 +319,7 @@ onBeforeUnmount(() => {
 })
 
 watch(trades, () => {
+  restorePropertyContext()
   renderMap()
 }, { flush: 'post' })
 </script>
@@ -350,7 +335,7 @@ watch(trades, () => {
             class="grid h-10 w-16 place-items-center border border-white/70 text-[10px] font-black leading-none tracking-[0.12em] [text-indent:0.12em] whitespace-nowrap"
             >HOME</span
           >
-          <strong class="text-sm font-black uppercase tracking-[0.22em]">SSAFY Home</strong>
+          <strong class="text-sm font-black uppercase tracking-[0.22em]">HOME FIT</strong>
         </RouterLink>
         <nav class="hidden items-center gap-7 text-sm font-black md:flex">
           <RouterLink
@@ -360,8 +345,15 @@ watch(trades, () => {
           >
             로그인
           </RouterLink>
+          <RouterLink
+            v-if="memberStore.isLoggedIn"
+            to="/member"
+            class="text-white hover:text-white/70"
+          >
+            나의 정보
+          </RouterLink>
           <button
-            v-else
+            v-if="memberStore.isLoggedIn"
             type="button"
             class="border-white/60 bg-white/10 text-white hover:bg-white/20"
             @click="logout"
@@ -493,7 +485,7 @@ watch(trades, () => {
             </div>
             <h2 class="mt-2 text-xl font-black leading-tight">{{ trade.aptName }}</h2>
             <div class="mt-4 text-sm">
-              <strong class="text-lg text-[#b4212a]">{{ trade.dealAmount }}만원</strong>
+              <strong class="text-lg text-[#b4212a]">{{ formatMoney(trade.dealAmount) }}</strong>
               <p class="mt-2 font-bold text-neutral-700">
                 {{ trade.exclusiveArea }}㎡ {{ trade.floor }}층 {{ trade.dealDate }}
               </p>

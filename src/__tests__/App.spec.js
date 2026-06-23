@@ -23,7 +23,7 @@ describe('App', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('SSAFY Home')
+    expect(wrapper.text()).toContain('HOME FIT')
     expect(wrapper.find('.nav-links').text()).toContain('로그인')
     expect(wrapper.find('.nav-links').text()).not.toContain('부동산 시세')
     expect(wrapper.find('.nav-links').text()).not.toContain('양도 게시판')
@@ -149,7 +149,7 @@ describe('App', () => {
     expect(registerWrapper.get('[data-testid="register-card"]').classes()).toContain(
       'grid-cols-[minmax(0,1.04fr)_minmax(360px,0.96fr)]',
     )
-    expect(registerWrapper.text()).toContain('Join SSAFY Home')
+    expect(registerWrapper.text()).toContain('Join HOME FIT')
     expect(registerWrapper.text()).not.toContain('아이디')
     expect(registerWrapper.text()).toContain('비밀번호 확인')
   })
