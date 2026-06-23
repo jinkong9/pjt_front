@@ -88,7 +88,7 @@ function submitForm() {
         <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Basic</p>
         <h2 class="mt-2 text-[34px] font-black text-[#171717]">기본 정보</h2>
       </div>
-      <div class="form-grid grid grid-cols-2 gap-4">
+      <div class="form-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label class="form-field wide col-span-2 grid gap-2 text-sm font-black">
           <span>제목</span>
           <input
@@ -172,7 +172,7 @@ function submitForm() {
         <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Location</p>
         <h2 class="mt-2 text-[34px] font-black text-[#171717]">위치 정보</h2>
       </div>
-      <div class="form-grid grid grid-cols-2 gap-4">
+      <div class="form-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label class="form-field grid gap-2 text-sm font-black">
           <span>주소</span>
           <input v-model="form.address" class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold outline-0" required placeholder="서울 관악구 봉천동" />
@@ -197,7 +197,7 @@ function submitForm() {
         <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Terms</p>
         <h2 class="mt-2 text-[34px] font-black text-[#171717]">금액과 일정</h2>
       </div>
-      <div class="form-grid grid grid-cols-2 gap-4">
+      <div class="form-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label class="form-field grid gap-2 text-sm font-black">
           <span>보증금</span>
           <input v-model="form.depositAmount" class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold outline-0" type="number" min="0" required placeholder="1000" />
@@ -230,7 +230,7 @@ function submitForm() {
         <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Contact</p>
         <h2 class="mt-2 text-[34px] font-black text-[#171717]">연락 정보</h2>
       </div>
-      <div class="form-grid grid grid-cols-2 gap-4">
+      <div class="form-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label class="form-field grid gap-2 text-sm font-black">
           <span>연락처</span>
           <input v-model="form.contactPhone" class="min-h-12 w-full border border-neutral-200 bg-white px-3 text-[15px] font-extrabold outline-0" required placeholder="010-0000-0000" />

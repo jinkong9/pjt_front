@@ -84,21 +84,21 @@ async function loadAnalysis() {
 <template>
   <aside
     data-testid="property-detail-panel"
-    class="property-detail-panel absolute bottom-0 left-0 top-20 z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:bottom-0 md:border md:border-neutral-200"
+    class="property-detail-panel relative z-40 flex w-full flex-col overflow-hidden bg-white shadow-2xl md:absolute md:bottom-0 md:left-0 md:top-20 md:border md:border-neutral-200"
   >
     <header class="border-b border-neutral-200 p-5">
-      <div class="flex items-start justify-between gap-4">
-        <div>
+      <div class="flex flex-col items-start justify-between gap-4 sm:flex-row">
+        <div class="min-w-0">
           <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">APT SALE</p>
           <h2 class="mt-2 text-2xl font-black">{{ trade.aptName }}</h2>
           <p class="mt-2 text-xs leading-5 text-neutral-500">{{ trade.address }}</p>
         </div>
-        <div class="flex flex-[0_0_auto] items-center gap-2">
+        <div class="flex w-full flex-[0_0_auto] items-center gap-2 sm:w-auto">
           <button
             v-if="loggedIn"
             type="button"
             data-testid="property-favorite-toggle"
-            class="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#b4212a] bg-white px-3 text-xs font-black text-[#b4212a] hover:bg-[#fff7f7]"
+            class="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border border-[#b4212a] bg-white px-3 text-xs font-black text-[#b4212a] hover:bg-[#fff7f7] sm:flex-none"
             @click="toggleFavorite"
           >
             {{ favorite ? '관심 해제' : '관심' }}
@@ -107,7 +107,7 @@ async function loadAnalysis() {
             v-else
             data-testid="property-login-link"
             :to="loginRoute"
-            class="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#b4212a] bg-white px-3 text-xs font-black text-[#b4212a] hover:bg-[#fff7f7]"
+            class="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border border-[#b4212a] bg-white px-3 text-xs font-black text-[#b4212a] hover:bg-[#fff7f7] sm:flex-none"
           >
             관심
           </RouterLink>
@@ -152,7 +152,7 @@ async function loadAnalysis() {
           <p class="text-xs font-black text-neutral-500">거래 가격</p>
           <strong class="mt-2 block text-3xl text-[#b4212a]">{{ trade.dealAmount }}만원</strong>
         </div>
-        <dl class="grid !grid-cols-2 gap-4 text-sm">
+        <dl class="grid grid-cols-1 gap-4 text-sm sm:!grid-cols-2">
           <div>
             <dt class="text-xs font-black text-neutral-500">전용면적</dt>
             <dd class="mt-1 font-bold">{{ trade.exclusiveArea }}㎡</dd>
@@ -161,7 +161,7 @@ async function loadAnalysis() {
             <dt class="text-xs font-black text-neutral-500">층</dt>
             <dd class="mt-1 font-bold">{{ trade.floor }}층</dd>
           </div>
-          <div class="col-span-2">
+          <div class="sm:col-span-2">
             <dt class="text-xs font-black text-neutral-500">거래일</dt>
             <dd class="mt-1 font-bold">{{ trade.dealDate }}</dd>
           </div>
@@ -226,7 +226,7 @@ async function loadAnalysis() {
 <style scoped>
 .property-detail-panel {
   box-sizing: border-box;
-  max-width: var(--price-panel-width, 520px);
+  max-width: none;
 }
 
 @media (min-width: 768px) {

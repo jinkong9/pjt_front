@@ -340,7 +340,7 @@ watch(trades, () => {
 </script>
 
 <template>
-  <div class="h-screen overflow-hidden bg-[#f4f0ea] text-[#171717]">
+  <div class="min-h-screen bg-[#f4f0ea] text-[#171717] md:h-screen md:overflow-hidden">
     <header
       class="absolute left-0 right-0 top-0 z-30 border-b border-white/15 bg-black/35 text-white backdrop-blur"
     >
@@ -372,19 +372,19 @@ watch(trades, () => {
       </div>
     </header>
 
-    <main class="price-map-shell relative h-screen">
-      <section id="map" class="absolute inset-0 bg-neutral-300">
+    <main class="price-map-shell relative min-h-screen pt-20 md:h-screen md:pt-0">
+      <section id="map" class="relative h-[320px] bg-neutral-300 md:absolute md:inset-0 md:h-auto">
         <div
           ref="mapEl"
           class="h-full w-full bg-[linear-gradient(135deg,#d6d6d6_0%,#ededed_42%,#c8c8c8_100%)]"
         ></div>
       </section>
       <div
-        class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent"
+        class="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-black/70 via-black/20 to-transparent md:block"
       ></div>
 
       <aside
-        class="price-search-panel price-panel-frame absolute bottom-0 left-0 top-20 z-20 flex w-full flex-col bg-white/95 shadow-2xl backdrop-blur md:border md:border-white/70"
+        class="price-search-panel price-panel-frame relative z-20 flex w-full flex-col bg-white/95 shadow-2xl backdrop-blur md:absolute md:bottom-0 md:left-0 md:top-20 md:border md:border-white/70"
       >
         <section class="border-b border-neutral-200 p-5">
           <p class="text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
@@ -397,7 +397,7 @@ watch(trades, () => {
               class="h-12 w-full border-neutral-300 text-sm font-bold"
               placeholder="아파트명 또는 지역명을 입력하세요"
             />
-            <div class="grid !grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 gap-2 sm:!grid-cols-2">
               <select
                 v-model="condition.sidoName"
                 class="h-11 border-neutral-300 text-sm font-bold"
@@ -434,7 +434,7 @@ watch(trades, () => {
                 placeholder="거래연도"
               />
             </div>
-            <div class="grid !grid-cols-[1fr_auto] gap-2">
+            <div class="grid grid-cols-1 gap-2 sm:!grid-cols-[1fr_auto]">
               <input
                 v-model="condition.limit"
                 type="number"
@@ -454,7 +454,7 @@ watch(trades, () => {
           <p class="mt-4 text-xs font-bold text-neutral-500">{{ statusText }}</p>
         </section>
 
-        <section class="flex-1 overflow-y-auto">
+        <section class="max-h-[56vh] overflow-y-auto md:max-h-none md:flex-1">
           <p v-if="loading" class="p-6 text-sm font-bold text-neutral-500">
             거래 정보를 불러오는 중입니다.
           </p>
@@ -474,7 +474,7 @@ watch(trades, () => {
             @click="openDetail(trade)"
           >
             <RouterLink
-              class="absolute right-5 top-5 border border-neutral-300 bg-white px-3 py-2 text-xs font-black text-[#171717] hover:text-[#b4212a]"
+              class="static mb-3 inline-flex min-h-9 items-center justify-center border border-neutral-300 bg-white px-3 py-2 text-xs font-black text-[#171717] hover:text-[#b4212a] sm:absolute sm:right-5 sm:top-5 sm:mb-0"
               :to="{
                 path: '/analysis',
                 query: {
@@ -488,7 +488,7 @@ watch(trades, () => {
             >
               생활권 분석
             </RouterLink>
-            <div class="pr-28 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">
+            <div class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a] sm:pr-28">
               APT SALE
             </div>
             <h2 class="mt-2 text-xl font-black leading-tight">{{ trade.aptName }}</h2>
@@ -513,7 +513,7 @@ watch(trades, () => {
 
       <div
         v-if="mapMessage"
-        class="absolute right-6 top-28 z-30 max-w-sm border border-red-200 bg-white p-5 text-sm font-bold text-red-700 shadow-xl"
+        class="mx-4 mt-4 border border-red-200 bg-white p-5 text-sm font-bold text-red-700 shadow-xl md:absolute md:right-6 md:top-28 md:z-30 md:mx-0 md:mt-0 md:max-w-sm"
       >
         {{ mapMessage }}
       </div>
