@@ -1,9 +1,11 @@
 <script setup>
 import { ref, watch } from 'vue'
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
 import { api } from '@/shared/api/client'
 import { getFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import { analyzePropertyLoan } from '@/entities/loan/api/loanAnalysisApi'
+import { memberKeys } from '@/entities/member/model/memberQueries'
 import LoanAnalysisResult from './LoanAnalysisResult.vue'
 import PropertyNeighborhoodAnalysis from './PropertyNeighborhoodAnalysis.vue'
 
@@ -14,6 +16,7 @@ const props = defineProps({
   loginRoute: { type: [String, Object], default: '/login' },
 })
 const emit = defineEmits(['close', 'tab-change'])
+const queryClient = useQueryClient()
 
 const activeTab = ref(props.initialTab === 'loan' ? 'loan' : 'detail')
 const favorite = ref(false)
@@ -22,6 +25,22 @@ const profileLoaded = ref(false)
 const analysis = ref(null)
 const loading = ref(false)
 const error = ref('')
+const favoriteMutation = useMutation({
+  mutationFn: () => api.post(`/favorites/${props.trade.no}/toggle`).then((response) => response.data),
+})
+const financialProfileMutation = useMutation({
+  mutationFn: getFinancialProfile,
+  onSuccess: (data) => queryClient.setQueryData(memberKeys.financialProfile(), data),
+})
+const loanAnalysisMutation = useMutation({
+  mutationFn: () =>
+    analyzePropertyLoan({
+      dealNo: props.trade.no,
+      years: 30,
+      rate: 4.2,
+      repaymentType: 'EQUAL_PAYMENT',
+    }),
+})
 
 watch(
   () => props.trade.no,
@@ -38,7 +57,7 @@ function openDetailTab() {
 }
 
 async function toggleFavorite() {
-  const { data } = await api.post(`/favorites/${props.trade.no}/toggle`)
+  const data = await favoriteMutation.mutateAsync()
   favorite.value = data.favorite
 }
 
@@ -49,7 +68,7 @@ async function openLoanTab() {
   loading.value = true
   error.value = ''
   try {
-    profile.value = await getFinancialProfile()
+    profile.value = await financialProfileMutation.mutateAsync()
     profileLoaded.value = true
     if (profile.value) await loadAnalysis()
   } catch (requestError) {
@@ -67,12 +86,7 @@ async function openLoanTab() {
 async function loadAnalysis() {
   loading.value = true
   try {
-    analysis.value = await analyzePropertyLoan({
-      dealNo: props.trade.no,
-      years: 30,
-      rate: 4.2,
-      repaymentType: 'EQUAL_PAYMENT',
-    })
+    analysis.value = await loanAnalysisMutation.mutateAsync()
   } catch {
     error.value = '대출 분석 결과를 불러오지 못했습니다.'
   } finally {

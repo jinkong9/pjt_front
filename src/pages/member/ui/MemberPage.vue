@@ -1,29 +1,27 @@
 <script setup>
-import { onMounted, reactive, ref, watch, watchEffect } from 'vue'
+import { computed, onMounted, reactive, ref, watch, watchEffect } from 'vue'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
-import { api } from '@/shared/api/client'
 import { useMemberStore } from '@/entities/member/model/member'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import FinancialProfileForm from '@/features/property-detail/ui/FinancialProfileForm.vue'
-import { getFinancialProfile, saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
+import { saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
+import { memberKeys, memberQueryOptions } from '@/entities/member/model/memberQueries'
 import {
-  fetchFavoriteRentalNotices,
   sendFavoriteRentalNoticeEmails,
   toggleFavoriteRentalNotice,
 } from '@/entities/rental/api/rentalApi'
+import { rentalKeys, rentalQueryOptions } from '@/entities/rental/model/rentalQueries'
 
 const memberStore = useMemberStore()
-const favorites = ref([])
-const rentalFavorites = ref([])
+const queryClient = useQueryClient()
 const rentalFavoritesLoaded = ref(false)
-const rentalFavoritesLoading = ref(false)
 const favoriteTab = ref('deals')
 const message = ref('')
 const rentalEmailMessage = ref('')
 const rentalEmailResult = ref(null)
 const rentalEmailSending = ref(false)
 const financialProfile = ref(null)
-const financialProfileLoaded = ref(false)
 const financialSaving = ref(false)
 const financialMessage = ref('')
 const form = reactive({
@@ -37,6 +35,37 @@ const favoriteTabs = [
   { key: 'transfers', label: '양도' },
   { key: 'rentals', label: 'LH' },
 ]
+const dealFavoritesQuery = useQuery({
+  ...memberQueryOptions.dealFavorites(),
+  enabled: () => memberStore.isLoggedIn,
+})
+const rentalFavoritesQuery = useQuery({
+  ...rentalQueryOptions.favorites(),
+  enabled: () => memberStore.isLoggedIn && favoriteTab.value === 'rentals',
+})
+const financialProfileQuery = useQuery({
+  ...memberQueryOptions.financialProfile(),
+  enabled: () => memberStore.isLoggedIn,
+})
+const financialProfileLoaded = computed(() =>
+  !memberStore.isLoggedIn || financialProfileQuery.isFetched.value || financialProfileQuery.isError.value,
+)
+const removeRentalFavoriteMutation = useMutation({
+  mutationFn: (noticeId) => toggleFavoriteRentalNotice(noticeId),
+  onSuccess: (_result, noticeId) => {
+    queryClient.setQueryData(rentalKeys.favorites(), (items = []) =>
+      items.filter((item) => item.notice.rentalNoticeId !== noticeId),
+    )
+    queryClient.invalidateQueries({ queryKey: ['rentals', 'list'] })
+    queryClient.invalidateQueries({ queryKey: ['rentals', 'recommendations'] })
+  },
+})
+const sendRentalEmailsMutation = useMutation({
+  mutationFn: sendFavoriteRentalNoticeEmails,
+})
+const favorites = computed(() => dealFavoritesQuery.data.value ?? [])
+const rentalFavorites = computed(() => rentalFavoritesQuery.data.value ?? [])
+const rentalFavoritesLoading = computed(() => rentalFavoritesQuery.isPending.value)
 
 watchEffect(() => {
   if (memberStore.current) {
@@ -46,34 +75,8 @@ watchEffect(() => {
   }
 })
 
-async function loadFavorites() {
-  try {
-    const { data } = await api.get('/favorites')
-    favorites.value = data
-  } catch {
-    favorites.value = []
-  }
-}
-
-async function loadRentalFavorites() {
-  if (rentalFavoritesLoading.value) return
-  rentalFavoritesLoading.value = true
-  try {
-    rentalFavorites.value = await fetchFavoriteRentalNotices()
-    rentalFavoritesLoaded.value = true
-  } catch {
-    rentalFavorites.value = []
-    rentalFavoritesLoaded.value = true
-  } finally {
-    rentalFavoritesLoading.value = false
-  }
-}
-
 async function removeRentalFavorite(noticeId) {
-  await toggleFavoriteRentalNotice(noticeId)
-  rentalFavorites.value = rentalFavorites.value.filter(
-    (item) => item.notice.rentalNoticeId !== noticeId,
-  )
+  await removeRentalFavoriteMutation.mutateAsync(noticeId)
 }
 
 function rentalEmailResultMessage(result) {
@@ -88,7 +91,7 @@ async function sendRentalEmails() {
   rentalEmailMessage.value = ''
   rentalEmailResult.value = null
   try {
-    const result = await sendFavoriteRentalNoticeEmails()
+    const result = await sendRentalEmailsMutation.mutateAsync()
     rentalEmailResult.value = result
     rentalEmailMessage.value = rentalEmailResultMessage(result)
   } finally {
@@ -104,15 +107,7 @@ async function updateMe() {
 }
 
 async function loadFinancialProfile() {
-  try {
-    financialProfile.value = await getFinancialProfile()
-  } catch (error) {
-    if (error.response?.status !== 204) {
-      financialMessage.value = '금융 프로필을 불러오지 못했습니다.'
-    }
-  } finally {
-    financialProfileLoaded.value = true
-  }
+  financialProfile.value = financialProfileQuery.data.value
 }
 
 async function updateFinancialProfile(payload) {
@@ -120,6 +115,7 @@ async function updateFinancialProfile(payload) {
   financialMessage.value = ''
   try {
     financialProfile.value = await saveFinancialProfile(payload)
+    queryClient.invalidateQueries({ queryKey: memberKeys.financialProfile() })
     financialMessage.value = '금융 프로필이 저장되었습니다.'
   } finally {
     financialSaving.value = false
@@ -135,18 +131,20 @@ function formatMoney(value) {
 onMounted(async () => {
   await memberStore.fetchMe()
   if (memberStore.isLoggedIn) {
-    await Promise.all([loadFavorites(), loadFinancialProfile()])
-    if (favoriteTab.value === 'rentals') {
-      await loadRentalFavorites()
-    }
+    await loadFinancialProfile()
   }
 })
 
 watch(favoriteTab, (tab) => {
   if (tab === 'rentals' && memberStore.isLoggedIn && !rentalFavoritesLoaded.value) {
-    loadRentalFavorites()
+    rentalFavoritesLoaded.value = true
   }
 })
+
+watch(financialProfileQuery.data, (profile) => {
+  if (!profile) return
+  financialProfile.value = profile
+}, { immediate: true })
 </script>
 
 <template>

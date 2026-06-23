@@ -1,14 +1,16 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
-import { fetchRentalNotices } from '@/entities/rental/api/rentalApi'
+import { rentalQueryOptions } from '@/entities/rental/model/rentalQueries'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
-const loading = ref(false)
-const notices = ref([])
 const currentDate = ref(new Date())
 const todayKey = toIsoDate(new Date())
 const selectedDay = ref(null)
+const calendarQuery = useQuery(rentalQueryOptions.list({ size: 100 }))
+const loading = computed(() => calendarQuery.isPending.value)
+const notices = computed(() => calendarQuery.data.value ?? [])
 
 const monthLabel = computed(() =>
   new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long' }).format(currentDate.value),
@@ -116,21 +118,16 @@ function moveMonth(amount) {
   currentDate.value = next
 }
 
-async function loadCalendar() {
-  loading.value = true
-  try {
-    const rentalNotices = await fetchRentalNotices({ size: 100 })
-    notices.value = rentalNotices
-    moveToFirstScheduleMonth(rentalNotices)
-  } finally {
-    loading.value = false
-  }
+function syncCalendarMonth(rentalNotices) {
+  moveToFirstScheduleMonth(rentalNotices)
 }
 
 onMounted(() => {
   document.title = 'LH 캘린더 | SSAFY Home'
-  loadCalendar()
+  syncCalendarMonth(notices.value)
 })
+
+watch(notices, syncCalendarMonth, { immediate: true })
 </script>
 
 <template>

@@ -1,18 +1,29 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
-import { fetchTransfers, toggleFavoriteTransfer } from '@/entities/transfer/api/transferApi'
+import { toggleFavoriteTransfer } from '@/entities/transfer/api/transferApi'
+import { transferKeys, transferQueryOptions } from '@/entities/transfer/model/transferQueries'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
-const loading = ref(false)
-const transfers = ref([])
+const queryClient = useQueryClient()
 const brokenImages = ref(new Set())
 const favoriteMessage = ref('')
 const condition = reactive({
   keyword: '',
   status: '',
 })
+const submittedCondition = ref({ ...condition })
+const transfersQuery = useQuery(computed(() => transferQueryOptions.list(submittedCondition.value)))
+const favoriteMutation = useMutation({
+  mutationFn: (transferId) => toggleFavoriteTransfer(transferId),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: transferKeys.all })
+  },
+})
+const transfers = computed(() => transfersQuery.data.value ?? [])
+const loading = computed(() => transfersQuery.isPending.value)
 
 const availableCount = computed(() => transfers.value.filter((post) => post.status === '양도가능').length)
 
@@ -26,18 +37,13 @@ function markBrokenImage(transferId) {
 }
 
 async function loadTransfers() {
-  loading.value = true
-  try {
-    transfers.value = await fetchTransfers(condition)
-  } finally {
-    loading.value = false
-  }
+  submittedCondition.value = { ...condition }
 }
 
 async function toggleFavorite(transferId) {
   favoriteMessage.value = ''
   try {
-    const result = await toggleFavoriteTransfer(transferId)
+    const result = await favoriteMutation.mutateAsync(transferId)
     favoriteMessage.value = result.favorite
       ? '관심 매물로 등록했습니다.'
       : '관심 매물에서 해제했습니다.'

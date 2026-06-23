@@ -1,21 +1,17 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
-  fetchRentalNotices,
-  fetchRentalRecommendations,
   toggleFavoriteRentalNotice,
 } from '@/entities/rental/api/rentalApi'
+import { rentalKeys, rentalQueryOptions } from '@/entities/rental/model/rentalQueries'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
 const router = useRouter()
-const loading = ref(false)
-const notices = ref([])
-const recommendations = ref([])
-const recommendationLoading = ref(false)
-const recommendationError = ref('')
+const queryClient = useQueryClient()
 const recommendationFavoriteMessage = ref('')
 const condition = reactive({
   keyword: '',
@@ -24,6 +20,7 @@ const condition = reactive({
   page: 1,
   size: 12,
 })
+const submittedCondition = ref({ ...condition })
 
 const regions = [
   { label: '전체', value: '' },
@@ -53,37 +50,40 @@ function syncFromRoute() {
 }
 
 async function loadRentals() {
-  loading.value = true
-  try {
-    notices.value = await fetchRentalNotices(condition)
-  } finally {
-    loading.value = false
-  }
+  submittedCondition.value = { ...condition }
 }
 
-async function loadRecommendations() {
-  recommendationLoading.value = true
-  recommendationError.value = ''
-  try {
-    recommendations.value = await fetchRentalRecommendations(10)
-  } catch (err) {
-    recommendations.value = []
-    if (err.response?.status === 401) {
-      recommendationError.value = 'login'
-    } else if (err.response?.status === 409) {
-      recommendationError.value = 'profile'
-    } else {
-      recommendationError.value = 'unknown'
-    }
-  } finally {
-    recommendationLoading.value = false
+const noticesQuery = useQuery(computed(() => rentalQueryOptions.list(submittedCondition.value)))
+const recommendationsQuery = useQuery(rentalQueryOptions.recommendations(10))
+const favoriteMutation = useMutation({
+  mutationFn: (noticeId) => toggleFavoriteRentalNotice(noticeId),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: rentalKeys.favorites() })
+    queryClient.invalidateQueries({ queryKey: rentalKeys.recommendations(10) })
+    queryClient.invalidateQueries({ queryKey: rentalKeys.all })
+  },
+})
+
+const notices = computed(() => noticesQuery.data.value ?? [])
+const loading = computed(() => noticesQuery.isPending.value)
+const recommendations = computed(() => recommendationsQuery.data.value ?? [])
+const recommendationLoading = computed(() => recommendationsQuery.isPending.value)
+const recommendationError = computed(() => {
+  const err = recommendationsQuery.error.value
+  if (!err) return ''
+  if (err.response?.status === 401) {
+    return 'login'
   }
-}
+  if (err.response?.status === 409) {
+    return 'profile'
+  }
+  return 'unknown'
+})
 
 async function toggleRecommendationFavorite(noticeId) {
   recommendationFavoriteMessage.value = ''
   try {
-    const result = await toggleFavoriteRentalNotice(noticeId)
+    const result = await favoriteMutation.mutateAsync(noticeId)
     recommendationFavoriteMessage.value = result.favorite
       ? '관심 공고로 등록했습니다.'
       : '관심 공고에서 해제했습니다.'
@@ -102,7 +102,7 @@ async function toggleRecommendationFavorite(noticeId) {
 async function toggleNoticeFavorite(noticeId) {
   recommendationFavoriteMessage.value = ''
   try {
-    const result = await toggleFavoriteRentalNotice(noticeId)
+    const result = await favoriteMutation.mutateAsync(noticeId)
     recommendationFavoriteMessage.value = result.favorite
       ? '관심 공고로 등록했습니다.'
       : '관심 공고에서 해제했습니다.'
@@ -127,7 +127,7 @@ async function search() {
 onMounted(async () => {
   document.title = '공공임대 공고 | SSAFY Home'
   syncFromRoute()
-  await Promise.all([loadRecommendations(), loadRentals()])
+  await loadRentals()
 })
 </script>
 

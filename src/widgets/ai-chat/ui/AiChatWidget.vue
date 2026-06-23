@@ -1,5 +1,6 @@
 <script setup>
 import { nextTick, ref } from 'vue'
+import { useMutation } from '@tanstack/vue-query'
 import { askAiChat } from '@/shared/api/aiChatApi'
 
 const isOpen = ref(false)
@@ -14,6 +15,9 @@ const messages = ref([
   },
 ])
 const messageList = ref(null)
+const chatMutation = useMutation({
+  mutationFn: (question) => askAiChat(question),
+})
 
 const quickQuestions = [
   '강남구 최근 실거래가 알려줘',
@@ -50,7 +54,7 @@ async function sendMessage(question = draft.value) {
   await scrollToBottom()
 
   try {
-    const response = await askAiChat(trimmed)
+    const response = await chatMutation.mutateAsync(trimmed)
     messages.value.push({
       id: Date.now() + 1,
       role: 'assistant',

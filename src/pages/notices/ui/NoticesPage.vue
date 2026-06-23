@@ -1,14 +1,16 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
-import { api } from '@/shared/api/client'
+import { appQueryOptions } from '@/shared/query/appQueries'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
-const loading = ref(true)
-const notices = ref([])
 const keyword = ref('')
 const searchKeyword = ref('')
+const noticesQuery = useQuery(appQueryOptions.noticeList({ limit: 50 }))
+const loading = computed(() => noticesQuery.isPending.value)
+const notices = computed(() => noticesQuery.data.value ?? [])
 
 const filteredNotices = computed(() => {
   const query = searchKeyword.value.trim().toLowerCase()
@@ -29,14 +31,8 @@ function resetSearch() {
   searchKeyword.value = ''
 }
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    const { data } = await api.get('/notices', { params: { limit: 50 } })
-    notices.value = data
-  } finally {
-    loading.value = false
-  }
+onMounted(() => {
+  document.title = '공지사항 | SSAFY Home'
 })
 </script>
 
