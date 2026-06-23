@@ -50,6 +50,17 @@ export function normalizeTransfer(post) {
   }
 }
 
+export function normalizeTransferComment(comment) {
+  return {
+    commentId: comment.commentId ?? comment.comment_id,
+    transferId: comment.transferId ?? comment.transfer_id,
+    writerId: comment.writerId ?? comment.writer_id,
+    content: comment.content ?? '',
+    createdAt: comment.createdAt ?? comment.created_at,
+    updatedAt: comment.updatedAt ?? comment.updated_at,
+  }
+}
+
 export function createTransferPayload(fields, images = []) {
   const payload = new FormData()
 
@@ -100,4 +111,23 @@ export async function deleteTransfer(transferId) {
 export async function toggleFavoriteTransfer(transferId) {
   const { data } = await api.post(`/transfers/${transferId}/favorite/toggle`)
   return data
+}
+
+export async function fetchTransferComments(transferId) {
+  const { data } = await api.get(`/transfers/${transferId}/comments`)
+  return data.map(normalizeTransferComment)
+}
+
+export async function createTransferComment(transferId, content) {
+  const { data } = await api.post(`/transfers/${transferId}/comments`, { content })
+  return normalizeTransferComment(data)
+}
+
+export async function updateTransferComment(commentId, content) {
+  const { data } = await api.put(`/transfers/comments/${commentId}`, { content })
+  return normalizeTransferComment(data)
+}
+
+export async function deleteTransferComment(commentId) {
+  await api.delete(`/transfers/comments/${commentId}`)
 }

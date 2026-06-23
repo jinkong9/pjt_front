@@ -3,11 +3,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createTransfer,
   createTransferPayload,
+  createTransferComment,
   deleteTransfer,
+  deleteTransferComment,
   fetchTransfers,
+  fetchTransferComments,
   normalizeTransfer,
+  normalizeTransferComment,
   resolveTransferImageUrl,
   toggleFavoriteTransfer,
+  updateTransferComment,
   updateTransfer,
 } from '@/entities/transfer/api/transferApi'
 import { api } from '@/shared/api/client'
@@ -123,5 +128,35 @@ describe('transferApi', () => {
     await expect(toggleFavoriteTransfer(7)).resolves.toEqual({ favorite: true })
 
     expect(api.post).toHaveBeenCalledWith('/transfers/7/favorite/toggle')
+  })
+
+  it('loads and mutates transfer comments through the backend', async () => {
+    api.get.mockResolvedValueOnce({
+      data: [{ comment_id: 3, transfer_id: 7, writer_id: 'ssafy', content: '좋아요' }],
+    })
+    api.post.mockResolvedValueOnce({
+      data: { commentId: 4, transferId: 7, writerId: 'ssafy', content: '문의합니다' },
+    })
+    api.put.mockResolvedValueOnce({
+      data: { commentId: 4, transferId: 7, writerId: 'ssafy', content: '수정합니다' },
+    })
+    api.delete.mockResolvedValueOnce({})
+
+    expect(normalizeTransferComment({ comment_id: 1, transfer_id: 7, writer_id: 'ssafy' })).toMatchObject({
+      commentId: 1,
+      transferId: 7,
+      writerId: 'ssafy',
+    })
+    await expect(fetchTransferComments(7)).resolves.toEqual([
+      expect.objectContaining({ commentId: 3, content: '좋아요' }),
+    ])
+    await expect(createTransferComment(7, '문의합니다')).resolves.toMatchObject({ commentId: 4 })
+    await expect(updateTransferComment(4, '수정합니다')).resolves.toMatchObject({ content: '수정합니다' })
+    await expect(deleteTransferComment(4)).resolves.toBeUndefined()
+
+    expect(api.get).toHaveBeenCalledWith('/transfers/7/comments')
+    expect(api.post).toHaveBeenCalledWith('/transfers/7/comments', { content: '문의합니다' })
+    expect(api.put).toHaveBeenCalledWith('/transfers/comments/4', { content: '수정합니다' })
+    expect(api.delete).toHaveBeenCalledWith('/transfers/comments/4')
   })
 })
