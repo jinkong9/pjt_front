@@ -12,10 +12,6 @@ on:
       - 'playwright.config.*'
       - '.github/workflows/front-e2e.yml'
   push:
-    branches:
-      - main
-      - master
-      - develop
     paths:
       - 'src/**'
       - 'e2e/**'
