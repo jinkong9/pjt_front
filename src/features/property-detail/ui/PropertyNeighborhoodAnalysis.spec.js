@@ -11,33 +11,33 @@ vi.mock('@/entities/analysis/api/analysisApi', () => ({
 const trade = {
   no: 11,
   address: '서울특별시 강남구 테헤란로 339',
-  longitude: '127.047',
-  latitude: '37.503',
+  longitude: '127.027619',
+  latitude: '37.497952',
 }
 
 const analysis = {
   score: {
-    total: 20,
+    total: 48,
     commercialScore: 20,
-    transitScore: 0,
+    transitScore: 28,
     trafficSafetyScore: 0,
-    level: '주의',
-    message: '상권 20점...',
+    level: '아쉬움',
+    message: '상권 20점, 대중교통 28점입니다.',
   },
   commercialSummary: {
-    totalCount: 50,
-    foodCount: 7,
+    totalCount: 4,
+    foodCount: 1,
     cafeCount: 1,
     medicalCount: 1,
-    convenienceCount: 0,
-    lifeCount: 42,
+    convenienceCount: 1,
+    lifeCount: 0,
   },
   transitSummary: {
-    subwayWithin500m: 0,
-    subwayWithin1000m: 0,
-    busStopWithin300m: 0,
-    busStopWithin500m: 0,
-    busStopWithin1000m: 0,
+    subwayWithin500m: 2,
+    subwayWithin1000m: 7,
+    busStopWithin300m: 3,
+    busStopWithin500m: 8,
+    busStopWithin1000m: 15,
   },
   trafficRiskSummary: {
     eventCount: 10,
@@ -46,13 +46,55 @@ const analysis = {
   },
   places: [
     {
-      name: '강남연세안과의원',
-      largeCategory: '보건의료',
+      name: '강남역 맛집',
+      largeCategory: '음식',
+      middleCategory: '한식',
+      address: '서울 강남구 테헤란로 1',
+    },
+    {
+      name: '역삼 카페',
+      largeCategory: '카페',
+      middleCategory: '커피전문점',
+      address: '서울 강남구 테헤란로 2',
+    },
+    {
+      name: '강남연세의원',
+      largeCategory: '의료',
       middleCategory: '의원',
-      address: '서울특별시 강남구 테헤란로 339',
+      address: '서울 강남구 테헤란로 3',
+    },
+    {
+      name: '편의점 강남점',
+      largeCategory: '편의',
+      middleCategory: '편의점',
+      address: '서울 강남구 테헤란로 4',
     },
   ],
-  events: [{ type: '공사', roadName: '봉은사로', message: '양방향 전면통제' }],
+  events: [{ type: '공사', roadName: '봉은사로', message: '일부 통제' }],
+  busStops: [
+    {
+      nodeId: 'ICB121000541',
+      nodeName: '강남역서초현대타워앞',
+      nodeNo: '31016',
+      latitude: 37.496661,
+      longitude: 127.028028,
+    },
+    {
+      nodeId: 'ICB121000009',
+      nodeName: '신분당선강남역(중)',
+      nodeNo: '22009',
+      latitude: 37.495913,
+      longitude: 127.028556,
+    },
+  ],
+  subwayStations: [
+    {
+      id: 'SW8-1',
+      name: '강남역',
+      address: '서울 강남구 강남대로',
+      distanceMeters: 120,
+    },
+  ],
 }
 
 describe('PropertyNeighborhoodAnalysis', () => {
@@ -61,65 +103,34 @@ describe('PropertyNeighborhoodAnalysis', () => {
     getPropertyAnalysis.mockResolvedValue(analysis)
   })
 
-  it('renders scores and commercial, transit, and traffic summaries', async () => {
+  it('loads one integrated analysis response with nearby bus stops and subway stations', async () => {
     const wrapper = mount(PropertyNeighborhoodAnalysis, { props: { trade } })
     await flushPromises()
 
     expect(getPropertyAnalysis).toHaveBeenCalledWith({
       label: trade.address,
-      longitude: 127.047,
-      latitude: 37.503,
+      longitude: 127.027619,
+      latitude: 37.497952,
       radius: 1000,
     })
-    expect(wrapper.text()).toContain('종합 점수')
-    expect(wrapper.text()).toContain('20점')
-    expect(wrapper.text()).toContain('상권 점수')
-    expect(wrapper.text()).toContain('대중교통 점수')
-    expect(wrapper.text()).toContain('교통안전 점수')
-    expect(wrapper.text()).toContain('전체 시설')
-    expect(wrapper.text()).toContain('음식')
-    expect(wrapper.text()).toContain('카페')
-    expect(wrapper.text()).toContain('의료')
-    expect(wrapper.text()).toContain('편의')
-    expect(wrapper.text()).toContain('생활')
-    expect(wrapper.text()).toContain('500m 이내 지하철')
-    expect(wrapper.text()).toContain('1km 이내 지하철')
-    expect(wrapper.text()).toContain('300m 이내 버스정류장')
-    expect(wrapper.text()).toContain('500m 이내 버스정류장')
-    expect(wrapper.text()).toContain('1km 이내 버스정류장')
-    expect(wrapper.text()).toContain('교통 이벤트')
-    expect(wrapper.text()).toContain('도로공사')
-    expect(wrapper.text()).toContain('위험 등급')
-    expect(wrapper.get('[data-testid="score-grid"]').classes()).toContain('!grid-cols-2')
+    expect(wrapper.text()).toContain('대중교통 요약')
+    expect(wrapper.text()).toContain('강남역서초현대타워앞')
+    expect(wrapper.text()).toContain('신분당선강남역(중)')
+    expect(wrapper.text()).toContain('강남역')
+    expect(wrapper.text()).not.toContain('교통 체크 포인트')
   })
 
-  it('limits facilities and traffic events until each section is expanded', async () => {
-    getPropertyAnalysis.mockResolvedValue({
-      ...analysis,
-      places: Array.from({ length: 6 }, (_, index) => ({
-        name: `생활시설 ${index + 1}`,
-        largeCategory: '생활',
-        middleCategory: '서비스',
-        address: `테헤란로 ${index + 1}`,
-      })),
-      events: Array.from({ length: 4 }, (_, index) => ({
-        type: '공사',
-        roadName: `도로 ${index + 1}`,
-        message: `교통 안내 ${index + 1}`,
-      })),
-    })
-
+  it('filters nearby facilities by category chips', async () => {
     const wrapper = mount(PropertyNeighborhoodAnalysis, { props: { trade } })
     await flushPromises()
 
-    expect(wrapper.text()).not.toContain('생활시설 6')
-    expect(wrapper.text()).not.toContain('교통 안내 4')
+    expect(wrapper.text()).toContain('강남역 맛집')
+    expect(wrapper.text()).toContain('역삼 카페')
 
-    await wrapper.get('[data-testid="expand-places"]').trigger('click')
-    await wrapper.get('[data-testid="expand-events"]').trigger('click')
+    await wrapper.get('[data-testid="facility-filter-cafe"]').trigger('click')
 
-    expect(wrapper.text()).toContain('생활시설 6')
-    expect(wrapper.text()).toContain('교통 안내 4')
+    expect(wrapper.text()).not.toContain('강남역 맛집')
+    expect(wrapper.text()).toContain('역삼 카페')
   })
 
   it('shows an error and retries the analysis request', async () => {
@@ -136,7 +147,7 @@ describe('PropertyNeighborhoodAnalysis', () => {
     expect(wrapper.text()).toContain('생활권 종합 평가')
   })
 
-  it('does not request analysis when coordinates are missing', async () => {
+  it('does not request analysis or transport details when coordinates are missing', async () => {
     const wrapper = mount(PropertyNeighborhoodAnalysis, {
       props: { trade: { ...trade, longitude: null, latitude: undefined } },
     })
@@ -146,7 +157,7 @@ describe('PropertyNeighborhoodAnalysis', () => {
     expect(wrapper.text()).toContain('좌표가 없어 생활권을 분석할 수 없습니다.')
   })
 
-  it('ignores an older response after the selected trade changes', async () => {
+  it('ignores older responses after the selected trade changes', async () => {
     let resolveFirst
     let resolveSecond
     getPropertyAnalysis

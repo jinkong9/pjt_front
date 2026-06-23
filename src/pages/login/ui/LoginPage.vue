@@ -3,6 +3,9 @@ import { computed, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 import { safeRedirect } from '@/shared/lib/safeRedirect'
+import kakaoLoginImage from '@/assets/oauth/kakao-login.svg'
+import naverLoginImage from '@/assets/oauth/naver-login.svg'
+import googleLoginImage from '@/assets/oauth/google-login.svg'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,9 +17,9 @@ const form = reactive({
 })
 
 const oauthProviders = [
-  { id: 'kakao', label: 'Kakao', title: '카카오 계정으로 로그인' },
-  { id: 'naver', label: 'Naver', title: '네이버 계정으로 로그인' },
-  { id: 'google', label: 'Google', title: '구글 계정으로 로그인' },
+  { id: 'kakao', label: 'Kakao', title: '카카오 계정으로 로그인', image: kakaoLoginImage },
+  { id: 'naver', label: 'Naver', title: '네이버 계정으로 로그인', image: naverLoginImage },
+  { id: 'google', label: 'Google', title: '구글 계정으로 로그인', image: googleLoginImage },
 ]
 
 const oauthRedirect = computed(() => safeRedirect(route.query.redirect))
@@ -112,22 +115,11 @@ async function login() {
               v-for="provider in oauthProviders"
               :key="provider.id"
               :data-testid="`oauth-${provider.id}`"
-              class="inline-flex min-h-[46px] cursor-pointer items-center justify-center gap-2 border px-3 text-[13px] font-black no-underline"
-              :class="{
-                'border-[#fee500] bg-[#fee500] text-[#171717]': provider.id === 'kakao',
-                'border-[#03c75a] bg-[#03c75a] text-white': provider.id === 'naver',
-                'border-[#d4d4d4] bg-white text-[#171717]': provider.id === 'google',
-              }"
+              class="inline-flex h-10 min-w-0 cursor-pointer items-center justify-center overflow-hidden rounded-md no-underline transition-opacity hover:opacity-85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b4212a]"
               :href="oauthUrl(provider.id)"
               :title="provider.title"
             >
-              <span
-                class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/70 text-[11px] font-black"
-                :class="{ 'border border-[#e0e0e0] text-[#4285f4]': provider.id === 'google' }"
-              >
-                {{ provider.label[0] }}
-              </span>
-              {{ provider.label }}
+              <img class="h-full w-full object-contain" :src="provider.image" :alt="provider.title" />
             </a>
           </div>
         </div>
