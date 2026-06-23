@@ -57,9 +57,16 @@ describe('LoginPage', () => {
 
     expect(wrapper.find('main').classes()).not.toContain('auth-page')
     expect(wrapper.get('[data-testid="login-card"]').classes()).not.toContain('auth-card')
-    expect(wrapper.get('[data-testid="oauth-kakao"]').classes()).toContain('bg-[#fee500]')
-    expect(wrapper.get('[data-testid="oauth-naver"]').classes()).toContain('bg-[#03c75a]')
-    expect(wrapper.get('[data-testid="oauth-google"]').classes()).toContain('bg-white')
+    expect(wrapper.get('[data-testid="oauth-kakao"] img').attributes('alt')).toBe(
+      '카카오 계정으로 로그인',
+    )
+    expect(wrapper.get('[data-testid="oauth-naver"] img').attributes('alt')).toBe(
+      '네이버 계정으로 로그인',
+    )
+    expect(wrapper.get('[data-testid="oauth-google"] img').attributes('alt')).toBe(
+      '구글 계정으로 로그인',
+    )
+    expect(wrapper.get('[data-testid="oauth-kakao"] img').attributes('src')).toContain('svg')
   })
 
   it('links social login buttons to backend oauth redirects with the safe return path', async () => {

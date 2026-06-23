@@ -1,0 +1,5 @@
+<svg width="175" height="40" viewBox="0 0 175 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Login with Kakao">
+  <rect width="175" height="40" rx="6" fill="#FEE500"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M31 20C31 24.4183 26.5228 28 21 28C19.9238 28 18.8873 27.864 17.9164 27.6126L13.6798 30.2392C13.2469 30.5076 12.6984 30.1172 12.8173 29.6218L13.8232 25.4294C12.0726 24.0152 11 22.108 11 20C11 15.5817 15.4772 12 21 12C26.5228 12 31 15.5817 31 20Z" fill="#000000" fill-opacity="0.9"/>
+  <text x="46" y="25" fill="#000000" fill-opacity="0.85" font-family="Arial, sans-serif" font-size="14" font-weight="700">Kakao</text>
+</svg>
