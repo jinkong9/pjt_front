@@ -1,21 +1,17 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
 import { RouterLink, useRoute } from 'vue-router'
-import { api } from '@/shared/api/client'
+import { appQueryOptions } from '@/shared/query/appQueries'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
-const loading = ref(true)
-const notice = ref(null)
+const noticeQuery = useQuery(computed(() => appQueryOptions.noticeDetail(route.params.noticeId)))
+const loading = computed(() => noticeQuery.isPending.value)
+const notice = computed(() => noticeQuery.data.value)
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    const { data } = await api.get(`/notices/${route.params.noticeId}`)
-    notice.value = data
-  } finally {
-    loading.value = false
-  }
+onMounted(() => {
+  document.title = '공지사항 상세 | SSAFY Home'
 })
 </script>
 

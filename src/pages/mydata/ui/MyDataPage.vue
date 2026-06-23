@@ -1,8 +1,10 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
-import { getFinancialProfile, saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
+import { saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
+import { memberKeys, memberQueryOptions } from '@/entities/member/model/memberQueries'
 import {
   buildFinancialPayload,
   normalizeMyDataProfile,
@@ -12,13 +14,24 @@ import {
 } from '@/entities/mydata/model/myDataProfile'
 
 const memberStore = useMemberStore()
+const queryClient = useQueryClient()
 const loaded = ref(false)
-const saving = ref(false)
 const message = ref('')
 const error = ref('')
 const form = reactive(normalizeMyDataProfile())
 const validationErrors = ref({})
 const regionInput = ref('')
+const financialProfileQuery = useQuery({
+  ...memberQueryOptions.financialProfile(),
+  enabled: () => memberStore.isLoggedIn,
+})
+const saveFinancialMutation = useMutation({
+  mutationFn: saveFinancialProfile,
+  onSuccess: (profile) => {
+    queryClient.setQueryData(memberKeys.financialProfile(), profile)
+  },
+})
+const saving = computed(() => saveFinancialMutation.isPending.value)
 
 const completion = computed(() => {
   const requiredFields = ['birthDate', 'householdMembers', 'isHomeless', 'annualIncome', 'totalAssets']
@@ -51,7 +64,7 @@ async function loadMyData() {
   applyProfile(readStoredMyDataProfile())
 
   try {
-    const financialProfile = await getFinancialProfile()
+    const { data: financialProfile } = await financialProfileQuery.refetch()
     if (financialProfile) {
       applyProfile({ ...form, ...financialProfile })
     }
@@ -74,16 +87,13 @@ async function saveMyData() {
     return
   }
 
-  saving.value = true
   try {
     const storedProfile = saveStoredMyDataProfile({ ...form })
-    const financialProfile = await saveFinancialProfile(buildFinancialPayload(storedProfile))
+    const financialProfile = await saveFinancialMutation.mutateAsync(buildFinancialPayload(storedProfile))
     applyProfile({ ...storedProfile, ...financialProfile })
     message.value = '마이데이터가 저장되었습니다.'
   } catch {
     error.value = '마이데이터를 저장하지 못했습니다.'
-  } finally {
-    saving.value = false
   }
 }
 

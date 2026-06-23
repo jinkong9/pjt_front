@@ -1,20 +1,18 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
 import { RouterLink, useRouter } from 'vue-router'
 import { A11y, Navigation, Pagination } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import { api } from '@/shared/api/client'
-import { fetchRentalNotices } from '@/entities/rental/api/rentalApi'
+import { rentalQueryOptions } from '@/entities/rental/model/rentalQueries'
+import { appQueryOptions } from '@/shared/query/appQueries'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const router = useRouter()
-const loading = ref(true)
-const rentalNotices = ref([])
-const popups = ref([])
 const dismissedPopupIds = ref([])
 const activeSection = ref(0)
 let sectionObserver
@@ -33,6 +31,11 @@ const defaultPriceMapQuery = {
 const visiblePopup = computed(() =>
   popups.value.find((popup) => !dismissedPopupIds.value.includes(String(popup.noticeId))),
 )
+const homeRentalsQuery = useQuery(rentalQueryOptions.list({ size: 6 }))
+const popupsQuery = useQuery(appQueryOptions.noticePopups(3))
+const rentalNotices = computed(() => homeRentalsQuery.data.value ?? [])
+const popups = computed(() => popupsQuery.data.value ?? [])
+const loading = computed(() => homeRentalsQuery.isPending.value)
 
 function readHiddenPopupMap() {
   try {
@@ -60,23 +63,6 @@ function hideNoticePopupToday() {
   hiddenPopupMap[String(visiblePopup.value.noticeId)] = Date.now() + 24 * 60 * 60 * 1000
   localStorage.setItem(noticePopupStorageKey, JSON.stringify(hiddenPopupMap))
   closeNoticePopup()
-}
-
-async function loadHome() {
-  loading.value = true
-  try {
-    const [rentalData, popupRes] = await Promise.all([
-      fetchRentalNotices({ size: 6 }),
-      api.get('/notices/popups', { params: { limit: 3 } }),
-    ])
-    rentalNotices.value = rentalData
-    popups.value = popupRes.data
-  } catch {
-    rentalNotices.value = []
-    popups.value = []
-  } finally {
-    loading.value = false
-  }
 }
 
 function search() {
@@ -146,7 +132,6 @@ function bindFullpageWheel() {
 onMounted(() => {
   document.title = 'SSAFY Home'
   refreshHiddenPopups()
-  loadHome()
   nextTick(() => {
     if (!window.IntersectionObserver) {
       activeSection.value = 0

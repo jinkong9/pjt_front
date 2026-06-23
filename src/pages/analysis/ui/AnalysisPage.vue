@@ -1,7 +1,8 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
 import { useRoute } from 'vue-router'
-import { api } from '@/shared/api/client'
+import { appQueryOptions } from '@/shared/query/appQueries'
 
 const route = useRoute()
 const loading = ref(false)
@@ -17,6 +18,8 @@ const form = reactive({
   radius: queryNumber('radius', 1000),
   priority: 'balanced',
 })
+const submittedForm = ref({ ...form })
+const analysisQuery = useQuery(computed(() => appQueryOptions.analysis(submittedForm.value)))
 
 const presets = [
   { label: '학교 근처', place: '서울 관악구 대학동', latitude: 37.4707, longitude: 126.9368 },
@@ -127,10 +130,11 @@ function createFallbackAnalysis() {
 }
 
 async function analyze() {
-  loading.value = true
   selectedFacilityFilter.value = 'all'
+  submittedForm.value = { ...form }
+  loading.value = true
   try {
-    const { data } = await api.get('/analysis', { params: form })
+    const { data } = await analysisQuery.refetch()
     analysis.value = data
     busStops.value = data.busStops ?? []
     subwayStations.value = data.subwayStations ?? []
