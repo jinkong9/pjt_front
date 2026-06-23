@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createWebHistory } from 'vue-router'
 
@@ -54,6 +54,12 @@ async function mountPage(initialPath = '/rentals/LH-1') {
 }
 
 describe('RentalDetailPage favorite button', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    delete window.kakao
+    document.getElementById('kakao-map-sdk')?.remove()
+  })
+
   it('toggles the favorite state from the detail header', async () => {
     fetchRentalDetail.mockResolvedValue(rentalDetail())
     toggleFavoriteRentalNotice.mockResolvedValue({ favorite: true })
@@ -77,5 +83,38 @@ describe('RentalDetailPage favorite button', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.fullPath).toBe('/login?redirect=/rentals/LH-1')
+  })
+
+  it('explains when Kakao geocoding cannot find coordinates for an LH supply name', async () => {
+    window.kakao = {
+      maps: {
+        load: (callback) => callback(),
+        services: {
+          Status: { OK: 'OK' },
+          Geocoder: vi.fn(function Geocoder() {
+            return {
+              addressSearch: vi.fn((address, callback) => callback([], 'ZERO_RESULT')),
+            }
+          }),
+        },
+      },
+    }
+    fetchRentalDetail.mockResolvedValue({
+      ...rentalDetail(),
+      supplies: [
+        {
+          usage: '26A',
+          address: '서귀포 대정 통합공공임대주택',
+          lotNumber: '-',
+          area: '26.32',
+        },
+      ],
+    })
+
+    const { wrapper } = await mountPage()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('좌표를 찾지 못했습니다')
+    expect(wrapper.text()).not.toContain('Kakao JavaScript 키')
   })
 })

@@ -96,3 +96,8 @@ export async function updateTransfer(transferId, fields, images = []) {
 export async function deleteTransfer(transferId) {
   await api.delete(`/transfers/${transferId}`)
 }
+
+export async function toggleFavoriteTransfer(transferId) {
+  const { data } = await api.post(`/transfers/${transferId}/favorite/toggle`)
+  return data
+}

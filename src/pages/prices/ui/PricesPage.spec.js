@@ -179,7 +179,7 @@ describe('PricesPage', () => {
     )
     expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).toContain('md:bottom-0')
     expect(wrapper.get('[data-testid="property-detail-panel"]').classes()).not.toContain('md:my-6')
-    expect(wrapper.text()).toContain('관심 매물 등록')
+    expect(wrapper.get('[data-testid="property-login-link"]').text()).toContain('관심')
     expect(wrapper.get('[data-testid="property-close"]').classes()).toContain('rounded-xl')
     expect(wrapper.get('[data-testid="loan-tab"]').classes()).toContain('min-h-11')
 

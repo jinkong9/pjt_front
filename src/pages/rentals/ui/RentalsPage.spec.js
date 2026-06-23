@@ -94,4 +94,28 @@ describe('RentalsPage recommendations', () => {
     expect(wrapper.text()).toContain('금융 프로필을 먼저 입력해 주세요.')
     expect(wrapper.text()).toContain('프로필 입력')
   })
+  it('toggles a favorite from a regular LH notice card', async () => {
+    fetchRentalRecommendations.mockResolvedValue([])
+    fetchRentalNotices.mockResolvedValue([
+      {
+        rentalNoticeId: 'LH-LIST-1',
+        title: 'LH 일반 공고',
+        regionName: '서울',
+        status: '접수예정',
+        noticeType: '공공임대',
+        detailType: '행복주택',
+        applicationPeriod: '2026-06-01 ~ 2026-06-10',
+        noticeDate: '2026-05-20',
+      },
+    ])
+    toggleFavoriteRentalNotice.mockResolvedValue({ favorite: true })
+
+    const { wrapper } = await mountRentalsPage()
+
+    await wrapper.get('[data-testid="notice-favorite-LH-LIST-1"]').trigger('click')
+    await flushPromises()
+
+    expect(toggleFavoriteRentalNotice).toHaveBeenCalledWith('LH-LIST-1')
+    expect(wrapper.text()).toContain('관심 공고로 등록했습니다.')
+  })
 })

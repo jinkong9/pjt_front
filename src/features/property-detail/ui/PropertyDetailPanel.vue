@@ -93,14 +93,33 @@ async function loadAnalysis() {
           <h2 class="mt-2 text-2xl font-black">{{ trade.aptName }}</h2>
           <p class="mt-2 text-xs leading-5 text-neutral-500">{{ trade.address }}</p>
         </div>
-        <button
-          data-testid="property-close"
-          class="grid min-h-10 w-10 flex-[0_0_40px] place-items-center rounded-xl border border-[#d4d4d4] bg-white p-0 text-[#404040] hover:border-[#b4212a] hover:bg-[#fff7f7] hover:text-[#b4212a]"
-          aria-label="상세 패널 닫기"
-          @click="$emit('close')"
-        >
-          <span class="material-symbols-outlined text-lg">close</span>
-        </button>
+        <div class="flex flex-[0_0_auto] items-center gap-2">
+          <button
+            v-if="loggedIn"
+            type="button"
+            data-testid="property-favorite-toggle"
+            class="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#b4212a] bg-white px-3 text-xs font-black text-[#b4212a] hover:bg-[#fff7f7]"
+            @click="toggleFavorite"
+          >
+            {{ favorite ? '관심 해제' : '관심' }}
+          </button>
+          <RouterLink
+            v-else
+            data-testid="property-login-link"
+            :to="loginRoute"
+            class="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#b4212a] bg-white px-3 text-xs font-black text-[#b4212a] hover:bg-[#fff7f7]"
+          >
+            관심
+          </RouterLink>
+          <button
+            data-testid="property-close"
+            class="grid min-h-10 w-10 flex-[0_0_40px] place-items-center rounded-xl border border-[#d4d4d4] bg-white p-0 text-[#404040] hover:border-[#b4212a] hover:bg-[#fff7f7] hover:text-[#b4212a]"
+            aria-label="상세 패널 닫기"
+            @click="$emit('close')"
+          >
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
       </div>
       <nav class="mt-5 grid !grid-cols-2 gap-2">
         <button
@@ -160,20 +179,6 @@ async function loadAnalysis() {
             },
           }"
           >생활권 분석 보기</RouterLink
-        >
-        <button
-          v-if="loggedIn"
-          class="w-full bg-[#b4212a] px-4 py-3 text-sm font-black text-white"
-          @click="toggleFavorite"
-        >
-          {{ favorite ? '관심 매물 해제' : '관심 매물 등록' }}
-        </button>
-        <RouterLink
-          v-else
-          data-testid="property-login-link"
-          :to="loginRoute"
-          class="block w-full bg-[#b4212a] px-4 py-3 text-center text-sm font-black text-white"
-          >로그인하고 관심 매물 등록</RouterLink
         >
       </section>
 

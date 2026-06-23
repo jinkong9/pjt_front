@@ -81,7 +81,7 @@ async function sendMessage(question = draft.value) {
     <transition name="ai-chat-panel">
       <article
         v-if="isOpen"
-        class="ai-chat-panel grid h-[min(640px,calc(100vh_-_120px))] w-[min(420px,calc(100vw_-_32px))] grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden border border-neutral-200 bg-white shadow-[0_24px_70px_rgba(23,23,23,0.24)]"
+        class="ai-chat-panel grid !h-[min(640px,calc(100vh_-_120px))] !w-[min(420px,calc(100vw_-_32px))] grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden border border-neutral-200 bg-white shadow-[0_24px_70px_rgba(23,23,23,0.24)]"
       >
         <header class="ai-chat-header flex items-center justify-between gap-4 bg-[#b4212a] p-4 text-white">
           <div class="ai-chat-title flex items-center gap-3">
@@ -106,14 +106,21 @@ async function sendMessage(question = draft.value) {
           </button>
         </header>
 
-        <div ref="messageList" class="ai-chat-messages grid content-start gap-3 overflow-y-auto bg-[#f7f4ef] p-4">
+        <div
+          ref="messageList"
+          data-testid="ai-chat-messages"
+          class="ai-chat-messages !grid !h-auto min-h-0 content-start gap-3 overflow-y-auto bg-[#f7f4ef] p-4"
+        >
           <div
             v-for="message in messages"
             :key="message.id"
-            class="ai-chat-message max-w-[86%] border border-neutral-200 bg-white p-3 text-sm font-bold leading-6 text-[#171717]"
+            :data-testid="`ai-chat-message-${message.role}`"
+            class="ai-chat-message max-w-[86%] border p-3 text-sm font-bold leading-6"
             :class="[
-              message.role === 'user' ? 'user justify-self-end border-[#b4212a] bg-[#b4212a] text-white' : 'assistant justify-self-start',
-              { 'error border-red-200 bg-red-50 text-red-700': message.isError },
+              message.role === 'user'
+                ? 'user justify-self-end border-[#b4212a] !bg-[#b4212a] !text-white'
+                : 'assistant justify-self-start border-neutral-200 !bg-white !text-[#171717]',
+              { 'error border-red-200 !bg-red-50 !text-red-700': message.isError },
             ]"
           >
             <p>{{ message.text }}</p>
@@ -143,9 +150,14 @@ async function sendMessage(question = draft.value) {
           </button>
         </div>
 
-        <form class="ai-chat-form grid grid-cols-[1fr_auto] gap-2 border-t border-neutral-200 bg-white p-3" @submit.prevent="sendMessage()">
+        <form
+          data-testid="ai-chat-form"
+          class="ai-chat-form grid grid-cols-[1fr_auto] gap-2 border-t border-neutral-200 bg-white p-3"
+          @submit.prevent="sendMessage()"
+        >
           <textarea
             v-model="draft"
+            data-testid="ai-chat-input"
             class="min-h-11 resize-none border border-neutral-200 bg-white px-3 py-2 text-sm font-bold outline-0"
             rows="1"
             placeholder="궁금한 내용을 입력하세요"
@@ -164,6 +176,7 @@ async function sendMessage(question = draft.value) {
     </transition>
 
     <button
+      data-testid="ai-chat-toggle"
       class="ai-chat-fab flex min-h-[72px] items-center gap-3 rounded-full border border-[#b4212a] bg-[#b4212a] px-5 font-black text-white shadow-[0_18px_40px_rgba(180,33,42,0.28)]"
       type="button"
       :aria-expanded="isOpen"

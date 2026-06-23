@@ -1,13 +1,14 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { fetchTransfers } from '@/entities/transfer/api/transferApi'
+import { fetchTransfers, toggleFavoriteTransfer } from '@/entities/transfer/api/transferApi'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const loading = ref(false)
 const transfers = ref([])
 const brokenImages = ref(new Set())
+const favoriteMessage = ref('')
 const condition = reactive({
   keyword: '',
   status: '',
@@ -30,6 +31,18 @@ async function loadTransfers() {
     transfers.value = await fetchTransfers(condition)
   } finally {
     loading.value = false
+  }
+}
+
+async function toggleFavorite(transferId) {
+  favoriteMessage.value = ''
+  try {
+    const result = await toggleFavoriteTransfer(transferId)
+    favoriteMessage.value = result.favorite
+      ? '관심 매물로 등록했습니다.'
+      : '관심 매물에서 해제했습니다.'
+  } catch {
+    favoriteMessage.value = '관심 매물 상태를 변경하지 못했습니다.'
   }
 }
 
@@ -100,20 +113,32 @@ onMounted(() => {
     </form>
 
     <LoadingState v-if="loading" />
-    <EmptyState v-else-if="!transfers.length" message="조회된 양도글이 없습니다." />
-    <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4">
+    <template v-else>
+      <p
+        v-if="favoriteMessage"
+        class="mb-4 border border-emerald-200 bg-emerald-50 p-3 text-sm font-black text-emerald-700"
+      >
+        {{ favoriteMessage }}
+      </p>
+      <EmptyState v-if="!transfers.length" message="조회된 양도글이 없습니다." />
+      <div
+        v-else
+        data-testid="transfer-card-grid"
+        class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
+      >
       <article
         v-for="post in transfers"
         :key="post.transferId"
         class="card transfer-card flex min-h-[360px] flex-col border border-neutral-200 bg-white p-4 transition hover:-translate-y-1 hover:border-[#b4212a] hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]"
       >
         <RouterLink
-          class="transfer-card-image grid aspect-[4/3] place-items-center overflow-hidden bg-[#f7f4ef] text-xs font-black tracking-[0.16em] text-neutral-400"
+          :data-testid="`transfer-card-image-${post.transferId}`"
+          class="transfer-card-image m-0 grid aspect-[16/10] min-h-0 w-full place-items-center overflow-hidden bg-[#f7f4ef] text-xs font-black tracking-[0.16em] text-neutral-400"
           :to="`/transfers/${post.transferId}`"
         >
           <img
             v-if="post.imageUrls?.length && !brokenImages.has(post.transferId)"
-            class="h-full w-full object-cover"
+            class="!h-full w-full object-cover"
             :src="post.imageUrls[0]"
             :alt="post.title"
             @error="markBrokenImage(post.transferId)"
@@ -154,13 +179,24 @@ onMounted(() => {
           입주 {{ post.moveInDate || '-' }} · 계약 종료 {{ post.contractEndDate || '-' }}<br />
           {{ post.exclusiveArea || '-' }}㎡ · {{ post.floor || '-' }}
         </p>
-        <RouterLink
-          class="button primary mt-auto inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] text-sm font-black text-white"
-          :to="`/transfers/${post.transferId}`"
-        >
-          상세 보기
-        </RouterLink>
+        <div class="mt-auto grid grid-cols-[1fr_auto] gap-2">
+          <RouterLink
+            class="button primary inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] text-sm font-black text-white"
+            :to="`/transfers/${post.transferId}`"
+          >
+            상세 보기
+          </RouterLink>
+          <button
+            type="button"
+            :data-testid="`transfer-favorite-${post.transferId}`"
+            class="inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-white px-4 text-sm font-black text-[#b4212a]"
+            @click="toggleFavorite(post.transferId)"
+          >
+            관심
+          </button>
+        </div>
       </article>
-    </div>
+      </div>
+    </template>
   </main>
 </template>

@@ -26,6 +26,12 @@ let kakaoMap = null
 let kakaoMarker = null
 let kakaoInfoWindow = null
 
+function mapError(code, message) {
+  const error = new Error(message)
+  error.code = code
+  return error
+}
+
 const myDataErrors = computed(() => validateMyDataProfile(myDataProfile.value))
 const hasMyData = computed(() => !Object.keys(myDataErrors.value).length)
 const eligibility = computed(() =>
@@ -61,7 +67,7 @@ async function loadKakaoSdk() {
     kakaoSdkPromise = new Promise((resolve, reject) => {
       const appKey = import.meta.env.OPENAPI_KAKAO_JAVASCRIPT_KEY
       if (!appKey) {
-        reject(new Error('Kakao JavaScript key is empty'))
+        reject(mapError('KAKAO_KEY_MISSING', 'Kakao JavaScript key is empty'))
         return
       }
       const existing = document.getElementById('kakao-map-sdk')
@@ -75,7 +81,7 @@ async function loadKakaoSdk() {
       script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services&autoload=false`
       script.async = true
       script.onload = resolve
-      script.onerror = reject
+      script.onerror = () => reject(mapError('KAKAO_SDK_LOAD_FAILED', 'Kakao SDK failed to load'))
       document.head.appendChild(script)
     })
   }
@@ -87,13 +93,13 @@ async function loadKakaoSdk() {
 function geocode(kakao, address) {
   return new Promise((resolve, reject) => {
     if (!address) {
-      reject(new Error('Address is empty'))
+      reject(mapError('GEOCODE_EMPTY', 'Address is empty'))
       return
     }
     const geocoder = new kakao.maps.services.Geocoder()
     geocoder.addressSearch(address, (results, status) => {
       if (status !== kakao.maps.services.Status.OK || !results.length) {
-        reject(new Error('Address not found'))
+        reject(mapError('GEOCODE_NOT_FOUND', address))
         return
       }
       resolve({
@@ -102,6 +108,16 @@ function geocode(kakao, address) {
       })
     })
   })
+}
+
+function mapLoadMessage(error) {
+  if (error?.code === 'GEOCODE_EMPTY' || error?.code === 'GEOCODE_NOT_FOUND') {
+    return `좌표를 찾지 못했습니다. '${error.message}' 주소가 건물명/사업명 형태라 Kakao 지도에서 검색되지 않을 수 있습니다.`
+  }
+  if (error?.code === 'KAKAO_KEY_MISSING' || error?.code === 'KAKAO_SDK_LOAD_FAILED') {
+    return `지도를 불러오지 못했습니다. Kakao JavaScript 키와 Web 플랫폼 도메인(${window.location.origin})을 확인하세요.`
+  }
+  return '지도를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
 }
 
 async function pointForSupply(kakao, supply) {
@@ -140,8 +156,8 @@ async function renderMap() {
     })
     kakaoInfoWindow.open(kakaoMap, kakaoMarker)
     mapMessage.value = ''
-  } catch {
-    mapMessage.value = `지도를 불러오지 못했습니다. Kakao JavaScript 키와 Web 플랫폼 도메인(${window.location.origin})을 확인하세요.`
+  } catch (err) {
+    mapMessage.value = mapLoadMessage(err)
   }
 }
 

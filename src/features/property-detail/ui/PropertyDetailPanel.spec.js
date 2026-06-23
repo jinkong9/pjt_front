@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PropertyDetailPanel from './PropertyDetailPanel.vue'
 import { getFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import { analyzePropertyLoan } from '@/entities/loan/api/loanAnalysisApi'
+import { api } from '@/shared/api/client'
 
 vi.mock('@/shared/api/client', () => ({
   api: {
@@ -123,5 +124,26 @@ describe('PropertyDetailPanel', () => {
       repaymentType: 'EQUAL_PAYMENT',
     })
     expect(wrapper.text()).toContain('245만원')
+  })
+  it('keeps the favorite action visible in the detail header after switching tabs', async () => {
+    getFinancialProfile.mockResolvedValue({
+      availableAssets: 200000000,
+      annualIncome: 80000000,
+      monthlySavings: 4000000,
+      existingLoanBalance: 0,
+      existingMonthlyDebtPayment: 0,
+    })
+    analyzePropertyLoan.mockResolvedValue(loanAnalysis())
+    const wrapper = await mountPanel()
+
+    expect(wrapper.get('[data-testid="property-favorite-toggle"]').text()).toContain('관심')
+
+    await wrapper.get('[data-testid="loan-tab"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="property-favorite-toggle"]').trigger('click')
+    await flushPromises()
+
+    expect(api.post).toHaveBeenCalledWith('/favorites/11/toggle')
+    expect(wrapper.get('[data-testid="property-favorite-toggle"]').text()).toContain('해제')
   })
 })

@@ -270,6 +270,9 @@ watch(favoriteTab, (tab) => {
               <span v-if="rentalEmailResult" class="mt-1 block text-xs text-emerald-800">
                 발송 {{ rentalEmailResult.sentCount ?? 0 }}건 · 보류 {{ rentalEmailResult.skippedCount ?? 0 }}건 ·
                 이메일 없음 {{ rentalEmailResult.missingMemberCount ?? 0 }}건
+                <span class="mt-1 block">
+                  보류는 이미 발송했거나 접수 기간 조건에 맞지 않는 공고입니다.
+                </span>
               </span>
             </p>
             <p v-if="rentalFavoritesLoading" class="mt-5 text-sm font-black text-neutral-500">
@@ -303,7 +306,7 @@ watch(favoriteTab, (tab) => {
                     <button
                       type="button"
                       :data-testid="`remove-rental-favorite-${item.notice.rentalNoticeId}`"
-                      class="inline-flex min-h-9 items-center justify-center border border-neutral-300 px-3 text-sm font-black text-neutral-700"
+                      class="inline-flex min-h-9 items-center justify-center border border-[#b4212a] bg-white px-3 text-sm font-black text-[#b4212a] hover:bg-[#fff7f7]"
                       @click="removeRentalFavorite(item.notice.rentalNoticeId)"
                     >
                       해제
