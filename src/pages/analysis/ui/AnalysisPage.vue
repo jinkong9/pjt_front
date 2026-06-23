@@ -128,8 +128,13 @@ async function analyze() {
                 v-for="option in radiusOptions"
                 :key="option.value"
                 type="button"
-                class="min-h-11 border border-neutral-200 bg-white px-3 text-sm font-black text-[#171717]"
-                :class="{ 'active border-[#b4212a] bg-[#b4212a] text-white': form.radius === option.value }"
+                :data-testid="`analysis-radius-${option.value}`"
+                class="min-h-11 border px-3 text-sm font-black"
+                :class="
+                  form.radius === option.value
+                    ? 'active border-[#b4212a] bg-[#b4212a] text-white'
+                    : 'border-neutral-200 bg-white text-[#171717]'
+                "
                 @click="form.radius = option.value"
               >
                 {{ option.label }}
@@ -144,8 +149,13 @@ async function analyze() {
                 v-for="option in priorityOptions"
                 :key="option.value"
                 type="button"
-                class="min-h-11 border border-neutral-200 bg-white px-3 text-sm font-black text-[#171717]"
-                :class="{ 'active border-[#b4212a] bg-[#b4212a] text-white': form.priority === option.value }"
+                :data-testid="`analysis-priority-${option.value}`"
+                class="min-h-11 border px-3 text-sm font-black"
+                :class="
+                  form.priority === option.value
+                    ? 'active border-[#b4212a] bg-[#b4212a] text-white'
+                    : 'border-neutral-200 bg-white text-[#171717]'
+                "
                 @click="form.priority = option.value"
               >
                 {{ option.label }}

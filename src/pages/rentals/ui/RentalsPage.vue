@@ -99,6 +99,25 @@ async function toggleRecommendationFavorite(noticeId) {
   }
 }
 
+async function toggleNoticeFavorite(noticeId) {
+  recommendationFavoriteMessage.value = ''
+  try {
+    const result = await toggleFavoriteRentalNotice(noticeId)
+    recommendationFavoriteMessage.value = result.favorite
+      ? '관심 공고로 등록했습니다.'
+      : '관심 공고에서 해제했습니다.'
+  } catch (err) {
+    if (err.response?.status === 401) {
+      await router.push({
+        path: '/login',
+        query: { redirect: '/rentals' },
+      })
+      return
+    }
+    recommendationFavoriteMessage.value = '관심 공고 상태를 변경하지 못했습니다.'
+  }
+}
+
 async function search() {
   condition.page = 1
   await router.push({ path: '/rentals', query: { ...condition } })
@@ -276,12 +295,22 @@ onMounted(async () => {
             <dd class="text-right">{{ notice.noticeDate || '-' }}</dd>
           </div>
         </dl>
-        <RouterLink
-          class="button primary mt-auto inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] text-sm font-black text-white"
-          :to="`/rentals/${notice.rentalNoticeId}`"
-        >
-          상세 보기
-        </RouterLink>
+        <div class="mt-auto grid grid-cols-[1fr_auto] gap-2">
+          <RouterLink
+            class="button primary inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] text-sm font-black text-white"
+            :to="`/rentals/${notice.rentalNoticeId}`"
+          >
+            상세 보기
+          </RouterLink>
+          <button
+            type="button"
+            :data-testid="`notice-favorite-${notice.rentalNoticeId}`"
+            class="inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-white px-4 text-sm font-black text-[#b4212a]"
+            @click="toggleNoticeFavorite(notice.rentalNoticeId)"
+          >
+            관심
+          </button>
+        </div>
       </article>
     </div>
   </main>

@@ -107,6 +107,12 @@ describe('MemberPage', () => {
     expect(fetchFavoriteRentalNotices).toHaveBeenCalled()
     expect(wrapper.text()).toContain('서울 행복주택')
     expect(wrapper.text()).toContain('2026-06-01 ~ 2026-06-10')
+    expect(wrapper.get('[data-testid="remove-rental-favorite-LH-FAV-1"]').classes()).toContain(
+      'border-[#b4212a]',
+    )
+    expect(wrapper.get('[data-testid="remove-rental-favorite-LH-FAV-1"]').classes()).toContain(
+      'bg-white',
+    )
 
     await wrapper.get('[data-testid="remove-rental-favorite-LH-FAV-1"]').trigger('click')
     await flushPromises()
@@ -133,5 +139,6 @@ describe('MemberPage', () => {
     expect(wrapper.text()).toContain('1건의 LH 관심 공고 알림을 발송했습니다.')
     expect(wrapper.text()).toContain('보류 2건')
     expect(wrapper.text()).toContain('이메일 없음 0건')
+    expect(wrapper.text()).toContain('보류는 이미 발송했거나 접수 기간 조건에 맞지 않는 공고입니다.')
   })
 })

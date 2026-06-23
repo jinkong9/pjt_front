@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { deleteTransfer, fetchTransferDetail } from '@/entities/transfer/api/transferApi'
+import { deleteTransfer, fetchTransferDetail, toggleFavoriteTransfer } from '@/entities/transfer/api/transferApi'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
@@ -9,6 +9,7 @@ const router = useRouter()
 const loading = ref(true)
 const post = ref(null)
 const failedImages = ref(new Set())
+const favorite = ref(false)
 
 function formatMoney(value) {
   if (value === undefined || value === null || value === '') return '-'
@@ -34,6 +35,11 @@ async function removeTransfer() {
   await deleteTransfer(route.params.transferId)
   router.push('/transfers')
 }
+
+async function toggleFavorite() {
+  const result = await toggleFavoriteTransfer(route.params.transferId)
+  favorite.value = Boolean(result.favorite)
+}
 </script>
 
 <template>
@@ -54,6 +60,14 @@ async function removeTransfer() {
           </p>
         </div>
         <div class="detail-actions flex flex-wrap gap-2">
+          <button
+            type="button"
+            data-testid="transfer-detail-favorite"
+            class="button danger inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-white px-[18px] font-black text-[#b4212a]"
+            @click="toggleFavorite"
+          >
+            {{ favorite ? '관심 해제' : '관심' }}
+          </button>
           <RouterLink
             class="button inline-flex min-h-11 items-center justify-center border border-[#171717] bg-[#171717] px-[18px] font-black text-white"
             :to="`/transfers/${post.transferId}/edit`"
@@ -76,11 +90,18 @@ async function removeTransfer() {
         </div>
       </div>
 
-      <section v-if="post.imageUrls?.length" class="transfer-gallery mb-6 grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <div class="grid h-[460px] place-items-center border border-neutral-200 bg-[#f7f4ef] text-xs font-black tracking-[0.16em] text-neutral-400">
+      <section
+        v-if="post.imageUrls?.length"
+        data-testid="transfer-detail-gallery"
+        class="transfer-detail-gallery mb-8 grid gap-4"
+      >
+        <div
+          data-testid="transfer-detail-hero-image"
+          class="grid aspect-[16/9] h-auto max-h-[560px] w-full place-items-center overflow-hidden border border-neutral-200 bg-[#f7f4ef] text-xs font-black tracking-[0.16em] text-neutral-400"
+        >
           <img
             v-if="!failedImages.has(post.imageUrls[0])"
-            class="h-full w-full object-cover"
+            class="!h-full w-full object-cover"
             :src="post.imageUrls[0]"
             :alt="post.title"
             @error="markFailedImage(post.imageUrls[0])"
@@ -105,7 +126,7 @@ async function removeTransfer() {
         </div>
       </section>
 
-      <section class="split transfer-detail-layout grid gap-5 lg:grid-cols-2">
+      <section data-testid="transfer-detail-panels" class="split transfer-detail-layout mt-0 grid gap-5 lg:grid-cols-2">
         <article class="panel border border-neutral-200 bg-white p-6">
           <h2 class="text-2xl font-black text-[#171717]">양도 조건</h2>
           <dl class="detail-grid mt-5 grid grid-cols-2 gap-4">

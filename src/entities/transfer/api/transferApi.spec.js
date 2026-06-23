@@ -7,6 +7,7 @@ import {
   fetchTransfers,
   normalizeTransfer,
   resolveTransferImageUrl,
+  toggleFavoriteTransfer,
   updateTransfer,
 } from '@/entities/transfer/api/transferApi'
 import { api } from '@/shared/api/client'
@@ -114,5 +115,13 @@ describe('transferApi', () => {
     expect(api.post).toHaveBeenCalledTimes(1)
     expect(api.put).toHaveBeenCalledTimes(1)
     expect(api.delete).toHaveBeenCalledWith('/transfers/10')
+  })
+
+  it('toggles transfer favorites through the backend', async () => {
+    api.post.mockResolvedValueOnce({ data: { favorite: true } })
+
+    await expect(toggleFavoriteTransfer(7)).resolves.toEqual({ favorite: true })
+
+    expect(api.post).toHaveBeenCalledWith('/transfers/7/favorite/toggle')
   })
 })
