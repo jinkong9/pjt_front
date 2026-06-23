@@ -176,7 +176,7 @@ watch(favoriteTab, (tab) => {
         </div>
       </div>
 
-      <section class="split grid grid-cols-2 gap-5">
+      <section class="split grid grid-cols-1 gap-5 lg:grid-cols-2">
         <article class="panel border border-neutral-200 bg-white p-6">
           <h2 class="text-[34px] font-black text-[#171717]">회원 정보 수정</h2>
           <p v-if="message" class="alert mt-4 border border-emerald-200 bg-emerald-50 p-3 text-sm font-black text-emerald-700">
@@ -216,13 +216,13 @@ watch(favoriteTab, (tab) => {
         <article class="panel border border-neutral-200 bg-white p-6">
           <div class="flex flex-wrap items-center justify-between gap-4">
             <h2 class="text-[34px] font-black text-[#171717]">관심 목록</h2>
-            <div class="grid grid-cols-3 border border-neutral-200 bg-white">
+            <div class="grid w-full grid-cols-3 border border-neutral-200 bg-white sm:w-auto">
               <button
                 v-for="tab in favoriteTabs"
                 :key="tab.key"
                 type="button"
                 :data-testid="`favorite-tab-${tab.key}`"
-                class="min-h-10 border-r border-neutral-200 px-5 text-sm font-black transition last:border-r-0"
+                class="min-h-10 border-r border-neutral-200 px-3 text-sm font-black transition last:border-r-0 sm:px-5"
                 :class="
                   favoriteTab === tab.key
                     ? 'bg-[#f7f4ef] text-[#b4212a]'
@@ -296,9 +296,9 @@ watch(favoriteTab, (tab) => {
                       {{ item.notice.applicationPeriod || item.notice.closeDate || '-' }}
                     </span>
                   </div>
-                  <div class="flex gap-2">
+                  <div class="flex w-full flex-wrap gap-2 sm:w-auto">
                     <RouterLink
-                      class="inline-flex min-h-9 items-center justify-center border border-[#b4212a] px-3 text-sm font-black text-[#b4212a]"
+                      class="inline-flex min-h-9 flex-1 items-center justify-center border border-[#b4212a] px-3 text-sm font-black text-[#b4212a] sm:flex-none"
                       :to="`/rentals/${item.notice.rentalNoticeId}`"
                     >
                       상세 보기
@@ -306,7 +306,7 @@ watch(favoriteTab, (tab) => {
                     <button
                       type="button"
                       :data-testid="`remove-rental-favorite-${item.notice.rentalNoticeId}`"
-                      class="inline-flex min-h-9 items-center justify-center border border-[#b4212a] bg-white px-3 text-sm font-black text-[#b4212a] hover:bg-[#fff7f7]"
+                      class="inline-flex min-h-9 flex-1 items-center justify-center border border-[#b4212a] bg-white px-3 text-sm font-black text-[#b4212a] hover:bg-[#fff7f7] sm:flex-none"
                       @click="removeRentalFavorite(item.notice.rentalNoticeId)"
                     >
                       해제

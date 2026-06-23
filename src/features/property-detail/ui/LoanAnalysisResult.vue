@@ -37,7 +37,7 @@ function isNegative(value) {
       <p class="mt-2 text-xs font-bold text-neutral-500">목표 예상기간 · {{ duration(analysis.readiness.monthsToTarget) }}</p>
     </section>
 
-    <div class="grid !grid-cols-2 gap-2">
+    <div class="grid grid-cols-1 gap-2 sm:!grid-cols-2">
       <div v-for="item in [
         ['총 필요자금', analysis.cost.totalRequiredFunds],
         ['현재 보유자산', analysis.cost.availableAssets],
@@ -57,11 +57,11 @@ function isNegative(value) {
 
     <section class="rounded-2xl border border-neutral-200 bg-[#faf9f7] p-4 text-xs">
       <h4 class="text-sm font-black">상환 계획</h4>
-      <div class="mt-4 flex justify-between gap-4">
+      <div class="mt-4 flex flex-wrap justify-between gap-4">
         <span class="font-bold text-neutral-500">예상 월 상환액</span>
         <b>{{ won(analysis.repayment.monthlyPayment) }}</b>
       </div>
-      <div class="mt-3 flex justify-between gap-4 border-t border-neutral-200 pt-3">
+      <div class="mt-3 flex flex-wrap justify-between gap-4 border-t border-neutral-200 pt-3">
         <span class="font-bold text-neutral-500">
           {{ isNegative(analysis.repayment.monthlyCashAfterPayment) ? '월 상환 부담 초과' : '상환 후 월 여유금액' }}
         </span>

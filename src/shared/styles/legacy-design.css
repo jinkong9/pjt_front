@@ -15,6 +15,7 @@ body {
   margin: 0;
   color: #171717;
   background: #f4f0ea;
+  overflow-x: hidden;
 }
 
 a {
@@ -2080,6 +2081,22 @@ textarea {
     width: min(100% - 32px, 1480px);
   }
 
+  .page-shell {
+    padding-top: 96px;
+    padding-bottom: 48px;
+  }
+
+  .page-title {
+    font-size: clamp(34px, 12vw, 52px);
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .panel,
+  .card {
+    padding: 20px;
+  }
+
   .main-search,
   .home-hero .main-search,
   .search,
@@ -2118,7 +2135,7 @@ textarea {
 
   .calendar-weekdays,
   .calendar-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 
   .calendar-day {
@@ -2232,6 +2249,52 @@ textarea {
   }
 }
 
+@media (max-width: 640px) {
+  .home-page {
+    height: auto;
+    overflow-y: visible;
+    scroll-snap-type: none;
+  }
+
+  .fullpage-section,
+  .home-hero {
+    height: auto;
+    min-height: 100svh;
+    scroll-snap-align: none;
+  }
+
+  .feature-rail,
+  .favorites-grid,
+  .transfer-terms {
+    grid-template-columns: 1fr;
+  }
+
+  .main-search button,
+  .search button,
+  .button.primary {
+    width: 100%;
+  }
+
+  .calendar-panel {
+    padding: 0;
+  }
+
+  .ai-chat-widget {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    justify-items: stretch;
+  }
+
+  .ai-chat-panel {
+    width: 100%;
+  }
+
+  .ai-chat-fab {
+    justify-self: end;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-page {
     scroll-behavior: auto;
@@ -2243,4 +2306,3 @@ textarea {
     transition: none;
   }
 }
-

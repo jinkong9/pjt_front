@@ -160,7 +160,7 @@ async function analyze() {
       </div>
     </div>
 
-    <section class="analysis-workspace grid grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] gap-5">
+    <section class="analysis-workspace grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
       <article class="panel analysis-quick-form border border-neutral-200 bg-white p-6">
         <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Start</p>
         <h2 class="mt-2 text-[34px] font-black text-[#171717]">어디를 볼까요?</h2>
@@ -177,7 +177,7 @@ async function analyze() {
 
           <div class="analysis-option-group grid gap-2">
             <span class="text-sm font-black">생활 반경</span>
-            <div class="analysis-segments grid grid-cols-3 gap-2">
+            <div class="analysis-segments grid grid-cols-1 gap-2 sm:grid-cols-3">
               <button
                 v-for="option in radiusOptions"
                 :key="option.value"
@@ -198,7 +198,7 @@ async function analyze() {
 
           <div class="analysis-option-group grid gap-2">
             <span class="text-sm font-black">중요한 기준</span>
-            <div class="analysis-segments grid grid-cols-3 gap-2">
+            <div class="analysis-segments grid grid-cols-1 gap-2 sm:grid-cols-3">
               <button
                 v-for="option in priorityOptions"
                 :key="option.value"
@@ -219,7 +219,7 @@ async function analyze() {
 
           <details class="analysis-advanced border border-neutral-200 bg-[#f7f4ef] p-4">
             <summary class="cursor-pointer text-sm font-black">고급 좌표 설정</summary>
-            <div class="analysis-coordinate-grid mt-4 grid grid-cols-2 gap-3">
+            <div class="analysis-coordinate-grid mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label class="grid gap-2 text-sm font-black">
                 <span>경도</span>
                 <input
@@ -284,7 +284,7 @@ async function analyze() {
       </article>
     </section>
 
-    <section v-if="analysis" class="analysis-result-grid mt-5 grid grid-cols-3 gap-4">
+    <section v-if="analysis" class="analysis-result-grid mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
       <article class="panel metric analysis-metric border border-neutral-200 bg-white p-6">
         <p class="eyebrow text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">상권</p>
         <strong class="mt-3 block text-4xl font-black">{{ analysis.commercialSummary.totalCount }}</strong>
@@ -304,7 +304,7 @@ async function analyze() {
       </article>
     </section>
 
-    <section v-if="analysis" class="analysis-lists mt-5 grid grid-cols-2 gap-5">
+    <section v-if="analysis" class="analysis-lists mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
       <article class="panel border border-neutral-200 bg-white p-6">
         <div class="flex items-center justify-between gap-4">
           <h2 class="text-[34px] font-black text-[#171717]">가까운 생활시설</h2>

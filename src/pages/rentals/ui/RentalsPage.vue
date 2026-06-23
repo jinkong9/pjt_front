@@ -295,7 +295,7 @@ onMounted(async () => {
             <dd class="text-right">{{ notice.noticeDate || '-' }}</dd>
           </div>
         </dl>
-        <div class="mt-auto grid grid-cols-[1fr_auto] gap-2">
+        <div class="mt-auto grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
           <RouterLink
             class="button primary inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] text-sm font-black text-white"
             :to="`/rentals/${notice.rentalNoticeId}`"

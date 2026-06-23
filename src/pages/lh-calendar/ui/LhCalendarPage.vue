@@ -166,6 +166,8 @@ onMounted(() => {
 
     <LoadingState v-if="loading" />
     <section v-else class="panel calendar-panel border border-neutral-200 bg-white p-6">
+      <div class="overflow-x-auto">
+        <div class="min-w-[720px]">
       <div class="calendar-weekdays grid grid-cols-7 border-b border-neutral-200 pb-3 text-center text-xs font-black text-neutral-500">
         <span>일</span>
         <span>월</span>
@@ -211,6 +213,8 @@ onMounted(() => {
             </button>
           </div>
         </article>
+      </div>
+        </div>
       </div>
     </section>
 

@@ -223,7 +223,7 @@ async function removeComment(comment) {
       <section data-testid="transfer-detail-panels" class="split transfer-detail-layout mt-0 grid gap-5 lg:grid-cols-2">
         <article class="panel border border-neutral-200 bg-white p-6">
           <h2 class="text-2xl font-black text-[#171717]">양도 조건</h2>
-          <dl class="detail-grid mt-5 grid grid-cols-2 gap-4">
+          <dl class="detail-grid mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="border-b border-neutral-100 pb-3"><dt class="block text-xs font-black text-neutral-500">보증금</dt><dd class="mt-1 block font-black">{{ formatMoney(post.depositAmount) }}</dd></div>
             <div class="border-b border-neutral-100 pb-3"><dt class="block text-xs font-black text-neutral-500">월세</dt><dd class="mt-1 block font-black">{{ formatMoney(post.monthlyRentAmount) }}</dd></div>
             <div class="border-b border-neutral-100 pb-3"><dt class="block text-xs font-black text-neutral-500">관리비</dt><dd class="mt-1 block font-black">{{ formatMoney(post.maintenanceFee) }}</dd></div>
@@ -270,7 +270,7 @@ async function removeComment(comment) {
             class="min-h-24 resize-y border border-neutral-300 bg-white p-4 text-sm font-bold leading-6 outline-none focus:border-[#b4212a]"
             placeholder="댓글을 입력하세요."
           />
-          <div class="flex items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <p class="text-sm font-bold text-[#b4212a]">{{ commentError }}</p>
             <button
               type="submit"
