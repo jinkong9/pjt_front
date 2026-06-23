@@ -11,7 +11,7 @@ const loading = computed(() => noticeQuery.isPending.value)
 const notice = computed(() => noticeQuery.data.value)
 
 onMounted(() => {
-  document.title = '공지사항 상세 | SSAFY Home'
+  document.title = '공지사항 상세 | HOME FIT'
 })
 </script>
 

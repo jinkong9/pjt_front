@@ -11,6 +11,7 @@ import {
   updateTransferComment,
 } from '@/entities/transfer/api/transferApi'
 import { transferKeys, transferQueryOptions } from '@/entities/transfer/model/transferQueries'
+import { formatManwonToKoreanMoney } from '@/shared/lib/formatMoney'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
@@ -55,8 +56,7 @@ const deleteCommentMutation = useMutation({
 const currentUserId = computed(() => memberStore.current?.userId ?? '')
 
 function formatMoney(value) {
-  if (value === undefined || value === null || value === '') return '-'
-  return `${Number(value).toLocaleString()}만원`
+  return formatManwonToKoreanMoney(value)
 }
 
 function markFailedImage(imageUrl) {
@@ -73,11 +73,11 @@ function formatDate(value) {
 }
 
 onMounted(() => {
-  document.title = '양도 상세 | SSAFY Home'
+  document.title = '양도 상세 | HOME FIT'
 })
 
 watch(post, (nextPost) => {
-  if (nextPost?.title) document.title = `${nextPost.title} | SSAFY Home`
+  if (nextPost?.title) document.title = `${nextPost.title} | HOME FIT`
 })
 
 async function removeTransfer() {

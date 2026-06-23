@@ -32,7 +32,7 @@ function resetSearch() {
 }
 
 onMounted(() => {
-  document.title = '공지사항 | SSAFY Home'
+  document.title = '공지사항 | HOME FIT'
 })
 </script>
 

@@ -105,7 +105,7 @@ async function register() {
         </div>
       </div>
       <aside class="grid content-center justify-items-center gap-[18px] bg-[linear-gradient(180deg,rgba(23,23,23,0.9),rgba(23,23,23,0.82)),url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center px-[42px] py-12 text-center text-white max-[899px]:order-[-1] max-[899px]:min-h-[230px] max-[899px]:px-6 max-[899px]:py-[34px]">
-        <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-white/75">Join SSAFY Home</p>
+        <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-white/75">Join HOME FIT</p>
         <h2 class="m-0 max-w-[380px] text-[clamp(32px,3.2vw,44px)] font-normal leading-[1.12] text-white">
           주거 정보를 한곳에서 관리하세요
         </h2>

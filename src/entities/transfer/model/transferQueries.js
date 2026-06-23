@@ -1,6 +1,7 @@
 import {
   fetchTransferComments,
   fetchTransferDetail,
+  fetchFavoriteTransfers,
   fetchTransfers,
 } from '@/entities/transfer/api/transferApi'
 
@@ -27,5 +28,10 @@ export const transferQueryOptions = {
     queryKey: transferKeys.comments(transferId),
     queryFn: () => fetchTransferComments(transferId),
     staleTime: 30_000,
+  }),
+  favorites: () => ({
+    queryKey: transferKeys.favorites(),
+    queryFn: fetchFavoriteTransfers,
+    staleTime: 60_000,
   }),
 }

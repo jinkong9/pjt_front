@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch, watchEffect } from 'vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import FinancialProfileForm from '@/features/property-detail/ui/FinancialProfileForm.vue'
@@ -12,16 +12,27 @@ import {
   toggleFavoriteRentalNotice,
 } from '@/entities/rental/api/rentalApi'
 import { rentalKeys, rentalQueryOptions } from '@/entities/rental/model/rentalQueries'
+import { transferQueryOptions } from '@/entities/transfer/model/transferQueries'
+import {
+  buildFinancialPayload,
+  readStoredMyDataProfile,
+  saveStoredMyDataProfile,
+} from '@/entities/mydata/model/myDataProfile'
+import { formatManwonToKoreanMoney } from '@/shared/lib/formatMoney'
 
 const memberStore = useMemberStore()
+const router = useRouter()
 const queryClient = useQueryClient()
+const ready = ref(false)
 const rentalFavoritesLoaded = ref(false)
+const transferFavoritesLoaded = ref(false)
 const favoriteTab = ref('deals')
 const message = ref('')
 const rentalEmailMessage = ref('')
 const rentalEmailResult = ref(null)
 const rentalEmailSending = ref(false)
 const financialProfile = ref(null)
+const myDataProfile = ref(null)
 const financialSaving = ref(false)
 const financialMessage = ref('')
 const form = reactive({
@@ -42,6 +53,10 @@ const dealFavoritesQuery = useQuery({
 const rentalFavoritesQuery = useQuery({
   ...rentalQueryOptions.favorites(),
   enabled: () => memberStore.isLoggedIn && favoriteTab.value === 'rentals',
+})
+const transferFavoritesQuery = useQuery({
+  ...transferQueryOptions.favorites(),
+  enabled: () => memberStore.isLoggedIn && favoriteTab.value === 'transfers',
 })
 const financialProfileQuery = useQuery({
   ...memberQueryOptions.financialProfile(),
@@ -65,7 +80,9 @@ const sendRentalEmailsMutation = useMutation({
 })
 const favorites = computed(() => dealFavoritesQuery.data.value ?? [])
 const rentalFavorites = computed(() => rentalFavoritesQuery.data.value ?? [])
+const transferFavorites = computed(() => transferFavoritesQuery.data.value ?? [])
 const rentalFavoritesLoading = computed(() => rentalFavoritesQuery.isPending.value)
+const transferFavoritesLoading = computed(() => transferFavoritesQuery.isPending.value)
 
 watchEffect(() => {
   if (memberStore.current) {
@@ -108,13 +125,18 @@ async function updateMe() {
 
 async function loadFinancialProfile() {
   financialProfile.value = financialProfileQuery.data.value
+  myDataProfile.value = readStoredMyDataProfile()
 }
 
-async function updateFinancialProfile(payload) {
+async function updateFinancialProfile(payload = {}) {
   financialSaving.value = true
   financialMessage.value = ''
   try {
-    financialProfile.value = await saveFinancialProfile(payload)
+    const nextMyDataProfile = saveStoredMyDataProfile(payload.myDataProfile ?? {})
+    myDataProfile.value = nextMyDataProfile
+    financialProfile.value = await saveFinancialProfile(
+      buildFinancialPayload(payload.financialProfile ?? nextMyDataProfile),
+    )
     queryClient.invalidateQueries({ queryKey: memberKeys.financialProfile() })
     financialMessage.value = '금융 프로필이 저장되었습니다.'
   } finally {
@@ -123,21 +145,38 @@ async function updateFinancialProfile(payload) {
 }
 
 function formatMoney(value) {
-  const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''))
-  if (!Number.isFinite(number)) return value ?? '-'
-  return number.toLocaleString('ko-KR')
+  return formatManwonToKoreanMoney(value)
+}
+
+function favoriteDealRoute(deal) {
+  return {
+    path: '/prices',
+    query: {
+      mode: 'search',
+      keyword: deal.aptName || deal.address || '',
+      trade: deal.no,
+      tab: 'detail',
+    },
+  }
 }
 
 onMounted(async () => {
   await memberStore.fetchMe()
-  if (memberStore.isLoggedIn) {
-    await loadFinancialProfile()
+  if (!memberStore.isLoggedIn) {
+    window.alert('로그인이 필요합니다.')
+    await router.replace('/login')
+    return
   }
+  await loadFinancialProfile()
+  ready.value = true
 })
 
 watch(favoriteTab, (tab) => {
   if (tab === 'rentals' && memberStore.isLoggedIn && !rentalFavoritesLoaded.value) {
     rentalFavoritesLoaded.value = true
+  }
+  if (tab === 'transfers' && memberStore.isLoggedIn && !transferFavoritesLoaded.value) {
+    transferFavoritesLoaded.value = true
   }
 })
 
@@ -148,7 +187,7 @@ watch(financialProfileQuery.data, (profile) => {
 </script>
 
 <template>
-  <main class="shell page-shell mx-auto w-[min(1480px,calc(100%_-_48px))] py-28">
+  <main v-if="ready" class="shell page-shell mx-auto w-[min(1480px,calc(100%_-_48px))] py-28">
     <section v-if="!memberStore.isLoggedIn" class="panel border border-neutral-200 bg-white p-6">
       <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Member</p>
       <h1 class="page-title mt-3 max-w-4xl text-[clamp(42px,6vw,76px)] font-black leading-none">
@@ -237,14 +276,61 @@ watch(financialProfileQuery.data, (profile) => {
             <EmptyState v-if="!favorites.length" message="저장한 관심 실거래가 없습니다." />
             <ul v-else class="clean-list mt-5 grid gap-4">
               <li v-for="deal in favorites" :key="deal.no" class="border-b border-neutral-100 pb-4">
-                <strong class="block font-black">{{ deal.aptName }}</strong>
-                <span class="mt-1 block text-sm font-bold text-neutral-500">
-                  {{ deal.address }} · {{ formatMoney(deal.dealAmount) }}만원
-                </span>
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <strong class="block font-black">{{ deal.aptName }}</strong>
+                    <span class="mt-1 block text-sm font-bold text-neutral-500">
+                      {{ deal.address }} · {{ formatMoney(deal.dealAmount) }}
+                    </span>
+                  </div>
+                  <RouterLink
+                    :data-testid="`favorite-deal-detail-${deal.no}`"
+                    class="inline-flex min-h-9 w-full items-center justify-center border border-[#b4212a] px-3 text-sm font-black text-[#b4212a] sm:w-auto"
+                    :to="favoriteDealRoute(deal)"
+                  >
+                    상세 보기
+                  </RouterLink>
+                </div>
               </li>
             </ul>
           </template>
-          <EmptyState v-else-if="favoriteTab === 'transfers'" message="저장한 관심 양도글이 없습니다." />
+          <template v-else-if="favoriteTab === 'transfers'">
+            <p v-if="transferFavoritesLoading" class="mt-5 text-sm font-black text-neutral-500">
+              관심 양도 매물을 불러오는 중입니다.
+            </p>
+            <EmptyState
+              v-else-if="!transferFavorites.length"
+              message="저장한 관심 양도글이 없습니다."
+            />
+            <ul v-else class="clean-list mt-5 grid gap-4">
+              <li
+                v-for="transfer in transferFavorites"
+                :key="transfer.transferId"
+                class="border-b border-neutral-100 pb-4"
+              >
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <strong class="block font-black">{{ transfer.title }}</strong>
+                    <span class="mt-1 block text-sm font-bold text-neutral-500">
+                      {{ transfer.address }} {{ transfer.detailAddress || '' }}
+                    </span>
+                    <span class="mt-2 block text-sm font-black text-neutral-700">
+                      보증금 {{ formatMoney(transfer.depositAmount) }} ·
+                      월세 {{ formatMoney(transfer.monthlyRentAmount) }} ·
+                      양도비 {{ formatMoney(transfer.transferFee) }}
+                    </span>
+                  </div>
+                  <RouterLink
+                    :data-testid="`favorite-transfer-detail-${transfer.transferId}`"
+                    class="inline-flex min-h-9 w-full items-center justify-center border border-[#b4212a] px-3 text-sm font-black text-[#b4212a] sm:w-auto"
+                    :to="`/transfers/${transfer.transferId}`"
+                  >
+                    상세 보기
+                  </RouterLink>
+                </div>
+              </li>
+            </ul>
+          </template>
           <template v-else>
             <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border border-neutral-200 bg-[#faf8f5] p-4">
               <p class="text-sm font-bold text-neutral-600">
@@ -318,16 +404,19 @@ watch(financialProfileQuery.data, (profile) => {
       </section>
 
       <section v-if="financialProfileLoaded" class="panel mt-6 border border-neutral-200 bg-white p-6">
-        <h2 class="text-[34px] font-black text-[#171717]">금융 프로필</h2>
-        <p class="muted mt-2 text-sm font-bold leading-7 text-neutral-500">
-          실거래 지도 대출 계산에 사용할 자산과 상환 정보를 관리합니다.
-        </p>
+        <div>
+          <h2 class="text-[34px] font-black text-[#171717]">금융 프로필</h2>
+          <p class="muted mt-2 text-sm font-bold leading-7 text-neutral-500">
+            실거래 지도 대출 계산에 사용할 자산과 상환 정보를 관리합니다.
+          </p>
+        </div>
         <p v-if="financialMessage" class="alert mt-4 border border-emerald-200 bg-emerald-50 p-3 text-sm font-black text-emerald-700">
           {{ financialMessage }}
         </p>
-        <div class="mt-5 max-w-xl">
+        <div class="mt-5">
           <FinancialProfileForm
             :initial-value="financialProfile"
+            :initial-my-data="myDataProfile"
             :saving="financialSaving"
             @save="updateFinancialProfile"
           />
