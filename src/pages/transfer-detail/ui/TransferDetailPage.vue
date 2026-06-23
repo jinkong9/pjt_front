@@ -1,15 +1,33 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { deleteTransfer, fetchTransferDetail, toggleFavoriteTransfer } from '@/entities/transfer/api/transferApi'
+import { useMemberStore } from '@/entities/member/model/member'
+import {
+  createTransferComment,
+  deleteTransfer,
+  deleteTransferComment,
+  fetchTransferComments,
+  fetchTransferDetail,
+  toggleFavoriteTransfer,
+  updateTransferComment,
+} from '@/entities/transfer/api/transferApi'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
 const route = useRoute()
 const router = useRouter()
+const memberStore = useMemberStore()
 const loading = ref(true)
 const post = ref(null)
 const failedImages = ref(new Set())
 const favorite = ref(false)
+const comments = ref([])
+const commentContent = ref('')
+const commentLoading = ref(false)
+const commentError = ref('')
+const editingCommentId = ref(null)
+const editingContent = ref('')
+
+const currentUserId = computed(() => memberStore.current?.userId ?? '')
 
 function formatMoney(value) {
   if (value === undefined || value === null || value === '') return '-'
@@ -20,10 +38,24 @@ function markFailedImage(imageUrl) {
   failedImages.value = new Set([...failedImages.value, imageUrl])
 }
 
+function isOwnComment(comment) {
+  return Boolean(currentUserId.value) && comment.writerId === currentUserId.value
+}
+
+function formatDate(value) {
+  if (!value) return ''
+  return String(value).replace('T', ' ').slice(0, 16)
+}
+
+async function loadComments() {
+  comments.value = await fetchTransferComments(route.params.transferId)
+}
+
 onMounted(async () => {
   loading.value = true
   try {
     post.value = await fetchTransferDetail(route.params.transferId)
+    await loadComments()
     document.title = `${post.value.title} | SSAFY Home`
   } finally {
     loading.value = false
@@ -39,6 +71,68 @@ async function removeTransfer() {
 async function toggleFavorite() {
   const result = await toggleFavoriteTransfer(route.params.transferId)
   favorite.value = Boolean(result.favorite)
+}
+
+async function submitComment() {
+  const content = commentContent.value.trim()
+  if (!content || commentLoading.value) return
+
+  commentLoading.value = true
+  commentError.value = ''
+  try {
+    await createTransferComment(route.params.transferId, content)
+    commentContent.value = ''
+    await loadComments()
+  } catch {
+    commentError.value = '댓글을 등록하지 못했습니다.'
+  } finally {
+    commentLoading.value = false
+  }
+}
+
+function startEdit(comment) {
+  editingCommentId.value = comment.commentId
+  editingContent.value = comment.content
+}
+
+function cancelEdit() {
+  editingCommentId.value = null
+  editingContent.value = ''
+}
+
+async function saveComment(comment) {
+  const content = editingContent.value.trim()
+  if (!content || commentLoading.value) return
+
+  commentLoading.value = true
+  commentError.value = ''
+  try {
+    await updateTransferComment(comment.commentId, content)
+    cancelEdit()
+    await loadComments()
+  } catch {
+    commentError.value = '댓글을 수정하지 못했습니다.'
+  } finally {
+    commentLoading.value = false
+  }
+}
+
+async function removeComment(comment) {
+  if (commentLoading.value) return
+
+  commentLoading.value = true
+  commentError.value = ''
+  try {
+    await deleteTransferComment(comment.commentId)
+    if (editingCommentId.value === comment.commentId) {
+      cancelEdit()
+    }
+    await loadComments()
+  } catch {
+    commentError.value = '댓글을 삭제하지 못했습니다.'
+  } finally {
+    commentLoading.value = false
+  }
 }
 </script>
 
@@ -151,6 +245,100 @@ async function toggleFavorite() {
             <strong class="mt-2 block text-2xl font-black">{{ post.contactPhone || '-' }}</strong>
           </div>
         </article>
+      </section>
+
+      <section class="panel mt-6 border border-neutral-200 bg-white p-6" data-testid="transfer-comments">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.24em] text-[#b4212a]">Comments</p>
+            <h2 class="mt-2 text-2xl font-black text-[#171717]">댓글 {{ comments.length }}</h2>
+          </div>
+          <RouterLink v-if="!memberStore.isLoggedIn" class="text-link text-sm font-black text-[#b4212a]" to="/login">
+            로그인 후 댓글 작성
+          </RouterLink>
+        </div>
+
+        <form
+          v-if="memberStore.isLoggedIn"
+          class="mt-5 grid gap-3"
+          data-testid="transfer-comment-submit"
+          @submit.prevent="submitComment"
+        >
+          <textarea
+            v-model="commentContent"
+            data-testid="transfer-comment-input"
+            class="min-h-24 resize-y border border-neutral-300 bg-white p-4 text-sm font-bold leading-6 outline-none focus:border-[#b4212a]"
+            placeholder="댓글을 입력하세요."
+          />
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-sm font-bold text-[#b4212a]">{{ commentError }}</p>
+            <button
+              type="submit"
+              class="button primary inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] font-black text-white disabled:opacity-50"
+              :disabled="commentLoading || !commentContent.trim()"
+            >
+              등록
+            </button>
+          </div>
+        </form>
+
+        <ul class="mt-6 divide-y divide-neutral-100">
+          <li v-for="comment in comments" :key="comment.commentId" class="py-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <strong class="block text-sm font-black text-[#171717]">{{ comment.writerId }}</strong>
+                <span class="mt-1 block text-xs font-bold text-neutral-500">{{ formatDate(comment.createdAt) }}</span>
+              </div>
+              <div v-if="isOwnComment(comment)" class="flex gap-2">
+                <button
+                  type="button"
+                  :data-testid="`transfer-comment-edit-${comment.commentId}`"
+                  class="text-sm font-black text-[#171717]"
+                  @click="startEdit(comment)"
+                >
+                  수정
+                </button>
+                <button
+                  type="button"
+                  :data-testid="`transfer-comment-delete-${comment.commentId}`"
+                  class="text-sm font-black text-[#b4212a]"
+                  @click="removeComment(comment)"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
+
+            <form
+              v-if="editingCommentId === comment.commentId"
+              class="mt-4 grid gap-3"
+              :data-testid="`transfer-comment-save-${comment.commentId}`"
+              @submit.prevent="saveComment(comment)"
+            >
+              <textarea
+                v-model="editingContent"
+                :data-testid="`transfer-comment-edit-input-${comment.commentId}`"
+                class="min-h-20 resize-y border border-neutral-300 bg-white p-4 text-sm font-bold leading-6 outline-none focus:border-[#b4212a]"
+              />
+              <div class="flex justify-end gap-2">
+                <button type="button" class="px-4 text-sm font-black text-neutral-500" @click="cancelEdit">취소</button>
+                <button
+                  type="submit"
+                  class="button inline-flex min-h-10 items-center justify-center border border-[#171717] bg-[#171717] px-4 text-sm font-black text-white disabled:opacity-50"
+                  :disabled="commentLoading || !editingContent.trim()"
+                >
+                  저장
+                </button>
+              </div>
+            </form>
+            <p v-else class="mt-4 whitespace-pre-wrap text-sm font-bold leading-7 text-neutral-700">
+              {{ comment.content }}
+            </p>
+          </li>
+        </ul>
+        <p v-if="!comments.length" class="mt-6 border-t border-neutral-100 pt-6 text-sm font-bold text-neutral-500">
+          아직 등록된 댓글이 없습니다.
+        </p>
       </section>
     </template>
   </main>
