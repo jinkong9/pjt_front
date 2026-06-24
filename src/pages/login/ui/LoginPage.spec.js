@@ -52,7 +52,20 @@ describe('LoginPage', () => {
     expect(wrapper.get('[data-testid="login-card"]').classes()).toContain(
       'w-[min(1120px,calc(100vw-48px))]',
     )
-    expect(wrapper.find('button[type="submit"]').classes()).toContain('min-h-[52px]')
+    expect(wrapper.find('button[type="submit"]').classes()).toContain('min-h-[54px]')
+  })
+
+  it('stacks social login buttons as three full-width rows', async () => {
+    const { wrapper } = await mountLogin('/login')
+
+    expect(wrapper.get('[data-testid="oauth-list"]').classes()).toContain('grid-cols-1')
+    expect(wrapper.get('[data-testid="oauth-kakao"]').classes()).toContain('min-h-[54px]')
+    expect(wrapper.get('[data-testid="oauth-naver"]').classes()).toContain('min-h-[54px]')
+    expect(wrapper.get('[data-testid="oauth-google"]').classes()).toContain('min-h-[54px]')
+    expect(wrapper.get('[data-testid="oauth-kakao"] img').classes()).toContain('object-fill')
+    expect(wrapper.get('[data-testid="oauth-naver"] img').classes()).toContain('object-fill')
+    expect(wrapper.get('[data-testid="oauth-google"]').classes()).toContain('google-oauth-button')
+    expect(wrapper.get('[data-testid="oauth-google"]').text()).toContain('구글로 로그인')
   })
 
   it('keeps login layout isolated from the shared auth layout classes', async () => {
@@ -60,16 +73,15 @@ describe('LoginPage', () => {
 
     expect(wrapper.find('main').classes()).not.toContain('auth-page')
     expect(wrapper.get('[data-testid="login-card"]').classes()).not.toContain('auth-card')
-    expect(wrapper.get('[data-testid="oauth-kakao"] img').attributes('alt')).toBe(
+    expect(wrapper.get('[data-testid="oauth-kakao"]').attributes('title')).toBe(
       '카카오 계정으로 로그인',
     )
-    expect(wrapper.get('[data-testid="oauth-naver"] img').attributes('alt')).toBe(
+    expect(wrapper.get('[data-testid="oauth-naver"]').attributes('title')).toBe(
       '네이버 계정으로 로그인',
     )
-    expect(wrapper.get('[data-testid="oauth-google"] img').attributes('alt')).toBe(
+    expect(wrapper.get('[data-testid="oauth-google"]').attributes('title')).toBe(
       '구글 계정으로 로그인',
     )
-    expect(wrapper.get('[data-testid="oauth-kakao"] img').attributes('src')).toContain('svg')
   })
 
   it('links social login buttons to backend oauth redirects with the safe return path', async () => {

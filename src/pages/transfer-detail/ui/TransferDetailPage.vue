@@ -54,6 +54,10 @@ const deleteCommentMutation = useMutation({
 })
 
 const currentUserId = computed(() => memberStore.current?.userId ?? '')
+const isOwner = computed(
+  () => Boolean(currentUserId.value && post.value?.writerId) && String(post.value.writerId) === String(currentUserId.value),
+)
+const canFavorite = computed(() => !isOwner.value)
 
 function formatMoney(value) {
   return formatManwonToKoreanMoney(value)
@@ -88,6 +92,14 @@ async function removeTransfer() {
 }
 
 async function toggleFavorite() {
+  if (!memberStore.isLoggedIn) {
+    router.push({
+      path: '/login',
+      query: { redirect: route.fullPath },
+    })
+    return
+  }
+
   const result = await favoriteMutation.mutateAsync()
   favorite.value = Boolean(result.favorite)
 }
@@ -171,6 +183,7 @@ async function removeComment(comment) {
         </div>
         <div class="detail-actions flex flex-wrap gap-2">
           <button
+            v-if="canFavorite"
             type="button"
             data-testid="transfer-detail-favorite"
             class="button danger inline-flex min-h-11 items-center justify-center border px-[18px] font-black transition"
@@ -180,19 +193,24 @@ async function removeComment(comment) {
             {{ favorite ? '관심중' : '관심' }}
           </button>
           <RouterLink
+            v-if="isOwner"
+            data-testid="transfer-detail-edit"
             class="button inline-flex min-h-11 items-center justify-center border border-neutral-300 bg-white px-[18px] font-black text-[#171717] transition hover:border-[#b4212a] hover:bg-[#fff7f7] hover:text-[#b4212a]"
             :to="`/transfers/${post.transferId}/edit`"
           >
             수정
           </RouterLink>
           <button
+            v-if="isOwner"
             type="button"
+            data-testid="transfer-detail-delete"
             class="button danger inline-flex min-h-11 items-center justify-center border border-[#f0c7ca] bg-[#fff7f7] px-[18px] font-black text-[#b4212a] transition hover:border-[#b4212a] hover:bg-white"
             @click="removeTransfer"
           >
             삭제
           </button>
           <a
+            v-if="false"
             class="button primary inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] font-black text-white"
             :href="`tel:${post.contactPhone}`"
           >

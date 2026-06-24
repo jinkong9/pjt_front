@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -53,6 +53,7 @@ async function mountDetail({ pinia = createPinia() } = {}) {
       { path: '/transfers', component: { template: '<div />' } },
       { path: '/transfers/:transferId', component: TransferDetailPage },
       { path: '/transfers/:transferId/edit', component: { template: '<div />' } },
+      { path: '/login', component: { template: '<div />' } },
     ],
   })
   await router.push('/transfers/1')
@@ -69,6 +70,10 @@ async function mountDetail({ pinia = createPinia() } = {}) {
 }
 
 describe('TransferDetailPage layout', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('keeps the hero image in a landscape frame above the detail panels', async () => {
     fetchTransferDetail.mockResolvedValue(transfer())
     fetchTransferComments.mockResolvedValue([])
@@ -92,17 +97,52 @@ describe('TransferDetailPage layout', () => {
   })
 
   it('toggles a favorite from the transfer detail header', async () => {
-    fetchTransferDetail.mockResolvedValue(transfer())
+    fetchTransferDetail.mockResolvedValue(transfer({ writerId: 'owner' }))
     fetchTransferComments.mockResolvedValue([])
     toggleFavoriteTransfer.mockResolvedValue({ favorite: true })
+    const pinia = createPinia()
+    useMemberStore(pinia).current = { userId: 'viewer', name: '뷰어' }
 
-    const wrapper = await mountDetail()
+    const wrapper = await mountDetail({ pinia })
 
     await wrapper.get('[data-testid="transfer-detail-favorite"]').trigger('click')
     await flushPromises()
 
     expect(toggleFavoriteTransfer).toHaveBeenCalledWith('1')
     expect(wrapper.get('[data-testid="transfer-detail-favorite"]').text()).toContain('관심중')
+  })
+
+  it('shows only the favorite action when logged out and sends it to login', async () => {
+    fetchTransferDetail.mockResolvedValue(transfer({ writerId: 'owner' }))
+    fetchTransferComments.mockResolvedValue([])
+
+    const wrapper = await mountDetail()
+
+    expect(wrapper.find('[data-testid="transfer-detail-favorite"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="transfer-detail-edit"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="transfer-detail-delete"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="transfer-detail-contact"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="transfer-detail-favorite"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.vm.$router.currentRoute.value.path).toBe('/login')
+    expect(wrapper.vm.$router.currentRoute.value.query.redirect).toBe('/transfers/1')
+    expect(toggleFavoriteTransfer).not.toHaveBeenCalled()
+  })
+
+  it('shows only edit and delete actions for the owner', async () => {
+    fetchTransferDetail.mockResolvedValue(transfer({ writerId: 'ssafy' }))
+    fetchTransferComments.mockResolvedValue([])
+    const pinia = createPinia()
+    useMemberStore(pinia).current = { userId: 'ssafy', name: '싸피' }
+
+    const wrapper = await mountDetail({ pinia })
+
+    expect(wrapper.find('[data-testid="transfer-detail-favorite"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="transfer-detail-edit"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="transfer-detail-delete"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="transfer-detail-contact"]').exists()).toBe(false)
   })
 
   it('loads comments and lets the current member create, edit, and delete their comment', async () => {

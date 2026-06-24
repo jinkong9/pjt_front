@@ -15,6 +15,21 @@ const form = reactive({
   rentalNoticeEmailEnabled: false,
 })
 
+function formatPhoneNumber(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 3) {
+    return digits
+  }
+  if (digits.length <= 7) {
+    return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  }
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+}
+
+function formatPhoneInput(event) {
+  form.phone = formatPhoneNumber(event.target.value)
+}
+
 async function register() {
   error.value = ''
   if (form.password !== form.passwordConfirm) {
@@ -95,8 +110,10 @@ async function register() {
             <input
               v-model="form.phone"
               data-testid="register-phone"
+              inputmode="tel"
               required
               class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
+              @input="formatPhoneInput"
             />
           </label>
           <label class="flex items-start gap-3 border border-[#e5e5e5] bg-[#faf8f5] p-3 text-sm font-black text-[#171717]">

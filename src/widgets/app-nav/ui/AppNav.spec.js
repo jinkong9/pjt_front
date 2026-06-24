@@ -39,6 +39,32 @@ describe('AppNav', () => {
     expect(wrapper.find('.menu-toggle').exists()).toBe(true)
   })
 
+  it('uses the main navigation layout on the notices page', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/home', name: 'home', component: { template: '<div />' } },
+        { path: '/notices', name: 'notices', component: { template: '<div />' } },
+      ],
+    })
+    await router.push('/notices')
+    await router.isReady()
+
+    const pinia = createPinia()
+    const memberStore = useMemberStore(pinia)
+    memberStore.loaded = true
+
+    const wrapper = mount(AppNav, {
+      global: {
+        plugins: [router, pinia],
+      },
+    })
+
+    expect(wrapper.find('.nav').exists()).toBe(true)
+    expect(wrapper.find('.brand-mark').text()).toBe('HOME')
+    expect(wrapper.find('.menu-toggle').exists()).toBe(true)
+  })
+
   it('shows login instead of logout when member data exists without an auth token', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
