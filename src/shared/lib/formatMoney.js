@@ -1,5 +1,10 @@
 export function formatManwonToKoreanMoney(value) {
-  const number = Number(String(value ?? '').replace(/[^\d.-]/g, ''))
+  const normalizedValue = String(value ?? '').replace(/[^\d.-]/g, '')
+  if (normalizedValue === '' || normalizedValue === '-' || normalizedValue === '.') {
+    return '-'
+  }
+
+  const number = Number(normalizedValue)
   if (!Number.isFinite(number)) return value ?? '-'
 
   if (Math.abs(number) < 10000) {

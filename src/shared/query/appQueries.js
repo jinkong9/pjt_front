@@ -47,7 +47,7 @@ export const appQueryOptions = {
   houseList: (params) => ({
     queryKey: appKeys.houses.list(params),
     queryFn: async () => {
-      const { data } = await api.get('/houses', { params })
+      const { data } = await api.get('/property-deals', { params })
       return data
     },
     staleTime: 30_000,

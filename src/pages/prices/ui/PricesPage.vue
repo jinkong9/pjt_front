@@ -4,15 +4,21 @@ import { useQuery } from '@tanstack/vue-query'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { toQuery } from '@/shared/api/client'
 import { useMemberStore } from '@/entities/member/model/member'
+import { memberQueryOptions } from '@/entities/member/model/memberQueries'
 import PropertyDetailPanel from '@/features/property-detail/ui/PropertyDetailPanel.vue'
 import { appQueryOptions } from '@/shared/query/appQueries'
-import { formatManwonToKoreanMoney } from '@/shared/lib/formatMoney'
+import {
+  getDealTypeLabel,
+  getHouseTradeLabel,
+  getHouseTradePriceLabel,
+} from '@/entities/house/model/houseTradeLabels'
 
 const route = useRoute()
 const router = useRouter()
 const memberStore = useMemberStore()
 const selectedTrade = ref(null)
 const selectedTab = ref('detail')
+const activePropertyTab = ref('apartment')
 const mapEl = ref(null)
 const mapMessage = ref('')
 let kakaoMap = null
@@ -42,17 +48,93 @@ const condition = reactive({
 const submittedCondition = ref({ ...condition })
 const sidosQuery = useQuery(appQueryOptions.sidos())
 const gugunsQuery = useQuery(computed(() => appQueryOptions.guguns(condition.sidoName)))
-const dongsQuery = useQuery(computed(() => appQueryOptions.dongs(condition.sidoName, condition.gugunName)))
-const tradesQuery = useQuery(computed(() => appQueryOptions.houseList(toQuery(submittedCondition.value))))
-const loading = computed(() => tradesQuery.isPending.value)
-const trades = computed(() => (tradesQuery.data.value ?? []).map(normalizeTrade).filter((trade) => !isSampleTrade(trade)))
+const dongsQuery = useQuery(
+  computed(() => appQueryOptions.dongs(condition.sidoName, condition.gugunName)),
+)
+const apartmentTradesQuery = useQuery(
+  computed(() => appQueryOptions.houseList(toPropertyQuery('APARTMENT'))),
+)
+const officetelTradesQuery = useQuery(
+  computed(() => appQueryOptions.houseList(toPropertyQuery('OFFICETEL'))),
+)
+const oneroomTradesQuery = useQuery(
+  computed(() => appQueryOptions.houseList(toPropertyQuery('ONEROOM'))),
+)
+const dealFavoritesQuery = useQuery({
+  ...memberQueryOptions.dealFavorites(),
+  enabled: () => memberStore.isLoggedIn && activePropertyTab.value === 'favorites',
+})
+const loading = computed(
+  () =>
+    apartmentTradesQuery.isPending.value ||
+    officetelTradesQuery.isPending.value ||
+    oneroomTradesQuery.isPending.value,
+)
+const tabLoading = computed(
+  () =>
+    activePropertyQuery.value.isPending.value ||
+    (activePropertyTab.value === 'favorites' && dealFavoritesQuery.isPending.value),
+)
+const apartmentTrades = computed(() =>
+  normalizeTrades(apartmentTradesQuery.data.value, 'APARTMENT'),
+)
+const officetelTrades = computed(() =>
+  normalizeTrades(officetelTradesQuery.data.value, 'OFFICETEL'),
+)
+const oneroomTrades = computed(() => normalizeTrades(oneroomTradesQuery.data.value, 'ONEROOM'))
+const allTrades = computed(() => [
+  ...apartmentTrades.value,
+  ...officetelTrades.value,
+  ...oneroomTrades.value,
+])
+const activePropertyQuery = computed(() => {
+  if (activePropertyTab.value === 'officetel') return officetelTradesQuery
+  if (activePropertyTab.value === 'oneroom') return oneroomTradesQuery
+  return apartmentTradesQuery
+})
+const activePropertyTrades = computed(() => {
+  if (activePropertyTab.value === 'officetel') return officetelTrades.value
+  if (activePropertyTab.value === 'oneroom') return oneroomTrades.value
+  return apartmentTrades.value
+})
+const trades = computed(() =>
+  activePropertyTrades.value.map((trade) => ({
+    ...trade,
+    favorite: Boolean(trade.favorite || favoriteDealNos.value.has(String(trade.no))),
+  })),
+)
+const favoriteTrades = computed(() =>
+  (dealFavoritesQuery.data.value ?? [])
+    .map((trade) => ({ ...normalizeTrade(trade), favorite: true }))
+    .filter((trade) => !isSampleTrade(trade)),
+)
+const favoriteDealNos = computed(
+  () => new Set(favoriteTrades.value.map((trade) => String(trade.no))),
+)
+const visibleTrades = computed(() => {
+  if (activePropertyTab.value === 'favorites') return favoriteTrades.value
+  return trades.value
+})
 const sidos = computed(() => sidosQuery.data.value ?? [])
 const guguns = computed(() => gugunsQuery.data.value ?? [])
 const dongs = computed(() => dongsQuery.data.value ?? [])
+const propertyTabs = computed(() => [
+  { key: 'apartment', label: '아파트', count: apartmentTrades.value.length },
+  { key: 'officetel', label: '오피스텔', count: officetelTrades.value.length },
+  { key: 'oneroom', label: '원룸', count: oneroomTrades.value.length },
+  {
+    key: 'favorites',
+    label: '관심',
+    count: memberStore.isLoggedIn ? favoriteTrades.value.length : 0,
+  },
+])
 
 const statusText = computed(() => {
-  if (loading.value) return '거래 정보를 불러오는 중입니다.'
-  if (hasSearchCondition()) return `총 ${trades.value.length}건의 거래를 표시합니다.`
+  if (tabLoading.value) return '거래 정보를 불러오는 중입니다.'
+  if (activePropertyTab.value === 'favorites' && !memberStore.isLoggedIn) {
+    return '로그인 후 관심 매물을 확인할 수 있습니다.'
+  }
+  if (hasSearchCondition()) return `총 ${visibleTrades.value.length}건의 거래를 표시합니다.`
   return '지역이나 아파트명을 검색하면 DB 실거래 정보가 표시됩니다.'
 })
 
@@ -80,6 +162,47 @@ function hasSearchCondition() {
     condition.dongName ||
     condition.dealYear,
   )
+}
+
+function toPropertyQuery(propertyType) {
+  const query = toQuery(submittedCondition.value)
+  if (isDefaultRegionCondition(query) && propertyType !== 'APARTMENT') {
+    delete query.sidoName
+    delete query.gugunName
+    delete query.dongName
+    delete query.lawdCd
+  }
+  return {
+    ...query,
+    propertyType,
+  }
+}
+
+function isDefaultRegionCondition(query) {
+  return (
+    !query.keyword &&
+    !query.dongName &&
+    !query.dealYear &&
+    query.sidoName === defaultPriceCondition.sidoName &&
+    query.gugunName === defaultPriceCondition.gugunName
+  )
+}
+
+function normalizeTrades(items = [], fallbackPropertyType = '') {
+  return items
+    .map((trade) =>
+      normalizeTrade({ ...trade, propertyType: trade.propertyType || fallbackPropertyType }),
+    )
+    .filter((trade) => !isSampleTrade(trade))
+}
+
+async function selectPropertyTab(tabKey) {
+  if (tabKey === 'favorites' && !memberStore.isLoggedIn) {
+    await router.push({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+  activePropertyTab.value = tabKey
+  selectedTrade.value = null
 }
 
 function syncFromRoute() {
@@ -130,9 +253,21 @@ function composeDealDate(trade) {
 function normalizeTrade(trade) {
   return {
     ...trade,
-    no: pickFirst(trade.no, trade.dealNo, trade.deal_no),
-    aptSeq: pickFirst(trade.aptSeq, trade.apt_seq),
-    aptName: pickFirst(trade.aptName, trade.apt_nm, trade.apt_name),
+    no: pickFirst(
+      trade.no,
+      trade.dealNo,
+      trade.deal_no,
+      trade.propertyDealId,
+      trade.property_deal_id,
+    ),
+    aptSeq: pickFirst(trade.aptSeq, trade.apt_seq, trade.sourceId, trade.source_id),
+    aptName: pickFirst(
+      trade.aptName,
+      trade.apt_nm,
+      trade.apt_name,
+      trade.propertyName,
+      trade.property_name,
+    ),
     sidoName: pickFirst(trade.sidoName, trade.sido_name),
     gugunName: pickFirst(trade.gugunName, trade.gugun_name),
     dongName: pickFirst(trade.dongName, trade.dong_name, trade.umdName, trade.umd_nm),
@@ -141,19 +276,106 @@ function normalizeTrade(trade) {
     longitude: pickFirst(trade.longitude, trade.lng, trade.lon),
     exclusiveArea: pickFirst(trade.exclusiveArea, trade.exclu_use_ar, trade.exclusive_area),
     dealAmount: pickFirst(trade.dealAmount, trade.deal_amount),
+    depositAmount: pickFirst(trade.depositAmount, trade.deposit_amount, trade.deposit),
+    monthlyRentAmount: pickFirst(
+      trade.monthlyRentAmount,
+      trade.monthly_rent_amount,
+      trade.monthlyRent,
+    ),
+    propertyType: pickFirst(
+      trade.propertyType,
+      trade.property_type,
+      trade.houseType,
+      trade.house_type,
+      trade.buildingType,
+      trade.building_type,
+      trade.estateType,
+      trade.estate_type,
+      trade.realEstateType,
+      trade.real_estate_type,
+    ),
+    dealType: pickFirst(
+      trade.dealType,
+      trade.deal_type,
+      trade.tradeType,
+      trade.trade_type,
+      trade.rentType,
+      trade.rent_type,
+      trade.transactionType,
+      trade.transaction_type,
+    ),
     dealDate: pickFirst(trade.dealDate, trade.deal_date, composeDealDate(trade)),
     floor: pickFirst(trade.floor),
+    jibun: pickFirst(trade.jibun),
   }
 }
 
-function formatMoney(value) {
-  return formatManwonToKoreanMoney(value)
+function tradeLabel(trade) {
+  return getHouseTradeLabel(trade)
+}
+
+function tradePriceLabel(trade) {
+  return getHouseTradePriceLabel(trade)
+}
+
+function formatShortManwon(value) {
+  const amount = Number(String(value ?? '').replace(/[^0-9.-]/g, ''))
+  if (!Number.isFinite(amount) || amount <= 0) return '-'
+  if (amount >= 10000) {
+    const eok = amount / 10000
+    return `${Number.isInteger(eok) ? eok.toFixed(0) : eok.toFixed(1)}억`
+  }
+  return `${amount.toLocaleString()}만`
+}
+
+function markerTopLabel(trade) {
+  const area = Number(trade.exclusiveArea)
+  if (Number.isFinite(area) && area > 0) return `${Math.round(area * 0.3025)}평`
+  return tradeLabel(trade).split(' / ')[0]
+}
+
+function markerPriceLabel(trade) {
+  const dealType = getDealTypeLabel(trade)
+  const prefix = dealType === '전세' ? '전' : dealType === '월세' ? '월' : '매'
+  const price =
+    dealType === '월세'
+      ? trade.monthlyRentAmount || trade.dealAmount
+      : trade.dealAmount || trade.depositAmount
+  return `${prefix}${formatShortManwon(price)}`
+}
+
+function refreshMarkerSelection() {
+  markers.forEach(({ element, trade }) => {
+    element.classList.toggle('is-active', String(trade.no) === String(selectedTrade.value?.no))
+  })
+}
+
+function createPriceMarkerContent(trade) {
+  const element = document.createElement('button')
+  element.type = 'button'
+  element.className = 'price-map-marker'
+  element.setAttribute('aria-label', `${trade.aptName} ${markerPriceLabel(trade)}`)
+  element.innerHTML = `
+    <span class="price-map-marker__area">${markerTopLabel(trade)}</span>
+    <span class="price-map-marker__price">${markerPriceLabel(trade)}</span>
+  `
+  element.addEventListener('click', () => {
+    selectedTrade.value = trade
+    selectedTab.value = 'detail'
+    refreshMarkerSelection()
+    focusMap(getLatLng(trade), 3)
+  })
+  return element
 }
 
 async function loadTrades() {
   submittedCondition.value = { ...condition }
   selectedTrade.value = null
-  await tradesQuery.refetch()
+  await Promise.all([
+    apartmentTradesQuery.refetch(),
+    officetelTradesQuery.refetch(),
+    oneroomTradesQuery.refetch(),
+  ])
   restorePropertyContext()
 }
 
@@ -168,7 +390,7 @@ function restorePropertyContext() {
 
 function clearMarkers() {
   while (markers.length) {
-    markers.pop().setMap(null)
+    markers.pop().overlay.setMap(null)
   }
 }
 
@@ -239,30 +461,29 @@ async function renderMap() {
     }
     clearMarkers()
     markerBounds = new kakao.maps.LatLngBounds()
-    const visibleTrades = trades.value.filter(getLatLng)
-    visibleTrades.forEach((trade) => {
+    const mapTrades = visibleTrades.value.filter(getLatLng)
+    mapTrades.forEach((trade) => {
       const point = getLatLng(trade)
       const position = new kakao.maps.LatLng(point.latitude, point.longitude)
-      const marker = new kakao.maps.Marker({
+      const content = createPriceMarkerContent(trade)
+      const overlay = new kakao.maps.CustomOverlay({
         map: kakaoMap,
         position,
-        title: trade.aptName,
+        content,
+        xAnchor: 0.5,
+        yAnchor: 1.15,
       })
-      kakao.maps.event.addListener(marker, 'click', () => {
-        selectedTrade.value = trade
-        selectedTab.value = 'detail'
-        focusMap(point, 3)
-      })
-      markers.push(marker)
+      markers.push({ overlay, element: content, trade })
       markerBounds.extend(position)
     })
+    refreshMarkerSelection()
     const selectedPoint = selectedTrade.value ? getLatLng(selectedTrade.value) : null
-    const firstSearchPoint = visibleTrades.length ? getLatLng(visibleTrades[0]) : null
+    const firstSearchPoint = mapTrades.length ? getLatLng(mapTrades[0]) : null
     if (selectedPoint) {
       focusMap(selectedPoint, 3)
     } else if (shouldFocusSearchResult() && firstSearchPoint) {
       focusMap(firstSearchPoint, 4)
-    } else if (visibleTrades.length) {
+    } else if (mapTrades.length) {
       kakaoMap.setLevel(defaultMapLevel)
     } else {
       kakaoMap.setCenter(fallbackCenter)
@@ -271,7 +492,7 @@ async function renderMap() {
     mapMessage.value = ''
   } catch {
     mapMessage.value =
-      'Kakao 지도를 불러오지 못했습니다. 프론트 .env의 OPENAPI_KAKAO_JAVASCRIPT_KEY와 Kakao Web 플랫폼 도메인을 확인하세요.'
+      'Kakao 지도를 불러오지 못했습니다. .env의 OPENAPI_KAKAO_JAVASCRIPT_KEY와 Kakao Web 플랫폼 도메인을 확인하세요.'
   }
 }
 
@@ -318,10 +539,14 @@ onBeforeUnmount(() => {
   clearMarkers()
 })
 
-watch(trades, () => {
-  restorePropertyContext()
-  renderMap()
-}, { flush: 'post' })
+watch(
+  visibleTrades,
+  () => {
+    restorePropertyContext()
+    renderMap()
+  },
+  { flush: 'post' },
+)
 </script>
 
 <template>
@@ -438,29 +663,50 @@ watch(trades, () => {
               <button
                 class="flex h-11 items-center gap-2 bg-[#b4212a] px-5 text-sm font-black text-white"
               >
-                검색
-                <span class="material-symbols-outlined text-base">search</span>
+                검색 <span class="material-symbols-outlined text-base">search</span>
               </button>
             </div>
           </form>
           <p class="mt-4 text-xs font-bold text-neutral-500">{{ statusText }}</p>
+          <div class="mt-4 grid grid-cols-4 gap-2" aria-label="매물 유형">
+            <button
+              v-for="tab in propertyTabs"
+              :key="tab.key"
+              type="button"
+              :data-testid="`property-tab-${tab.key}`"
+              class="property-type-tab grid min-h-[58px] place-items-center gap-1 border border-neutral-200 bg-white px-2 py-2 text-xs font-black text-neutral-600 transition hover:border-[#b4212a] hover:text-[#b4212a]"
+              :class="
+                activePropertyTab === tab.key ? 'border-[#b4212a] bg-[#fff1f2] text-[#b4212a]' : ''
+              "
+              @click="selectPropertyTab(tab.key)"
+            >
+              <span>{{ tab.label }}</span>
+              <small class="text-[11px] font-black opacity-70">{{ tab.count }}</small>
+            </button>
+          </div>
         </section>
 
         <section class="max-h-[56vh] overflow-y-auto md:max-h-none md:flex-1">
-          <p v-if="loading" class="p-6 text-sm font-bold text-neutral-500">
+          <p v-if="tabLoading" class="p-6 text-sm font-bold text-neutral-500">
             거래 정보를 불러오는 중입니다.
           </p>
           <p
-            v-else-if="!trades.length && !hasSearchCondition()"
+            v-else-if="activePropertyTab === 'favorites' && !memberStore.isLoggedIn"
+            class="p-6 text-sm font-bold text-neutral-500"
+          >
+            로그인 후 관심 매물을 확인할 수 있습니다.
+          </p>
+          <p
+            v-else-if="!visibleTrades.length && !hasSearchCondition()"
             class="p-6 text-sm font-bold text-neutral-500"
           >
             검색 조건을 입력해 주세요.
           </p>
-          <p v-else-if="!trades.length" class="p-6 text-sm font-bold text-neutral-500">
-            조건과 일치하는 거래 정보가 없습니다.
+          <p v-else-if="!visibleTrades.length" class="p-6 text-sm font-bold text-neutral-500">
+            선택한 탭에 표시할 거래 정보가 없습니다.
           </p>
           <article
-            v-for="trade in trades"
+            v-for="trade in visibleTrades"
             :key="trade.no"
             class="trade-item relative cursor-pointer border-b border-neutral-200 p-5 transition hover:bg-[#f7f4ef]"
             @click="openDetail(trade)"
@@ -481,13 +727,13 @@ watch(trades, () => {
               생활권 분석
             </RouterLink>
             <div class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a] sm:pr-28">
-              APT SALE
+              {{ tradeLabel(trade) }}
             </div>
             <h2 class="mt-2 text-xl font-black leading-tight">{{ trade.aptName }}</h2>
             <div class="mt-4 text-sm">
-              <strong class="text-lg text-[#b4212a]">{{ formatMoney(trade.dealAmount) }}</strong>
+              <strong class="text-lg text-[#b4212a]">{{ tradePriceLabel(trade) }}</strong>
               <p class="mt-2 font-bold text-neutral-700">
-                {{ trade.exclusiveArea }}㎡ {{ trade.floor }}층 {{ trade.dealDate }}
+                {{ trade.exclusiveArea }}㎡ · {{ trade.floor }}층 · {{ trade.dealDate }}
               </p>
               <p class="mt-2 text-xs leading-5 text-neutral-500">{{ trade.address }}</p>
               <button
@@ -535,6 +781,114 @@ watch(trades, () => {
 .price-search-panel {
   box-sizing: border-box;
   max-width: var(--price-panel-width);
+}
+:global(.price-map-marker) {
+  position: relative;
+  display: inline-grid;
+  grid-template-rows: 20px 28px;
+  grid-template-columns: max-content;
+
+  min-width: 68px;
+  width: max-content;
+  height: 48px;
+
+  overflow: visible;
+  border: 1px solid #676b73;
+  border-radius: 7px;
+  appearance: none;
+  background: #ffffff;
+  box-sizing: border-box;
+  box-shadow: 0 2px 6px rgb(23 23 23 / 28%);
+  color: #171717;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1;
+  padding: 0;
+  text-align: center;
+  transform: translateY(-2px);
+}
+
+:global(.price-map-marker::after) {
+  position: absolute;
+  z-index: 0;
+  bottom: -6px;
+  left: 50%;
+
+  width: 10px;
+  height: 10px;
+
+  border-right: 1px solid #676b73;
+  border-bottom: 1px solid #676b73;
+  border-radius: 0 0 2px 0;
+  background: #ffffff;
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+:global(.price-map-marker__area) {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 68px;
+  height: 20px;
+
+  overflow: hidden;
+  border-radius: 6px 6px 0 0;
+  background: #757a83;
+  box-sizing: border-box;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 20px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+:global(.price-map-marker__price) {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 68px;
+  height: 28px;
+
+  overflow: hidden;
+  border-radius: 0 0 6px 6px;
+  background: #ffffff;
+  box-sizing: border-box;
+  color: #171717;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 28px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+:global(.price-map-marker:focus),
+:global(.price-map-marker:focus-visible),
+:global(.price-map-marker.is-active) {
+  border-color: #2563eb;
+  outline: none;
+  z-index: 2;
+}
+
+:global(.price-map-marker:focus::after),
+:global(.price-map-marker:focus-visible::after),
+:global(.price-map-marker.is-active::after) {
+  border-color: #2563eb;
+}
+
+:global(.price-map-marker:focus .price-map-marker__area),
+:global(.price-map-marker:focus-visible .price-map-marker__area),
+:global(.price-map-marker.is-active .price-map-marker__area) {
+  background: #2563eb;
 }
 
 @media (min-width: 768px) {
