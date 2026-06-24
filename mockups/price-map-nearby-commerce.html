@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HOME FIT Price Map Nearby Mockup</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #f4f0ea;
+        color: #171717;
+        font-family:
+          Pretendard,
+          "Apple SD Gothic Neo",
+          "Noto Sans KR",
+          system-ui,
+          sans-serif;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .app {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        background:
+          linear-gradient(90deg, #d9d4cb 1px, transparent 1px),
+          linear-gradient(#d9d4cb 1px, transparent 1px),
+          #ebe6dd;
+        background-size: 76px 76px;
+      }
+
+      .topbar {
+        position: absolute;
+        inset: 0 0 auto;
+        z-index: 40;
+        display: flex;
+        min-height: 80px;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(23, 23, 23, 0.42);
+        padding: 0 32px;
+        color: white;
+        backdrop-filter: blur(12px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 0.22em;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 64px;
+        height: 40px;
+        place-items: center;
+        border: 1px solid currentColor;
+        font-size: 10px;
+      }
+
+      .nav {
+        display: flex;
+        gap: 24px;
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .road {
+        position: absolute;
+        height: 34px;
+        border-radius: 999px;
+        background: #f1c46f;
+        opacity: 0.78;
+        transform-origin: center;
+      }
+
+      .road.one {
+        left: 280px;
+        top: 230px;
+        width: 1200px;
+        transform: rotate(-12deg);
+      }
+
+      .road.two {
+        left: 760px;
+        top: -40px;
+        width: 820px;
+        transform: rotate(62deg);
+      }
+
+      .road.three {
+        left: 460px;
+        bottom: 150px;
+        width: 1120px;
+        transform: rotate(9deg);
+      }
+
+      .center-search {
+        position: absolute;
+        z-index: 35;
+        left: 50%;
+        top: 96px;
+        min-height: 38px;
+        border: 1px solid #d8d1c8;
+        background: rgba(255, 255, 255, 0.96);
+        color: #b4212a;
+        padding: 0 14px;
+        font-size: 12px;
+        font-weight: 900;
+        transform: translateX(-50%);
+        box-shadow: 0 8px 22px rgba(23, 23, 23, 0.16);
+      }
+
+      .search-panel {
+        position: absolute;
+        z-index: 30;
+        left: 24px;
+        top: 96px;
+        bottom: 24px;
+        display: flex;
+        width: min(520px, calc((100vw - 48px) / 2));
+        flex-direction: column;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 22px 70px rgba(23, 23, 23, 0.26);
+        backdrop-filter: blur(14px);
+      }
+
+      .search-head {
+        border-bottom: 1px solid #ddd7cf;
+        padding: 20px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: #b4212a;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 8px 0 0;
+        font-size: 30px;
+        line-height: 1.15;
+      }
+
+      .form {
+        display: grid;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      input,
+      select {
+        min-height: 44px;
+        width: 100%;
+        border: 1px solid #d8d1c8;
+        background: white;
+        padding: 0 12px;
+        color: #171717;
+        font-size: 14px;
+        font-weight: 800;
+        outline: 0;
+      }
+
+      .grid-two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .primary {
+        min-height: 44px;
+        border: 1px solid #b4212a;
+        background: #b4212a;
+        color: white;
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .type-tabs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .type-tab {
+        display: grid;
+        min-height: 58px;
+        place-items: center;
+        border: 1px solid #ddd7cf;
+        background: white;
+        color: #555;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .type-tab.active {
+        border-color: #b4212a;
+        background: #fff1f2;
+        color: #b4212a;
+        box-shadow: inset 0 -3px 0 #b4212a;
+      }
+
+      .list {
+        flex: 1;
+        overflow: auto;
+      }
+
+      .trade {
+        position: relative;
+        border-bottom: 1px solid #e5ded6;
+        padding: 18px 20px;
+      }
+
+      .trade.active {
+        background: #f7f4ef;
+      }
+
+      .trade-kind {
+        color: #b4212a;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+      }
+
+      .trade h2 {
+        margin: 8px 128px 0 0;
+        font-size: 20px;
+        line-height: 1.25;
+      }
+
+      .price {
+        display: block;
+        margin-top: 12px;
+        color: #b4212a;
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .meta {
+        margin-top: 8px;
+        color: #555;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.6;
+      }
+
+      .nearby-btn {
+        position: absolute;
+        right: 20px;
+        top: 18px;
+        min-height: 34px;
+        border: 1px solid #171717;
+        background: white;
+        padding: 0 10px;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .nearby-btn.active {
+        border-color: #b4212a;
+        background: #b4212a;
+        color: white;
+      }
+
+      .price-marker {
+        position: absolute;
+        z-index: 10;
+        display: grid;
+        min-width: 76px;
+        grid-template-rows: 20px 30px;
+        border: 1px solid #676b73;
+        border-radius: 7px;
+        background: white;
+        box-shadow: 0 2px 6px rgba(23, 23, 23, 0.28);
+        text-align: center;
+      }
+
+      .price-marker::after {
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        border-right: 1px solid #676b73;
+        border-bottom: 1px solid #676b73;
+        background: white;
+        content: "";
+        transform: translateX(-50%) rotate(45deg);
+      }
+
+      .price-marker .area {
+        display: grid;
+        place-items: center;
+        border-radius: 6px 6px 0 0;
+        background: #757a83;
+        color: white;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .price-marker .amount {
+        display: grid;
+        place-items: center;
+        color: #171717;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .price-marker.active {
+        border-color: #2563eb;
+      }
+
+      .price-marker.active .area {
+        background: #2563eb;
+      }
+
+      .price-marker.one {
+        left: 56%;
+        top: 43%;
+      }
+
+      .price-marker.two {
+        left: 70%;
+        top: 30%;
+      }
+
+      .price-marker.three {
+        left: 47%;
+        top: 62%;
+      }
+
+      .commerce-panel {
+        position: absolute;
+        z-index: 32;
+        right: 24px;
+        top: 96px;
+        display: grid;
+        width: min(430px, calc(100vw - 590px));
+        max-width: 430px;
+        min-width: 360px;
+        border: 1px solid rgba(255, 255, 255, 0.86);
+        background: rgba(255, 255, 255, 0.97);
+        box-shadow: 0 22px 70px rgba(23, 23, 23, 0.2);
+        backdrop-filter: blur(14px);
+      }
+
+      .commerce-head {
+        padding: 18px;
+        border-bottom: 1px solid #e5ded6;
+      }
+
+      .commerce-title {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .commerce-title h2 {
+        margin: 4px 0 0;
+        font-size: 22px;
+      }
+
+      .close {
+        min-width: 34px;
+        min-height: 34px;
+        border: 1px solid #171717;
+        background: white;
+        font-weight: 900;
+      }
+
+      .radius-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .radius {
+        min-height: 34px;
+        border: 1px solid #ddd7cf;
+        background: white;
+        padding: 0 10px;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .radius.active {
+        border-color: #b4212a;
+        color: #b4212a;
+      }
+
+      .commerce-tabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        border-bottom: 1px solid #e5ded6;
+        padding: 12px 14px;
+      }
+
+      .commerce-tab {
+        flex: 0 0 auto;
+        min-height: 38px;
+        border: 1px solid #ddd7cf;
+        background: white;
+        padding: 0 12px;
+        font-size: 12px;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .commerce-tab.active {
+        border-color: #b4212a;
+        background: #b4212a;
+        color: white;
+      }
+
+      .commerce-list {
+        display: grid;
+        max-height: 420px;
+        overflow: auto;
+      }
+
+      .facility {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: start;
+        border-bottom: 1px solid #f0ece6;
+        padding: 14px 16px;
+      }
+
+      .facility-badge {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        place-items: center;
+        border: 1px solid #b4212a;
+        color: #b4212a;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .facility strong {
+        display: block;
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .facility small {
+        display: block;
+        margin-top: 4px;
+        color: #777;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.45;
+      }
+
+      .distance {
+        color: #b4212a;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .commerce-summary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 14px;
+        background: #f7f4ef;
+      }
+
+      .summary-cell {
+        border: 1px solid #e5ded6;
+        background: white;
+        padding: 10px;
+      }
+
+      .summary-cell span {
+        display: block;
+        color: #777;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .summary-cell strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 16px;
+        font-weight: 900;
+      }
+
+      .facility-marker {
+        position: absolute;
+        z-index: 11;
+        display: grid;
+        min-width: 72px;
+        min-height: 32px;
+        place-items: center;
+        border: 1px solid currentColor;
+        background: white;
+        padding: 0 9px;
+        font-size: 12px;
+        font-weight: 900;
+        box-shadow: 0 10px 28px rgba(23, 23, 23, 0.18);
+      }
+
+      .facility-marker.hospital {
+        left: 62%;
+        top: 51%;
+        color: #b4212a;
+      }
+
+      .facility-marker.pharmacy {
+        left: 49%;
+        top: 36%;
+        color: #2f6ecb;
+      }
+
+      .facility-marker.market {
+        left: 73%;
+        top: 58%;
+        color: #008f72;
+      }
+
+      .facility-marker.cafe {
+        left: 82%;
+        top: 40%;
+        color: #8a5a00;
+      }
+
+      .property-panel {
+        position: absolute;
+        z-index: 31;
+        right: 24px;
+        bottom: 24px;
+        width: min(430px, calc(100vw - 590px));
+        min-width: 360px;
+        border: 1px solid rgba(255, 255, 255, 0.86);
+        background: rgba(255, 255, 255, 0.97);
+        padding: 18px;
+        box-shadow: 0 22px 70px rgba(23, 23, 23, 0.18);
+      }
+
+      .property-panel h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      .panel-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .outline {
+        min-height: 42px;
+        border: 1px solid #b4212a;
+        background: white;
+        color: #b4212a;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      @media (max-width: 1120px) {
+        .commerce-panel,
+        .property-panel {
+          left: 24px;
+          right: 24px;
+          width: auto;
+          min-width: 0;
+        }
+
+        .commerce-panel {
+          top: auto;
+          bottom: 24px;
+        }
+
+        .property-panel {
+          display: none;
+        }
+
+        .search-panel {
+          width: min(460px, calc(100vw - 48px));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .app {
+          overflow: auto;
+          min-height: 1300px;
+        }
+
+        .nav {
+          display: none;
+        }
+
+        .search-panel,
+        .commerce-panel {
+          position: relative;
+          left: auto;
+          right: auto;
+          top: auto;
+          bottom: auto;
+          width: calc(100% - 28px);
+          margin: 92px auto 14px;
+        }
+
+        .commerce-panel {
+          margin-top: 14px;
+        }
+
+        .center-search {
+          top: 540px;
+        }
+
+        .grid-two,
+        .type-tabs,
+        .commerce-summary {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">HOME</span>
+          <strong>HOME FIT</strong>
+        </div>
+        <nav class="nav">
+          <span>부동산 시세</span>
+          <span>공공임대</span>
+          <span>양도 게시판</span>
+          <span>나의 정보</span>
+        </nav>
+      </header>
+
+      <div class="road one"></div>
+      <div class="road two"></div>
+      <div class="road three"></div>
+
+      <button class="center-search" type="button">현 지도에서 검색</button>
+
+      <aside class="search-panel">
+        <section class="search-head">
+          <p class="eyebrow">Apartment Search</p>
+          <h1>실거래 지도</h1>
+          <div class="form">
+            <input value="역삼동" aria-label="검색어" />
+            <div class="grid-two">
+              <select aria-label="시도">
+                <option>서울특별시</option>
+              </select>
+              <select aria-label="구군">
+                <option>강남구</option>
+              </select>
+            </div>
+            <button class="primary" type="button">검색</button>
+          </div>
+          <div class="type-tabs">
+            <button class="type-tab active" type="button">아파트<br />20</button>
+            <button class="type-tab" type="button">오피스텔<br />12</button>
+            <button class="type-tab" type="button">원룸<br />8</button>
+            <button class="type-tab" type="button">관심<br />3</button>
+          </div>
+        </section>
+
+        <section class="list">
+          <article class="trade active">
+            <button class="nearby-btn active" type="button">주변 상권</button>
+            <div class="trade-kind">매매 / 아파트</div>
+            <h2>역삼래미안</h2>
+            <strong class="price">매매 14.2억</strong>
+            <p class="meta">25평 · 12층 · 2026-04-12<br />서울특별시 강남구 역삼동 757</p>
+          </article>
+          <article class="trade">
+            <button class="nearby-btn" type="button">주변 상권</button>
+            <div class="trade-kind">전세 / 아파트</div>
+            <h2>역삼자이</h2>
+            <strong class="price">전세 8.8억</strong>
+            <p class="meta">31평 · 7층 · 2026-03-30<br />서울특별시 강남구 역삼동 711</p>
+          </article>
+          <article class="trade">
+            <button class="nearby-btn" type="button">주변 상권</button>
+            <div class="trade-kind">월세 / 오피스텔</div>
+            <h2>강남역 센트럴</h2>
+            <strong class="price">보증금 1억 / 월 140</strong>
+            <p class="meta">12평 · 9층 · 2026-02-16<br />서울특별시 강남구 역삼동 820</p>
+          </article>
+        </section>
+      </aside>
+
+      <div class="price-marker active one">
+        <span class="area">25평</span>
+        <span class="amount">매 14.2억</span>
+      </div>
+      <div class="price-marker two">
+        <span class="area">31평</span>
+        <span class="amount">전 8.8억</span>
+      </div>
+      <div class="price-marker three">
+        <span class="area">12평</span>
+        <span class="amount">월 140</span>
+      </div>
+
+      <div class="facility-marker hospital">병원 230m</div>
+      <div class="facility-marker pharmacy">약국 310m</div>
+      <div class="facility-marker market">마트 420m</div>
+      <div class="facility-marker cafe">카페 밀집</div>
+
+      <section class="commerce-panel" aria-label="지도 주변 상권 패널">
+        <div class="commerce-head">
+          <div class="commerce-title">
+            <div>
+              <p class="eyebrow">Nearby</p>
+              <h2>역삼래미안 주변 상권</h2>
+            </div>
+            <button class="close" type="button">X</button>
+          </div>
+          <div class="radius-row">
+            <button class="radius" type="button">500m</button>
+            <button class="radius active" type="button">1km</button>
+            <button class="radius" type="button">1.5km</button>
+          </div>
+        </div>
+
+        <div class="commerce-tabs">
+          <button class="commerce-tab active" type="button">전체 42</button>
+          <button class="commerce-tab" type="button">병원 8</button>
+          <button class="commerce-tab" type="button">약국 11</button>
+          <button class="commerce-tab" type="button">마트 5</button>
+          <button class="commerce-tab" type="button">카페 13</button>
+          <button class="commerce-tab" type="button">편의점 5</button>
+        </div>
+
+        <div class="commerce-summary">
+          <div class="summary-cell">
+            <span>의료 접근</span>
+            <strong>상</strong>
+          </div>
+          <div class="summary-cell">
+            <span>장보기</span>
+            <strong>보통</strong>
+          </div>
+          <div class="summary-cell">
+            <span>생활 편의</span>
+            <strong>우수</strong>
+          </div>
+        </div>
+
+        <div class="commerce-list">
+          <article class="facility">
+            <span class="facility-badge">병원</span>
+            <div>
+              <strong>역삼튼튼의원</strong>
+              <small>서울 강남구 테헤란로 24길 · 카카오 주변검색</small>
+            </div>
+            <span class="distance">230m</span>
+          </article>
+          <article class="facility">
+            <span class="facility-badge">약국</span>
+            <div>
+              <strong>강남메디약국</strong>
+              <small>도보 4분, 대로변 접근</small>
+            </div>
+            <span class="distance">310m</span>
+          </article>
+          <article class="facility">
+            <span class="facility-badge">마트</span>
+            <div>
+              <strong>동네식자재마트</strong>
+              <small>장보기 후보, 반경 내 대형마트는 부족</small>
+            </div>
+            <span class="distance">420m</span>
+          </article>
+          <article class="facility">
+            <span class="facility-badge">카페</span>
+            <div>
+              <strong>테헤란로 카페 밀집구간</strong>
+              <small>업무권 방향으로 7개소 집중</small>
+            </div>
+            <span class="distance">500m</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="property-panel" aria-label="선택 매물 상세 요약">
+        <p class="eyebrow">Selected Property</p>
+        <h2>역삼래미안</h2>
+        <p class="meta">주변 상권 패널을 열어도 매물 요약은 유지해서 비교 흐름이 끊기지 않게 둡니다.</p>
+        <div class="panel-actions">
+          <button class="primary" type="button">상세보기</button>
+          <button class="outline" type="button">대출 계산</button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
