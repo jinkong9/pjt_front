@@ -21,6 +21,15 @@ let requestToken = 0
 const places = computed(() => analysis.value?.places ?? [])
 const counts = computed(() => countFacilities(places.value))
 const filteredPlaces = computed(() => filterFacilities(places.value, selectedFacilityFilter.value))
+const scoreTotal = computed(() => Math.round(Number(analysis.value?.score?.total ?? 0)))
+const scoreLevel = computed(() => analysis.value?.score?.level ?? '분석 완료')
+const transitSummary = computed(() => analysis.value?.transitSummary ?? {})
+const busStopCount = computed(() => Number(transitSummary.value.busStopWithin500m ?? analysis.value?.busStops?.length ?? 0))
+const subwayCount = computed(() => Number(transitSummary.value.subwayWithin1km ?? analysis.value?.subwayStations?.length ?? 0))
+const trafficRiskSummary = computed(() => analysis.value?.trafficRiskSummary ?? {})
+const trafficIssueCount = computed(
+  () => Number(trafficRiskSummary.value.eventCount ?? 0) + Number(trafficRiskSummary.value.roadWorkCount ?? 0),
+)
 
 function hasCoordinates(longitude, latitude) {
   return (
@@ -99,6 +108,24 @@ watch(() => props.trade.no, loadAnalysis, { immediate: true })
     </p>
 
     <template v-else-if="analysis">
+      <div class="mt-5 grid gap-2 sm:grid-cols-3">
+        <article class="border border-neutral-200 bg-[#f7f4ef] p-3">
+          <span class="block text-[11px] font-black uppercase tracking-[0.14em] text-[#b4212a]">Score</span>
+          <strong class="mt-1 block text-2xl font-black">{{ scoreTotal }}점</strong>
+          <span class="text-xs font-black text-neutral-500">{{ scoreLevel }}</span>
+        </article>
+        <article class="border border-neutral-200 bg-white p-3">
+          <span class="block text-[11px] font-black uppercase tracking-[0.14em] text-[#b4212a]">Transit</span>
+          <p class="mt-1 text-sm font-black">
+            버스 {{ busStopCount }}곳 · 지하철 {{ subwayCount }}곳
+          </p>
+        </article>
+        <article class="border border-neutral-200 bg-white p-3">
+          <span class="block text-[11px] font-black uppercase tracking-[0.14em] text-[#b4212a]">Traffic</span>
+          <p class="mt-1 text-sm font-black">교통 위험 {{ trafficIssueCount }}건</p>
+        </article>
+      </div>
+
       <div class="mt-5 flex gap-2 overflow-x-auto pb-1">
         <button
           v-for="filter in facilityFilters"

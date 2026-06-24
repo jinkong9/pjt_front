@@ -38,6 +38,16 @@ const radiusOptions = [
 const places = computed(() => analysis.value?.places ?? [])
 const counts = computed(() => countFacilities(places.value))
 const filteredPlaces = computed(() => filterFacilities(places.value, selectedFacilityFilter.value))
+const scoreTotal = computed(() => Math.round(Number(analysis.value?.score?.total ?? 0)))
+const scoreLevel = computed(() => analysis.value?.score?.level ?? '분석 완료')
+const transitSummary = computed(() => analysis.value?.transitSummary ?? {})
+const busStopCount = computed(() => Number(transitSummary.value.busStopWithin500m ?? analysis.value?.busStops?.length ?? 0))
+const subwayCount = computed(() => Number(transitSummary.value.subwayWithin1km ?? analysis.value?.subwayStations?.length ?? 0))
+const trafficRiskSummary = computed(() => analysis.value?.trafficRiskSummary ?? {})
+const trafficRiskLabel = computed(() => trafficRiskSummary.value.riskLevel ?? 'Low')
+const trafficIssueCount = computed(
+  () => Number(trafficRiskSummary.value.eventCount ?? 0) + Number(trafficRiskSummary.value.roadWorkCount ?? 0),
+)
 
 function queryString(key, fallback) {
   const value = route.query?.[key]
@@ -59,6 +69,19 @@ function applyPreset(preset) {
 function createFallbackAnalysis() {
   return {
     radiusMeters: form.radius,
+    score: {
+      total: 82,
+      level: 'Good',
+    },
+    trafficRiskSummary: {
+      eventCount: 0,
+      roadWorkCount: 0,
+      riskLevel: 'Low',
+    },
+    transitSummary: {
+      busStopWithin500m: 2,
+      subwayWithin1km: 1,
+    },
     places: [
       {
         name: '렌즈커뮤니케이션즈',
@@ -166,6 +189,32 @@ async function analyze() {
     </section>
 
     <section v-if="analysis" class="mt-5 border border-neutral-200 bg-white p-8">
+      <div class="mb-8 grid gap-3 md:grid-cols-3">
+        <article class="border border-neutral-200 bg-[#f7f4ef] p-5">
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">Score</p>
+          <strong class="mt-2 block text-4xl font-black text-[#171717]">{{ scoreTotal }}점</strong>
+          <span class="mt-2 block text-sm font-black text-neutral-500">{{ scoreLevel }}</span>
+        </article>
+        <article class="border border-neutral-200 bg-white p-5">
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">Transit</p>
+          <div class="mt-3 grid grid-cols-2 gap-3">
+            <div>
+              <span class="block text-sm font-black text-neutral-500">버스</span>
+              <strong class="text-3xl font-black">{{ busStopCount }}곳</strong>
+            </div>
+            <div>
+              <span class="block text-sm font-black text-neutral-500">지하철</span>
+              <strong class="text-3xl font-black">{{ subwayCount }}곳</strong>
+            </div>
+          </div>
+        </article>
+        <article class="border border-neutral-200 bg-white p-5">
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">Traffic</p>
+          <strong class="mt-2 block text-4xl font-black">{{ trafficIssueCount }}건</strong>
+          <span class="mt-2 block text-sm font-black text-neutral-500">교통 위험 {{ trafficRiskLabel }}</span>
+        </article>
+      </div>
+
       <div class="flex items-start justify-between gap-6">
         <h2 class="text-[clamp(36px,5vw,56px)] font-black leading-none">가까운 생활시설</h2>
         <span class="pt-3 text-lg font-black text-neutral-500">{{ counts.all ?? 0 }}곳</span>

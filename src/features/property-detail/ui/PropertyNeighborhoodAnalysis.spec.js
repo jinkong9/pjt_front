@@ -16,6 +16,19 @@ const trade = {
 }
 
 const analysis = {
+  score: {
+    total: 88,
+    level: 'Good',
+  },
+  trafficRiskSummary: {
+    eventCount: 1,
+    roadWorkCount: 1,
+    riskLevel: 'Low',
+  },
+  transitSummary: {
+    busStopWithin500m: 4,
+    subwayWithin1km: 2,
+  },
   places: [
     {
       name: '강남 대형마트',
@@ -79,6 +92,10 @@ describe('PropertyNeighborhoodAnalysis', () => {
       radius: 1000,
     })
     expect(wrapper.text()).toContain('가까운 생활시설')
+    expect(wrapper.text()).toContain('88점')
+    expect(wrapper.text()).toContain('버스 4곳')
+    expect(wrapper.text()).toContain('지하철 2곳')
+    expect(wrapper.text()).toContain('교통 위험 2건')
     expect(wrapper.text()).toContain('전체 7')
     expect(wrapper.text()).toContain('대형마트 1')
     expect(wrapper.text()).toContain('편의점 1')
