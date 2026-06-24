@@ -12,9 +12,7 @@ describe('api client auth', () => {
   })
 
   it('uses the configured backend origin for API requests', () => {
-    expect(apiBaseUrl()).toBe(
-      'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app/api',
-    )
+    expect(apiBaseUrl()).toBe('http://localhost:8080/api')
     expect(api.defaults.baseURL).toBe(apiBaseUrl())
   })
 
@@ -31,6 +29,23 @@ describe('api client auth', () => {
     )
 
     await api.get('/members/me', { adapter })
+
+    expect(adapter.mock.calls[0][0].headers.Authorization).toBe('Bearer access-token')
+  })
+
+  it('adds Authorization Bearer header for LH recommendation email requests', async () => {
+    saveAuthToken({ grantType: 'Bearer', accessToken: 'access-token' })
+    const adapter = vi.fn((config) =>
+      Promise.resolve({
+        data: {},
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      }),
+    )
+
+    await api.post('/rentals/recommendations/emails/send', {}, { adapter })
 
     expect(adapter.mock.calls[0][0].headers.Authorization).toBe('Bearer access-token')
   })

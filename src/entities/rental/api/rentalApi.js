@@ -122,3 +122,8 @@ export async function sendFavoriteRentalNoticeEmails() {
   const { data } = await api.post('/rentals/favorites/emails/send')
   return data
 }
+
+export async function sendRentalRecommendationEmails(criteria = {}) {
+  const { data } = await api.post('/rentals/recommendations/emails/send', criteria)
+  return data
+}
