@@ -117,4 +117,118 @@ describe('RentalDetailPage favorite button', () => {
     expect(wrapper.text()).toContain('좌표를 찾지 못했습니다')
     expect(wrapper.text()).not.toContain('Kakao JavaScript 키')
   })
+
+  it('renders the map from the contract address when there are no supply rows', async () => {
+    const mapConstructor = vi.fn()
+    const markerConstructor = vi.fn()
+    const infoWindowOpen = vi.fn()
+    const addressSearch = vi.fn((address, callback) =>
+      callback([{ y: '37.5665', x: '126.9780' }], 'OK'),
+    )
+    window.kakao = {
+      maps: {
+        load: (callback) => callback(),
+        LatLng: vi.fn(function LatLng(latitude, longitude) {
+          this.latitude = latitude
+          this.longitude = longitude
+        }),
+        Map: vi.fn(function Map(element, options) {
+          mapConstructor(element, options)
+          this.setCenter = vi.fn()
+          this.setLevel = vi.fn()
+        }),
+        Marker: vi.fn(function Marker(options) {
+          markerConstructor(options)
+          this.setMap = vi.fn()
+        }),
+        InfoWindow: vi.fn(function InfoWindow() {
+          this.open = infoWindowOpen
+          this.close = vi.fn()
+        }),
+        services: {
+          Status: { OK: 'OK' },
+          Geocoder: vi.fn(function Geocoder() {
+            return { addressSearch }
+          }),
+        },
+      },
+    }
+    fetchRentalDetail.mockResolvedValue({
+      ...rentalDetail(),
+      detail: {
+        ...rentalDetail().detail,
+        contractAddress: '서울특별시 중구 세종대로 110',
+        contractDetailAddress: '서울특별시 중구 세종대로 110',
+      },
+      supplies: [],
+    })
+
+    const { wrapper } = await mountPage()
+    await flushPromises()
+
+    expect(addressSearch).toHaveBeenCalledWith(
+      '서울특별시 중구 세종대로 110',
+      expect.any(Function),
+    )
+    expect(mapConstructor).toHaveBeenCalled()
+    expect(markerConstructor).toHaveBeenCalled()
+    expect(infoWindowOpen).toHaveBeenCalled()
+    expect(wrapper.text()).not.toContain('좌표를 찾지 못했습니다')
+  })
+
+  it('uses the precise map address before combining supply address and lot number', async () => {
+    const addressSearch = vi.fn((address, callback) =>
+      callback([{ y: '37.4826', x: '126.9413' }], 'OK'),
+    )
+    window.kakao = {
+      maps: {
+        load: (callback) => callback(),
+        LatLng: vi.fn(function LatLng(latitude, longitude) {
+          this.latitude = latitude
+          this.longitude = longitude
+        }),
+        Map: vi.fn(function Map() {
+          this.setCenter = vi.fn()
+          this.setLevel = vi.fn()
+        }),
+        Marker: vi.fn(function Marker() {
+          this.setMap = vi.fn()
+        }),
+        InfoWindow: vi.fn(function InfoWindow() {
+          this.open = vi.fn()
+          this.close = vi.fn()
+        }),
+        services: {
+          Status: { OK: 'OK' },
+          Geocoder: vi.fn(function Geocoder() {
+            return { addressSearch }
+          }),
+        },
+      },
+    }
+    fetchRentalDetail.mockResolvedValue({
+      ...rentalDetail(),
+      supplies: [
+        {
+          usage: '26A',
+          address: '서울특별시 관악구 봉천동',
+          lotNumber: '100-1',
+          mapAddress: '서울특별시 관악구 봉천동 100-1',
+          area: '26.32',
+        },
+      ],
+    })
+
+    await mountPage()
+    await flushPromises()
+
+    expect(addressSearch).toHaveBeenCalledWith(
+      '서울특별시 관악구 봉천동 100-1',
+      expect.any(Function),
+    )
+    expect(addressSearch).not.toHaveBeenCalledWith(
+      '서울특별시 관악구 봉천동 100-1 서울특별시 관악구 봉천동 100-1',
+      expect.any(Function),
+    )
+  })
 })

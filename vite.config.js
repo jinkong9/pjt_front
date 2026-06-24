@@ -4,6 +4,9 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
+const backendOrigin =
+  process.env.VITE_BACKEND_ORIGIN || 'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app'
+
 // https://vite.dev/config/
 export default defineConfig({
   envPrefix: ['VITE_', 'OPENAPI_'],
@@ -13,11 +16,11 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: backendOrigin,
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://localhost:8080',
+        target: backendOrigin,
         changeOrigin: true,
       },
     },

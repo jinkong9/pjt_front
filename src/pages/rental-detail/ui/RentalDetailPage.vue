@@ -51,21 +51,62 @@ const eligibility = computed(() =>
   hasMyData.value && detail.value ? evaluateRentalEligibility(myDataProfile.value, detail.value) : null,
 )
 const supplyRows = computed(() => detail.value?.supplies ?? [])
-const mapTarget = computed(() => selectedSupply.value ?? supplyRows.value[0] ?? null)
 const contractMapLabel = computed(() => {
   const contractAddress = detail.value?.detail?.contractDetailAddress
   if (contractAddress && contractAddress !== '-') return contractAddress
   return detail.value?.detail?.contractAddress || '-'
 })
+const contractMapTarget = computed(() => ({
+  address: contractMapLabel.value,
+  mapAddress: contractMapLabel.value,
+  lotNumber: '',
+}))
+const mapTarget = computed(() => selectedSupply.value ?? supplyRows.value[0] ?? contractMapTarget.value)
 
 function value(value) {
   return value || '-'
 }
 
+function cleanAddress(value) {
+  if (!value || value === '-') return ''
+  return String(value).trim().replace(/\s+/g, ' ')
+}
+
+function uniqueAddresses(addresses) {
+  return addresses
+    .map(cleanAddress)
+    .filter(Boolean)
+    .filter((item, index, items) => items.indexOf(item) === index)
+}
+
+function supplyAddressWithLot(supply) {
+  const address = cleanAddress(supply?.address)
+  const lotNumber = cleanAddress(supply?.lotNumber)
+  if (!address) return lotNumber
+  if (!lotNumber || address.includes(lotNumber)) return address
+  return `${address} ${lotNumber}`
+}
+
 function supplyMapAddress(supply) {
-  return [supply?.mapAddress, supply?.address, supply?.lotNumber]
-    .filter((item) => item && item !== '-')
-    .join(' ')
+  return (
+    uniqueAddresses([
+      supply?.mapAddress,
+      supplyAddressWithLot(supply),
+      supply?.address,
+      contractMapLabel.value,
+    ])[0] || ''
+  )
+}
+
+function mapAddressCandidates(supply) {
+  return uniqueAddresses([
+    supply?.mapAddress,
+    supplyAddressWithLot(supply),
+    supply?.address,
+    contractMapLabel.value,
+    detail.value?.detail?.contractAddress,
+    detail.value?.notice?.regionName,
+  ])
 }
 
 function selectSupplyOnMap(supply) {
@@ -139,7 +180,15 @@ async function pointForSupply(kakao, supply) {
   if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
     return { latitude, longitude }
   }
-  return geocode(kakao, supplyMapAddress(supply))
+  let lastError = null
+  for (const address of mapAddressCandidates(supply)) {
+    try {
+      return await geocode(kakao, address)
+    } catch (error) {
+      lastError = error
+    }
+  }
+  throw lastError ?? mapError('GEOCODE_EMPTY', 'Address is empty')
 }
 
 async function renderMap() {
@@ -343,7 +392,7 @@ onBeforeUnmount(() => {
                   <td class="border border-neutral-200 px-4 py-4 text-sm font-bold">{{ value(supply.address) }}</td>
                   <td class="border border-neutral-200 px-4 py-4 text-sm font-bold">{{ value(supply.lotNumber) }}</td>
                   <td class="border border-neutral-200 px-4 py-4 text-sm font-bold">{{ value(supply.area) }}</td>
-                  <td class="border border-neutral-200 px-4 py-4 text-right text-sm font-bold">
+                  <td class="border border-neutral-200 px-4 py-4 text-center text-sm font-bold">
                     {{ value(supply.expectedAmount) }}
                   </td>
                   <td class="border border-neutral-200 px-4 py-4 text-sm font-bold">

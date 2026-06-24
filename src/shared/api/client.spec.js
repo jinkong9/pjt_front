@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { api } from './client'
+import { api, apiBaseUrl } from './client'
 import { clearAuthToken, saveAuthToken } from './authToken'
 
 describe('api client auth', () => {
@@ -9,6 +9,13 @@ describe('api client auth', () => {
     document.cookie = 'happyhome.accessToken=; path=/; max-age=0'
     document.cookie = 'happyhome.refreshToken=; path=/; max-age=0'
     document.cookie = 'happyhome.grantType=; path=/; max-age=0'
+  })
+
+  it('uses the configured backend origin for API requests', () => {
+    expect(apiBaseUrl()).toBe(
+      'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app/api',
+    )
+    expect(api.defaults.baseURL).toBe(apiBaseUrl())
   })
 
   it('adds Authorization Bearer header when an access token exists', async () => {

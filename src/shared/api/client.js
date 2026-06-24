@@ -1,8 +1,19 @@
 import axios from 'axios'
 import { clearAuthToken, getAccessToken } from './authToken'
 
+export const DEFAULT_BACKEND_ORIGIN = 'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app'
+
+export function backendOrigin() {
+  return import.meta.env.VITE_BACKEND_ORIGIN || DEFAULT_BACKEND_ORIGIN
+}
+
+export function apiBaseUrl() {
+  const origin = backendOrigin()
+  return `${origin.replace(/\/$/, '')}/api`
+}
+
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseUrl(),
   withCredentials: true,
 })
 

@@ -340,6 +340,8 @@ describe('PricesPage', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('원룸 / 월세')
     expect(wrapper.text()).toContain('역삼 원룸')
+    expect(wrapper.text()).toContain('2026-04-12')
+    expect(wrapper.text()).not.toContain('20.5㎡ · 3층 · 2026-04-12')
     expect(wrapper.text()).not.toContain('역삼 오피스텔')
   })
 

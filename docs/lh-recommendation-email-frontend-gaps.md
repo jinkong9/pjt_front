@@ -161,4 +161,4 @@ export async function sendFavoriteRentalNoticeEmails() {
 ## 추가로 발견한 프론트 리스크
 
 - 여러 Vue 파일과 테스트에 한글이 깨진 문자열이 많고, 일부 문자열은 따옴표가 닫히지 않은 것처럼 보입니다. 실제 빌드가 깨질 수 있으니 새 기능 구현 전에 `pnpm test:unit` 또는 `pnpm build`로 현재 상태를 먼저 확인해야 합니다.
-- API 클라이언트는 `baseURL: '/api'`라 Netlify 배포에서는 프록시/redirect 설정이 없으면 백엔드로 요청이 가지 않습니다. Netlify `_redirects` 또는 환경변수 기반 API origin 설정이 필요할 수 있습니다.
+- API 클라이언트는 `VITE_BACKEND_ORIGIN` 또는 기본 Cloudtype origin을 사용합니다. Netlify 배포 환경에서도 동일한 백엔드 origin을 유지해야 합니다.
