@@ -23,6 +23,19 @@ vi.mock('vue-router', () => ({
 
 const analysis = {
   radiusMeters: 1000,
+  score: {
+    total: 91,
+    level: 'Excellent',
+  },
+  trafficRiskSummary: {
+    eventCount: 1,
+    roadWorkCount: 0,
+    riskLevel: 'Low',
+  },
+  transitSummary: {
+    busStopWithin500m: 5,
+    subwayWithin1km: 3,
+  },
   places: [
     {
       name: '강남 대형마트',
@@ -91,6 +104,12 @@ describe('AnalysisPage nearby facilities', () => {
       }),
     })
     expect(wrapper.text()).toContain('가까운 생활시설')
+    expect(wrapper.text()).toContain('91점')
+    expect(wrapper.text()).toContain('버스')
+    expect(wrapper.text()).toContain('5곳')
+    expect(wrapper.text()).toContain('지하철')
+    expect(wrapper.text()).toContain('3곳')
+    expect(wrapper.text()).toContain('교통 위험 Low')
     expect(wrapper.text()).toContain('7곳')
     expect(wrapper.text()).toContain('대형마트 1')
     expect(wrapper.text()).toContain('편의점 1')

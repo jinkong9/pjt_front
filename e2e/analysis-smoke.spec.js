@@ -91,6 +91,9 @@ test('analysis page submits selected radius and renders nearby facilities', asyn
   await page.locator('button[type="submit"]').click()
 
   await expect(page.getByRole('heading', { name: '가까운 생활시설' })).toBeVisible()
+  await expect(page.getByText('82점')).toBeVisible()
+  await expect(page.getByText('버스')).toBeVisible()
+  await expect(page.getByText('지하철')).toBeVisible()
   await expect(page.getByText('전체 2')).toBeVisible()
   await expect(page.getByText('카페 1')).toBeVisible()
   await expect(page.getByText('병원 1')).toBeVisible()
