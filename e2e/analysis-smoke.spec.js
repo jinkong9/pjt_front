@@ -6,7 +6,7 @@ const analysisResponse = {
     level: 'Good',
   },
   commercialSummary: {
-    totalCount: 4,
+    totalCount: 2,
   },
   trafficRiskSummary: {
     eventCount: 0,
@@ -24,14 +24,14 @@ const analysisResponse = {
   places: [
     {
       name: 'Happy Coffee',
-      largeCategory: 'Food',
-      middleCategory: 'Cafe',
+      largeCategory: '카페',
+      middleCategory: '카페',
       address: 'Test road 1',
     },
     {
-      name: 'Town Clinic',
-      largeCategory: 'Medical',
-      middleCategory: 'Clinic',
+      name: 'Town Hospital',
+      largeCategory: '병원',
+      middleCategory: '병원',
       address: 'Test road 2',
     },
   ],
@@ -64,7 +64,7 @@ const analysisResponse = {
   ],
 }
 
-test('analysis page submits selected radius and renders transit results', async ({ page }) => {
+test('analysis page submits selected radius and renders nearby facilities', async ({ page }) => {
   let requestedRadius = null
 
   await page.route('**/api/members/me**', async (route) => {
@@ -90,9 +90,15 @@ test('analysis page submits selected radius and renders transit results', async 
   await page.getByTestId('analysis-radius-1500').click()
   await page.locator('button[type="submit"]').click()
 
-  await expect(page.getByTestId('analysis-bus-radius-label')).toContainText('1500m')
-  await expect(page.getByText('Happy Home Station')).toBeVisible()
-  await expect(page.getByText('Gangnam Station')).toBeVisible()
+  await expect(page.getByRole('heading', { name: '가까운 생활시설' })).toBeVisible()
+  await expect(page.getByText('전체 2')).toBeVisible()
+  await expect(page.getByText('카페 1')).toBeVisible()
+  await expect(page.getByText('병원 1')).toBeVisible()
   await expect(page.getByText('Happy Coffee')).toBeVisible()
+  await expect(page.getByText('Town Hospital')).toBeVisible()
+
+  await page.getByTestId('analysis-facility-filter-cafe').click()
+  await expect(page.getByText('Happy Coffee')).toBeVisible()
+  await expect(page.getByText('Town Hospital')).not.toBeVisible()
   expect(requestedRadius).toBe('1500')
 })
