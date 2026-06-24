@@ -184,4 +184,21 @@ describe('TransferDetailPage layout', () => {
 
     expect(deleteTransferComment).toHaveBeenCalledWith(4)
   })
+
+  it('renders comment timestamps in Korea time when the backend returns an offset timestamp', async () => {
+    fetchTransferDetail.mockResolvedValue(transfer({ imageUrls: [] }))
+    fetchTransferComments.mockResolvedValue([
+      {
+        commentId: 8,
+        transferId: 1,
+        writerId: 'ssafy',
+        content: '시간 확인',
+        createdAt: '2026-06-24T09:05:00Z',
+      },
+    ])
+
+    const wrapper = await mountDetail()
+
+    expect(wrapper.text()).toContain('2026-06-24 18:05')
+  })
 })

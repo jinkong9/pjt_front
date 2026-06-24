@@ -1,10 +1,9 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
+import { saveAuthToken } from '@/shared/api/authToken'
 import { safeRedirect } from '@/shared/lib/safeRedirect'
-import kakaoLoginImage from '@/assets/oauth/kakao-login-official.png'
-import naverLoginImage from '@/assets/oauth/naver-login-official.png'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,17 +15,12 @@ const form = reactive({
 })
 
 const oauthProviders = [
-  { id: 'kakao', label: 'Kakao', title: '카카오 계정으로 로그인' },
-  { id: 'naver', label: 'Naver', title: '네이버 계정으로 로그인' },
-  { id: 'google', label: '구글로 로그인', title: '구글 계정으로 로그인' },
+  { id: 'kakao', label: '카카오 로그인', title: '카카오 계정으로 로그인' },
+  { id: 'naver', label: '네이버 로그인', title: '네이버 계정으로 로그인' },
+  { id: 'google', label: 'Google 로그인', title: '구글 계정으로 로그인' },
 ]
 
 const oauthRedirect = computed(() => safeRedirect(route.query.redirect))
-const oauthImageMap = {
-  kakao: kakaoLoginImage,
-  naver: naverLoginImage,
-}
-
 const oauthSetupMessage = computed(() => {
   const provider = route.query.oauthSetup
   if (!provider) {
@@ -46,8 +40,32 @@ function backendOrigin() {
 }
 
 function oauthUrl(provider) {
-  const redirectUrl = new URL(oauthRedirect.value, window.location.origin).toString()
+  const callbackUrl = new URL('/login', window.location.origin)
+  callbackUrl.searchParams.set('redirect', oauthRedirect.value)
+  const redirectUrl = callbackUrl.toString()
   return `${backendOrigin()}/api/oauth/redirect/${provider}?redirect=${encodeURIComponent(redirectUrl)}`
+}
+
+function routeQueryValue(key) {
+  const value = route.query[key]
+  return Array.isArray(value) ? value[0] : value
+}
+
+async function consumeOauthToken() {
+  const accessToken = routeQueryValue('accessToken')
+  const refreshToken = routeQueryValue('refreshToken')
+  const grantType = routeQueryValue('grantType') || 'Bearer'
+  if (!accessToken || !refreshToken) {
+    return
+  }
+
+  saveAuthToken({
+    grantType: String(grantType),
+    accessToken: String(accessToken),
+    refreshToken: String(refreshToken),
+  })
+  await memberStore.fetchMe()
+  await router.replace(safeRedirect(route.query.redirect))
 }
 
 async function login() {
@@ -63,6 +81,10 @@ async function login() {
     error.value = '이메일 또는 비밀번호를 확인하세요.'
   }
 }
+
+onMounted(() => {
+  consumeOauthToken()
+})
 </script>
 
 <template>
@@ -119,21 +141,22 @@ async function login() {
               v-for="provider in oauthProviders"
               :key="provider.id"
               :data-testid="`oauth-${provider.id}`"
-              class="block min-h-[54px] w-full min-w-0 cursor-pointer overflow-hidden rounded-md no-underline transition-opacity hover:opacity-85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b4212a]"
-              :class="provider.id === 'google' ? 'google-oauth-button' : ''"
+              class="oauth-provider-link grid min-h-[54px] w-full min-w-0 cursor-pointer grid-cols-[56px_minmax(0,1fr)_56px] items-center rounded-md border no-underline transition-opacity hover:opacity-85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b4212a]"
+              :class="`oauth-provider-${provider.id}`"
               :href="oauthUrl(provider.id)"
               :title="provider.title"
             >
-              <img
-                v-if="provider.id !== 'google'"
-                class="oauth-image block h-[54px] w-full object-fill"
-                :src="oauthImageMap[provider.id]"
-                :alt="provider.title"
-              />
-              <template v-else>
-                <span class="google-oauth-logo" aria-hidden="true">G</span>
-                <span class="google-oauth-label">{{ provider.label }}</span>
-              </template>
+              <span class="oauth-icon grid place-items-center" aria-hidden="true">
+                <span v-if="provider.id === 'kakao'" class="oauth-icon-kakao"></span>
+                <span v-else-if="provider.id === 'naver'" class="oauth-icon-naver">N</span>
+                <span v-else class="oauth-icon-google">
+                  <span class="google-letter google-blue">G</span>
+                </span>
+              </span>
+              <span class="oauth-label justify-self-center text-center text-[16px] font-black">
+                {{ provider.label }}
+              </span>
+              <span aria-hidden="true"></span>
               <span class="sr-only">{{ provider.title }}</span>
             </a>
           </div>
@@ -165,35 +188,70 @@ async function login() {
 </template>
 
 <style scoped>
-.oauth-image {
-  width: 100% !important;
-  height: 54px !important;
-  object-fit: fill !important;
+.oauth-provider-link {
+  border-radius: 6px;
 }
 
-.google-oauth-button {
-  display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) 52px;
-  align-items: center;
-  border: 1px solid #dadce0;
+.oauth-provider-kakao {
+  border-color: #fee500;
+  background: #fee500;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.oauth-provider-naver {
+  border-color: #03c75a;
+  background: #03c75a;
+  color: #ffffff;
+}
+
+.oauth-provider-google {
+  border-color: #dadce0;
   background: #ffffff;
-  color: #1f1f1f;
+  color: #3c4043;
 }
 
-.google-oauth-logo {
+.oauth-icon-kakao {
+  position: relative;
+  width: 23px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.oauth-icon-kakao::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  bottom: -4px;
+  width: 8px;
+  height: 7px;
+  background: rgba(0, 0, 0, 0.9);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+.oauth-icon-naver {
+  font-family: Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.oauth-icon-google {
   display: grid;
-  min-height: 54px;
+  width: 24px;
+  height: 24px;
   place-items: center;
-  color: #4285f4;
+  border-radius: 50%;
   font-family: Arial, sans-serif;
-  font-size: 26px;
+  font-size: 25px;
   font-weight: 700;
+  line-height: 1;
 }
 
-.google-oauth-label {
-  justify-self: center;
-  font-family: Arial, sans-serif;
-  font-size: 17px;
-  font-weight: 700;
+.google-letter {
+  background: conic-gradient(from -45deg, #4285f4 0 25%, #34a853 0 50%, #fbbc04 0 75%, #ea4335 0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 </style>

@@ -76,6 +76,8 @@ describe('AnalysisPage segment buttons', () => {
     expect(activeRadius.classes()).toContain('bg-[#b4212a]')
     expect(activeRadius.classes()).toContain('text-white')
     expect(activeRadius.classes()).not.toContain('bg-white')
+    expect(wrapper.text()).toContain('대중교통 중심')
+    expect(wrapper.text()).not.toContain('교통 안전')
 
     await wrapper.get('[data-testid="analysis-priority-commercial"]').trigger('click')
 

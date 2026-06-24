@@ -50,6 +50,19 @@ const transitSummaryItems = computed(() => [
   ['1km 이내 버스정류장', analysis.value?.transitSummary?.busStopWithin1000m ?? 0],
 ])
 
+const trafficIssueCount = computed(
+  () =>
+    (analysis.value?.trafficRiskSummary?.eventCount ?? 0) +
+    (analysis.value?.trafficRiskSummary?.roadworkCount ?? 0),
+)
+
+const scoreCards = computed(() => [
+  { label: '종합 점수', value: analysis.value?.score?.total ?? 0, unit: '점' },
+  { label: '상권 점수', value: analysis.value?.score?.commercialScore ?? 0, unit: '점' },
+  { label: '대중교통 점수', value: analysis.value?.score?.transitScore ?? 0, unit: '점' },
+  { label: '교통 이슈 건수', value: trafficIssueCount.value, unit: '건' },
+])
+
 function facilityCategory(place) {
   const text = `${place.largeCategory ?? ''} ${place.middleCategory ?? ''}`
   if (text.includes('카페') || text.includes('커피')) return 'cafe'
@@ -151,17 +164,12 @@ watch(() => props.trade.no, loadAnalysis, { immediate: true })
         </div>
         <div data-testid="score-grid" class="mt-4 grid grid-cols-1 gap-2 sm:!grid-cols-2">
           <div
-            v-for="[label, value] in [
-              ['종합 점수', analysis.score.total],
-              ['상권 점수', analysis.score.commercialScore],
-              ['대중교통 점수', analysis.score.transitScore],
-              ['교통안전 점수', analysis.score.trafficSafetyScore],
-            ]"
-            :key="label"
+            v-for="card in scoreCards"
+            :key="card.label"
             class="bg-[#f7f4ef] p-3"
           >
-            <p class="text-[11px] font-black text-neutral-500">{{ label }}</p>
-            <strong class="mt-1 block text-xl text-[#b4212a]">{{ value }}점</strong>
+            <p class="text-[11px] font-black text-neutral-500">{{ card.label }}</p>
+            <strong class="mt-1 block text-xl text-[#b4212a]">{{ card.value }}{{ card.unit }}</strong>
           </div>
         </div>
         <p class="mt-3 text-xs font-bold leading-5 text-neutral-600">

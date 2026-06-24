@@ -17,12 +17,12 @@ const trade = {
 
 const analysis = {
   score: {
-    total: 48,
-    commercialScore: 20,
-    transitScore: 28,
+    total: 80,
+    commercialScore: 33,
+    transitScore: 47,
     trafficSafetyScore: 0,
-    level: '아쉬움',
-    message: '상권 20점, 대중교통 28점입니다.',
+    level: '좋음',
+    message: '상권 33점, 대중교통 47점으로 총 80점입니다.',
   },
   commercialSummary: {
     totalCount: 4,
@@ -117,6 +117,9 @@ describe('PropertyNeighborhoodAnalysis', () => {
     expect(wrapper.text()).toContain('강남역서초현대타워앞')
     expect(wrapper.text()).toContain('신분당선강남역(중)')
     expect(wrapper.text()).toContain('강남역')
+    expect(wrapper.text()).toContain('교통 이슈 건수')
+    expect(wrapper.text()).toContain('20건')
+    expect(wrapper.text()).not.toContain('교통안전 점수')
     expect(wrapper.text()).not.toContain('교통 체크 포인트')
   })
 
