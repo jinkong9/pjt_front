@@ -10,6 +10,7 @@ let housesResponse = []
 let officetelResponse = []
 let oneroomResponse = []
 let latestMap = null
+let latestIdleCallback = null
 
 vi.mock('@/shared/api/client', () => ({
   api: {
@@ -61,8 +62,32 @@ describe('PricesPage', () => {
     officetelResponse = []
     oneroomResponse = []
     latestMap = null
+    latestIdleCallback = null
     window.kakao = {
       maps: {
+        services: {
+          Status: {
+            OK: 'OK',
+          },
+          Geocoder: vi.fn(function Geocoder() {
+            return {
+              coord2RegionCode: vi.fn((longitude, latitude, callback) => {
+                callback(
+                  [
+                    {
+                      region_type: 'B',
+                      address_name: '경기도 김포시 풍무동',
+                      region_1depth_name: '경기도',
+                      region_2depth_name: '김포시',
+                      region_3depth_name: '풍무동',
+                    },
+                  ],
+                  'OK',
+                )
+              }),
+            }
+          }),
+        },
         load: (callback) => callback(),
         LatLng: vi.fn(function LatLng(latitude, longitude) {
           return { latitude, longitude }
@@ -78,6 +103,10 @@ describe('PricesPage', () => {
             setCenter: vi.fn(),
             panTo: vi.fn(),
             setLevel: vi.fn(),
+            getCenter: vi.fn(() => ({
+              getLat: () => 37.6123,
+              getLng: () => 126.7225,
+            })),
           }
           return latestMap
         }),
@@ -92,7 +121,9 @@ describe('PricesPage', () => {
           }
         }),
         event: {
-          addListener: vi.fn(),
+          addListener: vi.fn((target, eventName, callback) => {
+            if (eventName === 'idle') latestIdleCallback = callback
+          }),
         },
       },
     }
@@ -171,6 +202,53 @@ describe('PricesPage', () => {
     expect(wrapper.text()).toContain('개포 실제 아파트')
   })
 
+  it('searches deals around the current map center from the top map bar', async () => {
+    const router = createTestRouter()
+    await router.push('/prices')
+    await router.isReady()
+
+    const wrapper = mount(PricesPage, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="map-center-address"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="map-center-search"]').text()).toContain('현 지도에서 검색')
+    expect(window.kakao.maps.event.addListener).toHaveBeenCalledWith(
+      latestMap,
+      'idle',
+      expect.any(Function),
+    )
+
+    latestMap.getCenter.mockReturnValue({
+      getLat: () => 37.615,
+      getLng: () => 126.716,
+    })
+    latestIdleCallback()
+    await flushPromises()
+
+    await wrapper.get('[data-testid="map-center-search"]').trigger('click')
+    await flushPromises()
+
+    expect(api.get).toHaveBeenCalledWith('/property-deals', {
+      params: expect.objectContaining({
+        mode: 'region',
+        sidoName: '경기도',
+        gugunName: '김포시',
+        dongName: '풍무동',
+        propertyType: 'APARTMENT',
+      }),
+    })
+    expect(router.currentRoute.value.query).toMatchObject({
+      mode: 'region',
+      sidoName: '경기도',
+      gugunName: '김포시',
+      dongName: '풍무동',
+    })
+  })
+
   it('shows officetel and one-room deals from separate backend property types', async () => {
     housesResponse = [
       {
@@ -244,6 +322,15 @@ describe('PricesPage', () => {
 
     await wrapper.get('[data-testid="property-tab-officetel"]').trigger('click')
     await flushPromises()
+    expect(wrapper.get('[data-testid="property-tab-officetel"]').attributes('aria-pressed')).toBe(
+      'true',
+    )
+    expect(wrapper.get('[data-testid="property-tab-officetel"]').classes()).toContain(
+      'shadow-[inset_0_-3px_0_#b4212a]',
+    )
+    expect(wrapper.get('[data-testid="property-tab-apartment"]').attributes('aria-pressed')).toBe(
+      'false',
+    )
     expect(wrapper.text()).toContain('오피스텔 / 월세')
     expect(wrapper.text()).toContain('역삼 오피스텔')
     expect(wrapper.text()).toContain('3,000만원 / 120만원')
@@ -254,6 +341,119 @@ describe('PricesPage', () => {
     expect(wrapper.text()).toContain('원룸 / 월세')
     expect(wrapper.text()).toContain('역삼 원룸')
     expect(wrapper.text()).not.toContain('역삼 오피스텔')
+  })
+
+  it('uses an address based listing name when non-apartment API rows only contain a generic type', async () => {
+    officetelResponse = [
+      {
+        propertyDealId: 22,
+        propertyType: 'OFFICETEL',
+        dealType: 'RENT',
+        propertyName: '오피스텔',
+        depositAmount: '500',
+        monthlyRentAmount: '39',
+        exclusiveArea: '25.83',
+        floor: '9',
+        dealDate: '2026-06-23',
+        sidoName: '경기도',
+        gugunName: '김포시',
+        dongName: '풍무동',
+        jibun: '1008',
+      },
+    ]
+    const router = createTestRouter()
+    await router.push('/prices')
+    await router.isReady()
+
+    const wrapper = mount(PricesPage, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+    await flushPromises()
+
+    await wrapper.get('[data-testid="property-tab-officetel"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('풍무동 1008 오피스텔')
+    expect(wrapper.text()).not.toContain('\n오피스텔\n500만원')
+  })
+
+  it('uses the officetel building name from offiNm before falling back to the address', async () => {
+    officetelResponse = [
+      {
+        propertyDealId: 23,
+        propertyType: 'OFFICETEL',
+        dealType: 'TRADE',
+        offiNm: '르메이에르종로타운1',
+        dealAmount: '110000',
+        exclusiveArea: '152.95',
+        floor: '12',
+        dealDate: '2015-12-21',
+        sidoName: '서울특별시',
+        gugunName: '종로구',
+        dongName: '종로1가',
+        jibun: '24',
+      },
+    ]
+    const router = createTestRouter()
+    await router.push('/prices')
+    await router.isReady()
+
+    const wrapper = mount(PricesPage, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+    await flushPromises()
+
+    await wrapper.get('[data-testid="property-tab-officetel"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('르메이에르종로타운1')
+    expect(wrapper.text()).not.toContain('종로1가 24 오피스텔')
+  })
+
+  it('does not route neighborhood analysis to default coordinates when a deal has no coordinates', async () => {
+    officetelResponse = [
+      {
+        propertyDealId: 22,
+        propertyType: 'OFFICETEL',
+        dealType: 'RENT',
+        propertyName: '풍무동 1008 오피스텔',
+        depositAmount: '500',
+        monthlyRentAmount: '39',
+        exclusiveArea: '25.83',
+        floor: '9',
+        dealDate: '2026-06-23',
+        sidoName: '경기도',
+        gugunName: '김포시',
+        dongName: '풍무동',
+        jibun: '1008',
+        latitude: null,
+        longitude: null,
+      },
+    ]
+    const router = createTestRouter()
+    await router.push('/prices')
+    await router.isReady()
+
+    const wrapper = mount(PricesPage, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+    await flushPromises()
+
+    await wrapper.get('[data-testid="property-tab-officetel"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="trade-analysis-link-22"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="trade-analysis-disabled-22"]').text()).toContain(
+      '좌표 확인 필요',
+    )
+    expect(wrapper.html()).not.toContain('126.9413')
+    expect(wrapper.html()).not.toContain('37.4826')
   })
 
   it('opens the fixed detail panel and switches to the loan tab', async () => {

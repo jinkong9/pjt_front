@@ -36,7 +36,7 @@ const radiusOptions = [
 const priorityOptions = [
   { label: '균형', value: 'balanced' },
   { label: '상권 중심', value: 'commercial' },
-  { label: '교통 안전', value: 'traffic' },
+  { label: '대중교통 중심', value: 'traffic' },
 ]
 
 const facilityFilters = [

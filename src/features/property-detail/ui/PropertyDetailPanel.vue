@@ -108,6 +108,21 @@ function tradeLabel(trade) {
 function tradePriceLabel(trade) {
   return getHouseTradePriceLabel(trade)
 }
+
+function hasTradeCoordinates(trade) {
+  const latitude = Number(trade.latitude)
+  const longitude = Number(trade.longitude)
+  return (
+    trade.latitude !== null &&
+    trade.latitude !== undefined &&
+    trade.latitude !== '' &&
+    trade.longitude !== null &&
+    trade.longitude !== undefined &&
+    trade.longitude !== '' &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude)
+  )
+}
 </script>
 
 <template>
@@ -204,6 +219,8 @@ function tradePriceLabel(trade) {
         </dl>
         <PropertyNeighborhoodAnalysis :trade="trade" />
         <RouterLink
+          v-if="hasTradeCoordinates(trade)"
+          data-testid="property-analysis-link"
           class="block border border-neutral-300 px-4 py-3 text-center text-xs font-black"
           :to="{
             path: '/analysis',
@@ -216,6 +233,15 @@ function tradePriceLabel(trade) {
           }"
           >생활권 분석 보기</RouterLink
         >
+        <button
+          v-else
+          type="button"
+          data-testid="property-analysis-disabled"
+          class="block w-full cursor-not-allowed border border-neutral-200 bg-[#f7f4ef] px-4 py-3 text-center text-xs font-black text-neutral-400"
+          disabled
+        >
+          좌표 확인 필요
+        </button>
       </section>
 
       <section v-else>

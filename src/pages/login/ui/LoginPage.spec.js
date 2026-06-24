@@ -6,6 +6,12 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 import LoginPage from './LoginPage.vue'
 
+vi.mock('@/shared/api/authToken', () => ({
+  saveAuthToken: vi.fn(),
+}))
+
+import { saveAuthToken } from '@/shared/api/authToken'
+
 function createTestRouter() {
   return createRouter({
     history: createMemoryHistory(),
@@ -24,6 +30,7 @@ async function mountLogin(initialPath) {
 
   const memberStore = useMemberStore()
   memberStore.login = vi.fn().mockResolvedValue({ userId: 'ssafy' })
+  memberStore.fetchMe = vi.fn().mockResolvedValue()
 
   const router = createTestRouter()
   await router.push(initialPath)
@@ -55,17 +62,22 @@ describe('LoginPage', () => {
     expect(wrapper.find('button[type="submit"]').classes()).toContain('min-h-[54px]')
   })
 
-  it('stacks social login buttons as three full-width rows', async () => {
+  it('stacks official social login buttons as three full-width rows', async () => {
     const { wrapper } = await mountLogin('/login')
 
     expect(wrapper.get('[data-testid="oauth-list"]').classes()).toContain('grid-cols-1')
     expect(wrapper.get('[data-testid="oauth-kakao"]').classes()).toContain('min-h-[54px]')
     expect(wrapper.get('[data-testid="oauth-naver"]').classes()).toContain('min-h-[54px]')
     expect(wrapper.get('[data-testid="oauth-google"]').classes()).toContain('min-h-[54px]')
-    expect(wrapper.get('[data-testid="oauth-kakao"] img').classes()).toContain('object-fill')
-    expect(wrapper.get('[data-testid="oauth-naver"] img').classes()).toContain('object-fill')
-    expect(wrapper.get('[data-testid="oauth-google"]').classes()).toContain('google-oauth-button')
-    expect(wrapper.get('[data-testid="oauth-google"]').text()).toContain('구글로 로그인')
+    expect(wrapper.get('[data-testid="oauth-kakao"]').classes()).toContain(
+      'grid-cols-[56px_minmax(0,1fr)_56px]',
+    )
+    expect(wrapper.get('[data-testid="oauth-kakao"] .oauth-label').text()).toBe('카카오 로그인')
+    expect(wrapper.get('[data-testid="oauth-naver"] .oauth-label').text()).toBe('네이버 로그인')
+    expect(wrapper.get('[data-testid="oauth-google"] .oauth-label').text()).toBe('Google 로그인')
+    expect(wrapper.find('[data-testid="oauth-kakao"] .oauth-icon-kakao').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="oauth-naver"] .oauth-icon-naver').text()).toBe('N')
+    expect(wrapper.find('[data-testid="oauth-google"] .oauth-icon-google').exists()).toBe(true)
   })
 
   it('keeps login layout isolated from the shared auth layout classes', async () => {
@@ -90,13 +102,28 @@ describe('LoginPage', () => {
     const kakaoHref = wrapper.get('[data-testid="oauth-kakao"]').attributes('href')
 
     expect(kakaoHref).toContain('/api/oauth/redirect/kakao?redirect=')
-    expect(decodeURIComponent(kakaoHref)).toContain('/prices?mode=search')
+    expect(decodeURIComponent(decodeURIComponent(kakaoHref))).toContain('/prices?mode=search')
   })
 
   it('explains when a social provider is not configured yet', async () => {
     const { wrapper } = await mountLogin('/login?oauthSetup=kakao')
 
     expect(wrapper.text()).toContain('KAKAO 로그인 설정이 아직 완료되지 않았습니다')
+  })
+
+  it('stores oauth jwt tokens from the callback url and removes them from the address', async () => {
+    const { memberStore, router } = await mountLogin(
+      '/login?oauth=success&grantType=Bearer&accessToken=access-token&refreshToken=refresh-token&redirect=%2Fprices%3Fmode%3Dsearch',
+    )
+    await flushPromises()
+
+    expect(saveAuthToken).toHaveBeenCalledWith({
+      grantType: 'Bearer',
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+    })
+    expect(memberStore.fetchMe).toHaveBeenCalled()
+    expect(router.currentRoute.value.fullPath).toBe('/prices?mode=search')
   })
 
   it('routes a normal login to home', async () => {
