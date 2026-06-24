@@ -13,6 +13,7 @@ const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
 const recommendationFavoriteMessage = ref('')
+const favoriteStates = ref({})
 const condition = reactive({
   keyword: '',
   regionCode: '',
@@ -88,10 +89,23 @@ const recommendationError = computed(() => {
   return 'unknown'
 })
 
+function isFavorite(notice) {
+  const noticeId = notice?.rentalNoticeId
+  if (!noticeId) return false
+  return favoriteStates.value[noticeId] ?? Boolean(notice.favorite)
+}
+
+function favoriteButtonClass(notice) {
+  return isFavorite(notice)
+    ? 'border-[#b4212a] bg-[#b4212a] text-white hover:bg-[#921b22]'
+    : 'border-[#b4212a] bg-white text-[#b4212a] hover:bg-[#fff7f7]'
+}
+
 async function toggleRecommendationFavorite(noticeId) {
   recommendationFavoriteMessage.value = ''
   try {
     const result = await favoriteMutation.mutateAsync(noticeId)
+    favoriteStates.value = { ...favoriteStates.value, [noticeId]: Boolean(result.favorite) }
     recommendationFavoriteMessage.value = result.favorite
       ? '관심 공고로 등록했습니다.'
       : '관심 공고에서 해제했습니다.'
@@ -111,6 +125,7 @@ async function toggleNoticeFavorite(noticeId) {
   recommendationFavoriteMessage.value = ''
   try {
     const result = await favoriteMutation.mutateAsync(noticeId)
+    favoriteStates.value = { ...favoriteStates.value, [noticeId]: Boolean(result.favorite) }
     recommendationFavoriteMessage.value = result.favorite
       ? '관심 공고로 등록했습니다.'
       : '관심 공고에서 해제했습니다.'
@@ -232,10 +247,11 @@ onMounted(async () => {
             <button
               type="button"
               :data-testid="`recommendation-favorite-${item.notice.rentalNoticeId}`"
-              class="inline-flex min-h-10 items-center justify-center border border-neutral-300 bg-white px-4 text-sm font-black text-neutral-700"
+              class="inline-flex min-h-10 items-center justify-center border px-4 text-sm font-black transition"
+              :class="favoriteButtonClass(item.notice)"
               @click="toggleRecommendationFavorite(item.notice.rentalNoticeId)"
             >
-              관심 등록
+              {{ isFavorite(item.notice) ? '관심중' : '관심' }}
             </button>
           </div>
         </article>
@@ -339,10 +355,11 @@ onMounted(async () => {
           <button
             type="button"
             :data-testid="`notice-favorite-${notice.rentalNoticeId}`"
-            class="inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-white px-4 text-sm font-black text-[#b4212a]"
+            class="inline-flex min-h-10 items-center justify-center border px-4 text-sm font-black transition"
+            :class="favoriteButtonClass(notice)"
             @click="toggleNoticeFavorite(notice.rentalNoticeId)"
           >
-            관심
+            {{ isFavorite(notice) ? '관심중' : '관심' }}
           </button>
         </div>
       </article>

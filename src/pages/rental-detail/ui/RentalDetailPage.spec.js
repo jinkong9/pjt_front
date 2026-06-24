@@ -70,7 +70,7 @@ describe('RentalDetailPage favorite button', () => {
     await flushPromises()
 
     expect(toggleFavoriteRentalNotice).toHaveBeenCalledWith('LH-1')
-    expect(wrapper.get('[data-testid="rental-favorite-toggle"]').text()).toContain('관심 공고 해제')
+    expect(wrapper.get('[data-testid="rental-favorite-toggle"]').text()).toContain('관심중')
   })
 
   it('sends 401 users to login with the rental detail redirect', async () => {

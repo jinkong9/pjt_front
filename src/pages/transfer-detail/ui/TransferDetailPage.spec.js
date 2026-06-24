@@ -102,7 +102,7 @@ describe('TransferDetailPage layout', () => {
     await flushPromises()
 
     expect(toggleFavoriteTransfer).toHaveBeenCalledWith('1')
-    expect(wrapper.get('[data-testid="transfer-detail-favorite"]').text()).toContain('해제')
+    expect(wrapper.get('[data-testid="transfer-detail-favorite"]').text()).toContain('관심중')
   })
 
   it('loads comments and lets the current member create, edit, and delete their comment', async () => {

@@ -78,6 +78,7 @@ onMounted(() => {
 
 watch(post, (nextPost) => {
   if (nextPost?.title) document.title = `${nextPost.title} | HOME FIT`
+  favorite.value = Boolean(nextPost?.favorite)
 })
 
 async function removeTransfer() {
@@ -172,20 +173,21 @@ async function removeComment(comment) {
           <button
             type="button"
             data-testid="transfer-detail-favorite"
-            class="button danger inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-white px-[18px] font-black text-[#b4212a]"
+            class="button danger inline-flex min-h-11 items-center justify-center border px-[18px] font-black transition"
+            :class="favorite ? 'border-[#b4212a] bg-[#b4212a] text-white' : 'border-[#b4212a] bg-white text-[#b4212a] hover:bg-[#fff7f7]'"
             @click="toggleFavorite"
           >
-            {{ favorite ? '관심 해제' : '관심' }}
+            {{ favorite ? '관심중' : '관심' }}
           </button>
           <RouterLink
-            class="button inline-flex min-h-11 items-center justify-center border border-[#171717] bg-[#171717] px-[18px] font-black text-white"
+            class="button inline-flex min-h-11 items-center justify-center border border-neutral-300 bg-white px-[18px] font-black text-[#171717] transition hover:border-[#b4212a] hover:bg-[#fff7f7] hover:text-[#b4212a]"
             :to="`/transfers/${post.transferId}/edit`"
           >
             수정
           </RouterLink>
           <button
             type="button"
-            class="button danger inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-white px-[18px] font-black text-[#b4212a]"
+            class="button danger inline-flex min-h-11 items-center justify-center border border-[#f0c7ca] bg-[#fff7f7] px-[18px] font-black text-[#b4212a] transition hover:border-[#b4212a] hover:bg-white"
             @click="removeTransfer"
           >
             삭제
@@ -308,7 +310,7 @@ async function removeComment(comment) {
                 <button
                   type="button"
                   :data-testid="`transfer-comment-edit-${comment.commentId}`"
-                  class="text-sm font-black text-[#171717]"
+                  class="border border-neutral-200 bg-white px-3 py-1.5 text-sm font-black text-neutral-600 transition hover:border-[#b4212a] hover:text-[#b4212a]"
                   @click="startEdit(comment)"
                 >
                   수정
@@ -316,7 +318,7 @@ async function removeComment(comment) {
                 <button
                   type="button"
                   :data-testid="`transfer-comment-delete-${comment.commentId}`"
-                  class="text-sm font-black text-[#b4212a]"
+                  class="border border-[#f0c7ca] bg-[#fff7f7] px-3 py-1.5 text-sm font-black text-[#b4212a] transition hover:border-[#b4212a] hover:bg-white"
                   @click="removeComment(comment)"
                 >
                   삭제

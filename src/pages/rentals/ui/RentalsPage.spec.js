@@ -75,6 +75,7 @@ describe('RentalsPage recommendations', () => {
     await flushPromises()
 
     expect(toggleFavoriteRentalNotice).toHaveBeenCalledWith('LH-REC-1')
+    expect(wrapper.get('[data-testid="recommendation-favorite-LH-REC-1"]').text()).toContain('관심중')
   })
 
   it('shows a login CTA when recommendations return 401', async () => {
@@ -116,6 +117,7 @@ describe('RentalsPage recommendations', () => {
     await flushPromises()
 
     expect(toggleFavoriteRentalNotice).toHaveBeenCalledWith('LH-LIST-1')
+    expect(wrapper.get('[data-testid="notice-favorite-LH-LIST-1"]').text()).toContain('관심중')
     expect(wrapper.text()).toContain('관심 공고로 등록했습니다.')
   })
 

@@ -144,6 +144,6 @@ describe('PropertyDetailPanel', () => {
     await flushPromises()
 
     expect(api.post).toHaveBeenCalledWith('/favorites/11/toggle')
-    expect(wrapper.get('[data-testid="property-favorite-toggle"]').text()).toContain('해제')
+    expect(wrapper.get('[data-testid="property-favorite-toggle"]').text()).toContain('관심중')
   })
 })

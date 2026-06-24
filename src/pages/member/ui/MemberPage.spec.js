@@ -8,7 +8,6 @@ import { useMemberStore } from '@/entities/member/model/member'
 import { getFinancialProfile, saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import {
   fetchFavoriteRentalNotices,
-  sendFavoriteRentalNoticeEmails,
   toggleFavoriteRentalNotice,
 } from '@/entities/rental/api/rentalApi'
 import { fetchFavoriteTransfers } from '@/entities/transfer/api/transferApi'
@@ -20,8 +19,8 @@ vi.mock('@/shared/api/client', () => ({
         data: [
           {
             no: 1,
-            aptName: '삼성힐스테이트',
-            address: '서울특별시 강남구 삼성동',
+            aptName: '일성아파트',
+            address: '서울특별시 강남구 일성동',
             dealAmount: '70000',
           },
         ],
@@ -37,7 +36,6 @@ vi.mock('@/entities/member/api/financialProfileApi', () => ({
 
 vi.mock('@/entities/rental/api/rentalApi', () => ({
   fetchFavoriteRentalNotices: vi.fn(),
-  sendFavoriteRentalNoticeEmails: vi.fn(),
   toggleFavoriteRentalNotice: vi.fn(),
 }))
 
@@ -55,6 +53,7 @@ async function mountMemberPage() {
   const router = createRouter({
     history: createWebHistory(),
     routes: [
+      { path: '/', component: { template: '<div />' } },
       { path: '/login', component: { template: '<div />' } },
       { path: '/prices', component: { template: '<div />' } },
       { path: '/rentals/:noticeId', component: { template: '<div />' } },
@@ -105,7 +104,7 @@ describe('MemberPage', () => {
 
     expect(alertSpy).toHaveBeenCalledWith('로그인이 필요합니다.')
     expect(router.currentRoute.value.path).toBe('/login')
-    expect(wrapper.text()).not.toContain('로그인이 필요합니다')
+    expect(wrapper.text()).not.toContain('로그인이 필요합니다.')
   })
 
   it('shows the saved financial profile editor and default deal favorites', async () => {
@@ -245,24 +244,16 @@ describe('MemberPage', () => {
     expect(wrapper.text()).not.toContain('서울 행복주택')
   })
 
-  it('shows a result message after sending LH favorite email alerts', async () => {
+  it('shows automatic LH email guidance instead of a manual send action', async () => {
     getFinancialProfile.mockResolvedValue(null)
     fetchFavoriteRentalNotices.mockResolvedValue([])
-    sendFavoriteRentalNoticeEmails.mockResolvedValue({
-      sentCount: 1,
-      skippedCount: 2,
-      missingMemberCount: 0,
-    })
 
     const wrapper = await mountMemberPage()
     await wrapper.get('[data-testid="favorite-tab-rentals"]').trigger('click')
-    await wrapper.get('[data-testid="send-rental-favorite-emails"]').trigger('click')
     await flushPromises()
 
-    expect(sendFavoriteRentalNoticeEmails).toHaveBeenCalled()
-    expect(wrapper.text()).toContain('1건의 LH 관심 공고 알림을 발송했습니다.')
-    expect(wrapper.text()).toContain('보류 2건')
-    expect(wrapper.text()).toContain('이메일 없음 0건')
-    expect(wrapper.text()).toContain('보류는 이미 발송했거나 접수 기간 조건에 맞지 않는 공고입니다.')
+    expect(wrapper.find('[data-testid="send-rental-favorite-emails"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('마감 3일 이내')
+    expect(wrapper.text()).toContain('하루에 한 번 자동')
   })
 })

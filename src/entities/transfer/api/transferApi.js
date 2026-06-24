@@ -47,6 +47,7 @@ export function normalizeTransfer(post) {
     imageUrls,
     viewCount: post.viewCount ?? post.view_count,
     createdAt: post.createdAt ?? post.created_at,
+    favorite: Boolean(post.favorite ?? post.isFavorite ?? post.is_favorite),
   }
 }
 

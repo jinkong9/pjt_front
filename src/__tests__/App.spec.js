@@ -83,7 +83,7 @@ describe('App', () => {
     expect(router.resolve('/mydata').name).toBe('mydata')
   })
 
-  it('uses full-page scroll sections on the home page', async () => {
+  it('uses natural scroll reveal sections on the home page', async () => {
     router.push('/home')
     await router.isReady()
 
@@ -94,7 +94,8 @@ describe('App', () => {
     })
 
     expect(wrapper.find('.home-hero').exists()).toBe(true)
-    expect(wrapper.find('.fullpage-scroll').exists()).toBe(true)
+    expect(wrapper.find('.natural-scroll').exists()).toBe(true)
+    expect(wrapper.find('.fullpage-scroll').exists()).toBe(false)
     expect(wrapper.findAll('.fullpage-section').length).toBeGreaterThanOrEqual(3)
     expect(wrapper.findAll('.fullpage-reveal').length).toBeGreaterThanOrEqual(3)
     expect(wrapper.find('.home-bottom-sheets').exists()).toBe(false)
@@ -129,7 +130,7 @@ describe('App', () => {
 
     expect(loginWrapper.find('.auth-visual').exists()).toBe(false)
     expect(loginWrapper.get('[data-testid="login-card"]').classes()).toContain(
-      'grid-cols-[minmax(0,1fr)_minmax(360px,0.95fr)]',
+      'grid-cols-[minmax(0,1.04fr)_minmax(360px,0.96fr)]',
     )
     expect(loginWrapper.text()).toContain('Welcome Back')
     expect(loginWrapper.text()).toContain('이메일')

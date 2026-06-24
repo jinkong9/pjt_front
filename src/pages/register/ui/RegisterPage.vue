@@ -12,6 +12,7 @@ const form = reactive({
   password: '',
   passwordConfirm: '',
   phone: '',
+  rentalNoticeEmailEnabled: false,
 })
 
 async function register() {
@@ -28,6 +29,7 @@ async function register() {
       password: form.password,
       name: form.name,
       phone: form.phone,
+      rentalNoticeEmailEnabled: form.rentalNoticeEmailEnabled,
     })
     router.push('/login')
   } catch {
@@ -53,6 +55,7 @@ async function register() {
             이름
             <input
               v-model="form.name"
+              data-testid="register-name"
               required
               class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
             />
@@ -61,6 +64,7 @@ async function register() {
             이메일
             <input
               v-model="form.email"
+              data-testid="register-email"
               type="email"
               required
               class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
@@ -70,6 +74,7 @@ async function register() {
             비밀번호
             <input
               v-model="form.password"
+              data-testid="register-password"
               type="password"
               required
               class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
@@ -79,6 +84,7 @@ async function register() {
             비밀번호 확인
             <input
               v-model="form.passwordConfirm"
+              data-testid="register-password-confirm"
               type="password"
               required
               class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
@@ -88,9 +94,24 @@ async function register() {
             전화번호
             <input
               v-model="form.phone"
+              data-testid="register-phone"
               required
               class="min-h-12 border border-[#d4d4d4] bg-white px-3.5 text-inherit outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#b4212a] focus:shadow-[0_0_0_3px_rgba(180,33,42,0.12)]"
             />
+          </label>
+          <label class="flex items-start gap-3 border border-[#e5e5e5] bg-[#faf8f5] p-3 text-sm font-black text-[#171717]">
+            <input
+              v-model="form.rentalNoticeEmailEnabled"
+              data-testid="register-rental-email-consent"
+              type="checkbox"
+              class="mt-1 size-4 accent-[#b4212a]"
+            />
+            <span class="leading-6">
+              LH 관심 공고 접수/마감 알림 메일 수신에 동의합니다.
+              <small class="block text-xs font-bold text-neutral-500">
+                미동의해도 가입할 수 있으며, 나의 정보에서 언제든 변경할 수 있습니다.
+              </small>
+            </span>
           </label>
           <button
             type="submit"

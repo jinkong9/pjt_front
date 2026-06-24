@@ -11,6 +11,7 @@ import LoadingState from '@/shared/ui/LoadingState.vue'
 const queryClient = useQueryClient()
 const brokenImages = ref(new Set())
 const favoriteMessage = ref('')
+const favoriteStates = ref({})
 const condition = reactive({
   keyword: '',
   status: '',
@@ -36,6 +37,18 @@ function markBrokenImage(transferId) {
   brokenImages.value = new Set([...brokenImages.value, transferId])
 }
 
+function isFavorite(post) {
+  const transferId = post?.transferId
+  if (!transferId) return false
+  return favoriteStates.value[transferId] ?? Boolean(post.favorite)
+}
+
+function favoriteButtonClass(post) {
+  return isFavorite(post)
+    ? 'border-[#b4212a] bg-[#b4212a] text-white hover:bg-[#921b22]'
+    : 'border-[#b4212a] bg-white text-[#b4212a] hover:bg-[#fff7f7]'
+}
+
 async function loadTransfers() {
   submittedCondition.value = { ...condition }
 }
@@ -44,6 +57,7 @@ async function toggleFavorite(transferId) {
   favoriteMessage.value = ''
   try {
     const result = await favoriteMutation.mutateAsync(transferId)
+    favoriteStates.value = { ...favoriteStates.value, [transferId]: Boolean(result.favorite) }
     favoriteMessage.value = result.favorite
       ? '관심 매물로 등록했습니다.'
       : '관심 매물에서 해제했습니다.'
@@ -195,10 +209,11 @@ onMounted(() => {
           <button
             type="button"
             :data-testid="`transfer-favorite-${post.transferId}`"
-            class="inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-white px-4 text-sm font-black text-[#b4212a]"
+            class="inline-flex min-h-10 items-center justify-center border px-4 text-sm font-black transition"
+            :class="favoriteButtonClass(post)"
             @click="toggleFavorite(post.transferId)"
           >
-            관심
+            {{ isFavorite(post) ? '관심중' : '관심' }}
           </button>
         </div>
       </article>

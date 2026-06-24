@@ -8,6 +8,8 @@
     "build": "vite build",
     "build:backend": "vite build --base /app/ --outDir ../pjt_back/src/main/resources/static/app --emptyOutDir",
     "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "test:unit": "vitest",
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.0",
     "@tailwindcss/vite": "^4.3.1",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vitest/eslint-plugin": "^1.6.16",
