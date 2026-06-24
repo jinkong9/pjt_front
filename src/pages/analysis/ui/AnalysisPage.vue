@@ -117,7 +117,7 @@ async function analyze() {
       </p>
       <h1 class="mt-3 text-[clamp(42px,6vw,76px)] font-black leading-none">생활권 분석</h1>
       <p class="mt-3 text-sm font-bold leading-7 text-neutral-500">
-        지도에서 선택한 매물 주변의 병원, 약국, 마트, 카페, 편의점 등을 카카오 주변검색 기준으로 확인합니다.
+        지도에서 선택한 매물 주변의 대형마트, 편의점, 학교, 어린이집·유치원, 카페, 병원, 음식점을 카카오 주변검색 기준으로 확인합니다.
       </p>
 
       <form class="mt-6 grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto_auto]" @submit.prevent="analyze">

@@ -25,22 +25,46 @@ const analysis = {
   radiusMeters: 1000,
   places: [
     {
-      name: '렌즈커뮤니케이션즈',
-      largeCategory: '시설관리·임대',
-      middleCategory: '산업용품 대여',
+      name: '강남 대형마트',
+      largeCategory: '대형마트',
+      middleCategory: '대형마트',
       address: '서울특별시 강남구 논현로 651',
     },
     {
-      name: '케이컴',
-      largeCategory: '과학·기술',
-      middleCategory: '광고',
+      name: '역삼 편의점',
+      largeCategory: '편의점',
+      middleCategory: '편의점',
       address: '서울특별시 강남구 논현로 641',
+    },
+    {
+      name: '역삼초등학교',
+      largeCategory: '학교',
+      middleCategory: '초등학교',
+      address: '서울특별시 강남구 논현로 642',
+    },
+    {
+      name: '튼튼어린이집',
+      largeCategory: '어린이집·유치원',
+      middleCategory: '어린이집',
+      address: '서울특별시 강남구 논현로 643',
     },
     {
       name: '강남 카페',
       largeCategory: '카페',
       middleCategory: '커피전문점',
       address: '서울특별시 강남구 논현로 650',
+    },
+    {
+      name: '강남병원',
+      largeCategory: '병원',
+      middleCategory: '병원',
+      address: '서울특별시 강남구 논현로 644',
+    },
+    {
+      name: '강남맛집',
+      largeCategory: '음식점',
+      middleCategory: '한식',
+      address: '서울특별시 강남구 논현로 645',
     },
   ],
 }
@@ -67,9 +91,16 @@ describe('AnalysisPage nearby facilities', () => {
       }),
     })
     expect(wrapper.text()).toContain('가까운 생활시설')
-    expect(wrapper.text()).toContain('3곳')
-    expect(wrapper.text()).toContain('렌즈커뮤니케이션즈')
-    expect(wrapper.text()).toContain('시설관리·임대 / 산업용품 대여 · 서울특별시 강남구 논현로 651')
+    expect(wrapper.text()).toContain('7곳')
+    expect(wrapper.text()).toContain('대형마트 1')
+    expect(wrapper.text()).toContain('편의점 1')
+    expect(wrapper.text()).toContain('학교 1')
+    expect(wrapper.text()).toContain('어린이집·유치원 1')
+    expect(wrapper.text()).toContain('카페 1')
+    expect(wrapper.text()).toContain('병원 1')
+    expect(wrapper.text()).toContain('음식점 1')
+    expect(wrapper.text()).toContain('강남 대형마트')
+    expect(wrapper.text()).toContain('대형마트 / 대형마트 · 서울특별시 강남구 논현로 651')
 
     wrapper.unmount()
   })
@@ -81,7 +112,7 @@ describe('AnalysisPage nearby facilities', () => {
     await flushPromises()
     await wrapper.get('[data-testid="analysis-facility-filter-cafe"]').trigger('click')
 
-    expect(wrapper.text()).not.toContain('렌즈커뮤니케이션즈')
+    expect(wrapper.text()).not.toContain('강남 대형마트')
     expect(wrapper.text()).toContain('강남 카페')
   })
 })

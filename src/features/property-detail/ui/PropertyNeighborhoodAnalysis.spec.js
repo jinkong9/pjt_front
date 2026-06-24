@@ -18,22 +18,46 @@ const trade = {
 const analysis = {
   places: [
     {
-      name: '강남맛집',
-      largeCategory: '음식',
-      middleCategory: '한식',
+      name: '강남 대형마트',
+      largeCategory: '대형마트',
+      middleCategory: '대형마트',
       address: '서울 강남구 테헤란로 1',
+    },
+    {
+      name: '역삼 편의점',
+      largeCategory: '편의점',
+      middleCategory: '편의점',
+      address: '서울 강남구 테헤란로 2',
+    },
+    {
+      name: '역삼초등학교',
+      largeCategory: '학교',
+      middleCategory: '초등학교',
+      address: '서울 강남구 테헤란로 3',
+    },
+    {
+      name: '튼튼어린이집',
+      largeCategory: '어린이집·유치원',
+      middleCategory: '어린이집',
+      address: '서울 강남구 테헤란로 4',
     },
     {
       name: '역삼 카페',
       largeCategory: '카페',
       middleCategory: '커피전문점',
-      address: '서울 강남구 테헤란로 2',
+      address: '서울 강남구 테헤란로 5',
     },
     {
-      name: '강남연세의원',
-      largeCategory: '의료',
-      middleCategory: '의원',
-      address: '서울 강남구 테헤란로 3',
+      name: '강남병원',
+      largeCategory: '병원',
+      middleCategory: '병원',
+      address: '서울 강남구 테헤란로 6',
+    },
+    {
+      name: '강남맛집',
+      largeCategory: '음식점',
+      middleCategory: '한식',
+      address: '서울 강남구 테헤란로 7',
     },
   ],
 }
@@ -55,20 +79,24 @@ describe('PropertyNeighborhoodAnalysis', () => {
       radius: 1000,
     })
     expect(wrapper.text()).toContain('가까운 생활시설')
-    expect(wrapper.text()).toContain('전체 3')
-    expect(wrapper.text()).toContain('음식 1')
+    expect(wrapper.text()).toContain('전체 7')
+    expect(wrapper.text()).toContain('대형마트 1')
+    expect(wrapper.text()).toContain('편의점 1')
+    expect(wrapper.text()).toContain('학교 1')
+    expect(wrapper.text()).toContain('어린이집·유치원 1')
     expect(wrapper.text()).toContain('카페 1')
-    expect(wrapper.text()).toContain('의료 1')
+    expect(wrapper.text()).toContain('병원 1')
+    expect(wrapper.text()).toContain('음식점 1')
   })
 
   it('filters nearby facilities by category chips', async () => {
     const wrapper = mount(PropertyNeighborhoodAnalysis, { props: { trade } })
     await flushPromises()
 
-    await wrapper.get('[data-testid="facility-filter-cafe"]').trigger('click')
+    await wrapper.get('[data-testid="facility-filter-hospital"]').trigger('click')
 
     expect(wrapper.text()).not.toContain('강남맛집')
-    expect(wrapper.text()).toContain('역삼 카페')
+    expect(wrapper.text()).toContain('강남병원')
   })
 
   it('shows an error and retries the analysis request', async () => {
