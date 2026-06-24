@@ -6,7 +6,10 @@ import { api } from '@/shared/api/client'
 import { getFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import { analyzePropertyLoan } from '@/entities/loan/api/loanAnalysisApi'
 import { memberKeys } from '@/entities/member/model/memberQueries'
-import { formatManwonToKoreanMoney } from '@/shared/lib/formatMoney'
+import {
+  getHouseTradeLabel,
+  getHouseTradePriceLabel,
+} from '@/entities/house/model/houseTradeLabels'
 import LoanAnalysisResult from './LoanAnalysisResult.vue'
 import PropertyNeighborhoodAnalysis from './PropertyNeighborhoodAnalysis.vue'
 
@@ -27,7 +30,8 @@ const analysis = ref(null)
 const loading = ref(false)
 const error = ref('')
 const favoriteMutation = useMutation({
-  mutationFn: () => api.post(`/favorites/${props.trade.no}/toggle`).then((response) => response.data),
+  mutationFn: () =>
+    api.post(`/favorites/${props.trade.no}/toggle`).then((response) => response.data),
 })
 const financialProfileMutation = useMutation({
   mutationFn: getFinancialProfile,
@@ -97,8 +101,12 @@ async function loadAnalysis() {
   }
 }
 
-function formatMoney(value) {
-  return formatManwonToKoreanMoney(value)
+function tradeLabel(trade) {
+  return getHouseTradeLabel(trade)
+}
+
+function tradePriceLabel(trade) {
+  return getHouseTradePriceLabel(trade)
 }
 </script>
 
@@ -110,7 +118,9 @@ function formatMoney(value) {
     <header class="border-b border-neutral-200 p-5">
       <div class="flex flex-col items-start justify-between gap-4 sm:flex-row">
         <div class="min-w-0">
-          <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">APT SALE</p>
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">
+            {{ tradeLabel(trade) }}
+          </p>
           <h2 class="mt-2 text-2xl font-black">{{ trade.aptName }}</h2>
           <p class="mt-2 text-xs leading-5 text-neutral-500">{{ trade.address }}</p>
         </div>
@@ -120,7 +130,11 @@ function formatMoney(value) {
             type="button"
             data-testid="property-favorite-toggle"
             class="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border px-3 text-xs font-black transition sm:flex-none"
-            :class="favorite ? 'border-[#b4212a] bg-[#b4212a] text-white' : 'border-[#b4212a] bg-white text-[#b4212a] hover:bg-[#fff7f7]'"
+            :class="
+              favorite
+                ? 'border-[#b4212a] bg-[#b4212a] text-white'
+                : 'border-[#b4212a] bg-white text-[#b4212a] hover:bg-[#fff7f7]'
+            "
             @click="toggleFavorite"
           >
             {{ favorite ? '관심중' : '관심' }}
@@ -172,7 +186,7 @@ function formatMoney(value) {
       <section v-if="activeTab === 'detail'" class="space-y-5">
         <div class="bg-[#f7f4ef] p-5">
           <p class="text-xs font-black text-neutral-500">거래 가격</p>
-          <strong class="mt-2 block text-3xl text-[#b4212a]">{{ formatMoney(trade.dealAmount) }}</strong>
+          <strong class="mt-2 block text-3xl text-[#b4212a]">{{ tradePriceLabel(trade) }}</strong>
         </div>
         <dl class="grid grid-cols-1 gap-4 text-sm sm:!grid-cols-2">
           <div>
@@ -228,7 +242,8 @@ function formatMoney(value) {
             마이데이터를 입력하면 예상 월 납부액을 바로 계산할 수 있습니다.
           </h3>
           <p class="mt-2 text-xs font-bold leading-5 text-neutral-500">
-            보유자산, 연소득, 월 저축액, 기존 대출 정보를 저장한 뒤 이 매물의 대출 분석 결과를 확인하세요.
+            보유자산, 연소득, 월 저축액, 기존 대출 정보를 저장한 뒤 이 매물의 대출 분석 결과를
+            확인하세요.
           </p>
           <RouterLink
             data-testid="mydata-link"

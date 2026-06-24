@@ -7,17 +7,24 @@ import PricesPage from '@/pages/prices/ui/PricesPage.vue'
 import { api } from '@/shared/api/client'
 
 let housesResponse = []
+let officetelResponse = []
+let oneroomResponse = []
 let latestMap = null
 
 vi.mock('@/shared/api/client', () => ({
   api: {
-    get: vi.fn((url) => {
+    get: vi.fn((url, config = {}) => {
       if (url === '/regions/sidos')
         return Promise.resolve({ data: [{ label: '서울특별시', value: '서울특별시' }] })
       if (url === '/regions/guguns')
         return Promise.resolve({ data: [{ label: '강남구', value: '강남구' }] })
       if (url === '/regions/dongs') return Promise.resolve({ data: [] })
-      if (url === '/houses') return Promise.resolve({ data: housesResponse })
+      if (url === '/property-deals') {
+        const propertyType = config.params?.propertyType
+        if (propertyType === 'OFFICETEL') return Promise.resolve({ data: officetelResponse })
+        if (propertyType === 'ONEROOM') return Promise.resolve({ data: oneroomResponse })
+        return Promise.resolve({ data: housesResponse })
+      }
       return Promise.reject(new Error('unexpected url'))
     }),
     post: vi.fn(),
@@ -51,6 +58,8 @@ function createTestRouter() {
 describe('PricesPage', () => {
   beforeEach(() => {
     housesResponse = []
+    officetelResponse = []
+    oneroomResponse = []
     latestMap = null
     window.kakao = {
       maps: {
@@ -77,6 +86,11 @@ describe('PricesPage', () => {
             setMap: vi.fn(),
           }
         }),
+        CustomOverlay: vi.fn(function CustomOverlay() {
+          return {
+            setMap: vi.fn(),
+          }
+        }),
         event: {
           addListener: vi.fn(),
         },
@@ -97,14 +111,27 @@ describe('PricesPage', () => {
     })
     await flushPromises()
 
-    expect(api.get).toHaveBeenCalledWith('/houses', {
+    expect(api.get).toHaveBeenCalledWith('/property-deals', {
       params: expect.objectContaining({
         mode: 'region',
         sidoName: '서울특별시',
         gugunName: '강남구',
+        propertyType: 'APARTMENT',
         limit: 20,
       }),
     })
+    expect(api.get).toHaveBeenCalledWith('/property-deals', {
+      params: expect.objectContaining({
+        mode: 'region',
+        propertyType: 'OFFICETEL',
+        limit: 20,
+      }),
+    })
+    const officetelCall = api.get.mock.calls.find(
+      ([url, config]) => url === '/property-deals' && config.params.propertyType === 'OFFICETEL',
+    )
+    expect(officetelCall[1].params).not.toHaveProperty('sidoName')
+    expect(officetelCall[1].params).not.toHaveProperty('gugunName')
   })
 
   it('does not render backend sample house rows or the map side navigation', async () => {
@@ -142,6 +169,91 @@ describe('PricesPage', () => {
     expect(wrapper.find('.map-side-nav').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('샘플')
     expect(wrapper.text()).toContain('개포 실제 아파트')
+  })
+
+  it('shows officetel and one-room deals from separate backend property types', async () => {
+    housesResponse = [
+      {
+        propertyDealId: 1,
+        propertyType: 'APARTMENT',
+        dealType: 'TRADE',
+        propertyName: '역삼 아파트',
+        dealAmount: '90000',
+        exclusiveArea: '84.9',
+        floor: '10',
+        dealDate: '2026-04-10',
+        sidoName: '서울특별시',
+        gugunName: '강남구',
+        dongName: '역삼동',
+        jibun: '1',
+        latitude: 37.5,
+        longitude: 127.03,
+      },
+    ]
+    officetelResponse = [
+      {
+        propertyDealId: 2,
+        propertyType: 'OFFICETEL',
+        dealType: 'RENT',
+        propertyName: '역삼 오피스텔',
+        depositAmount: '3000',
+        monthlyRentAmount: '120',
+        exclusiveArea: '32.1',
+        floor: '5',
+        dealDate: '2026-04-11',
+        sidoName: '서울특별시',
+        gugunName: '강남구',
+        dongName: '역삼동',
+        jibun: '2',
+        latitude: 37.51,
+        longitude: 127.04,
+      },
+    ]
+    oneroomResponse = [
+      {
+        propertyDealId: 3,
+        propertyType: 'ONEROOM',
+        dealType: 'RENT',
+        propertyName: '역삼 원룸',
+        depositAmount: '1000',
+        monthlyRentAmount: '80',
+        exclusiveArea: '20.5',
+        floor: '3',
+        dealDate: '2026-04-12',
+        sidoName: '서울특별시',
+        gugunName: '강남구',
+        dongName: '역삼동',
+        jibun: '3',
+        latitude: 37.52,
+        longitude: 127.05,
+      },
+    ]
+    const router = createTestRouter()
+    await router.push('/prices')
+    await router.isReady()
+
+    const wrapper = mount(PricesPage, {
+      global: {
+        plugins: [router, createPinia()],
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('역삼 아파트')
+    expect(wrapper.text()).not.toContain('역삼 오피스텔')
+
+    await wrapper.get('[data-testid="property-tab-officetel"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('오피스텔 / 월세')
+    expect(wrapper.text()).toContain('역삼 오피스텔')
+    expect(wrapper.text()).toContain('3,000만원 / 120만원')
+    expect(wrapper.text()).not.toContain('역삼 아파트')
+
+    await wrapper.get('[data-testid="property-tab-oneroom"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('원룸 / 월세')
+    expect(wrapper.text()).toContain('역삼 원룸')
+    expect(wrapper.text()).not.toContain('역삼 오피스텔')
   })
 
   it('opens the fixed detail panel and switches to the loan tab', async () => {
