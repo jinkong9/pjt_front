@@ -29,6 +29,7 @@ export function normalizeRentalNotice(notice) {
     applicationPeriod: buildPeriod(applyStartDate, applyEndDate),
     detailUrl: valueOf(notice, 'detailUrl', 'detail_url'),
     source: valueOf(notice, 'source'),
+    favorite: Boolean(valueOf(notice, 'favorite', 'isFavorite', 'is_favorite')),
   }
 }
 

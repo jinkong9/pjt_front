@@ -47,7 +47,10 @@ describe('LoginPage', () => {
 
     expect(wrapper.find('main').classes()).toContain('min-h-[calc(100svh-80px)]')
     expect(wrapper.get('[data-testid="login-card"]').classes()).toContain(
-      'grid-cols-[minmax(0,1fr)_minmax(360px,0.95fr)]',
+      'grid-cols-[minmax(0,1.04fr)_minmax(360px,0.96fr)]',
+    )
+    expect(wrapper.get('[data-testid="login-card"]').classes()).toContain(
+      'w-[min(1120px,calc(100vw-48px))]',
     )
     expect(wrapper.find('button[type="submit"]').classes()).toContain('min-h-[52px]')
   })

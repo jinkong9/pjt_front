@@ -67,10 +67,10 @@ async function login() {
   >
     <section
       data-testid="login-card"
-      class="mx-auto grid min-h-[min(620px,calc(100svh-132px))] w-[min(1040px,calc(100vw-48px))] grid-cols-[minmax(0,1fr)_minmax(360px,0.95fr)] overflow-hidden border border-[#e0ddd7] bg-white shadow-[0_22px_58px_rgba(23,23,23,0.12)] max-[899px]:min-h-0 max-[899px]:grid-cols-1"
+      class="mx-auto grid min-h-[min(690px,calc(100svh-118px))] w-[min(1120px,calc(100vw-48px))] grid-cols-[minmax(0,1.04fr)_minmax(360px,0.96fr)] overflow-hidden border border-[#e0ddd7] bg-white shadow-[0_22px_58px_rgba(23,23,23,0.12)] max-[899px]:min-h-0 max-[899px]:grid-cols-1"
     >
       <div
-        class="grid w-[min(100%,460px)] content-center justify-self-center px-12 py-[52px] max-[899px]:w-full max-[899px]:px-6 max-[899px]:py-[34px]"
+        class="grid w-[min(100%,500px)] content-center justify-self-center px-[52px] py-12 max-[899px]:w-full max-[899px]:px-6 max-[899px]:py-[34px]"
       >
         <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Login</p>
         <h1 class="mt-4 text-[clamp(38px,4vw,48px)] font-normal leading-none">로그인</h1>
@@ -129,7 +129,7 @@ async function login() {
         </div>
       </div>
       <aside
-        class="grid content-center justify-items-center gap-[18px] bg-[linear-gradient(180deg,rgba(23,23,23,0.9),rgba(23,23,23,0.82)),url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center px-10 py-12 text-center text-white max-[899px]:order-[-1] max-[899px]:min-h-[220px] max-[899px]:px-6 max-[899px]:py-[34px]"
+        class="grid content-center justify-items-center gap-[18px] bg-[linear-gradient(180deg,rgba(23,23,23,0.9),rgba(23,23,23,0.82)),url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center px-[42px] py-12 text-center text-white max-[899px]:order-[-1] max-[899px]:min-h-[230px] max-[899px]:px-6 max-[899px]:py-[34px]"
       >
         <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-white/75">Welcome Back</p>
         <h2 class="m-0 text-[clamp(28px,3vw,36px)] font-normal leading-[1.08] text-white">

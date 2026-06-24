@@ -47,9 +47,11 @@ watch(
   () => props.trade.no,
   () => {
     activeTab.value = props.initialTab === 'loan' ? 'loan' : 'detail'
+    favorite.value = Boolean(props.trade.favorite)
     analysis.value = null
     error.value = ''
   },
+  { immediate: true },
 )
 
 function openDetailTab() {
@@ -117,10 +119,11 @@ function formatMoney(value) {
             v-if="loggedIn"
             type="button"
             data-testid="property-favorite-toggle"
-            class="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border border-[#b4212a] bg-white px-3 text-xs font-black text-[#b4212a] hover:bg-[#fff7f7] sm:flex-none"
+            class="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border px-3 text-xs font-black transition sm:flex-none"
+            :class="favorite ? 'border-[#b4212a] bg-[#b4212a] text-white' : 'border-[#b4212a] bg-white text-[#b4212a] hover:bg-[#fff7f7]'"
             @click="toggleFavorite"
           >
-            {{ favorite ? '관심 해제' : '관심' }}
+            {{ favorite ? '관심중' : '관심' }}
           </button>
           <RouterLink
             v-else

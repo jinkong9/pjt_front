@@ -95,6 +95,7 @@ describe('TransfersPage layout', () => {
     await flushPromises()
 
     expect(toggleFavoriteTransfer).toHaveBeenCalledWith(1)
+    expect(wrapper.get('[data-testid="transfer-favorite-1"]').text()).toContain('관심중')
     expect(wrapper.text()).toContain('관심 매물로 등록했습니다.')
   })
 })

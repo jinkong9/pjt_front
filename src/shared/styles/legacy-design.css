@@ -224,19 +224,19 @@ button {
 }
 
 .home-page {
-  height: 100vh;
-  overflow-y: auto;
+  min-height: 100vh;
+  overflow-y: visible;
   background: #f4f0ea;
   scroll-behavior: smooth;
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: none;
 }
 
 .fullpage-section {
-  height: 100vh;
-  min-height: 100vh;
-  overflow-y: auto;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  height: auto;
+  min-height: 88vh;
+  overflow: hidden;
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
 }
 
 .fullpage-reveal {
@@ -255,12 +255,12 @@ button {
 }
 
 .home-hero {
-  height: 100vh;
-  min-height: 100vh;
+  height: auto;
+  min-height: 92vh;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.28)),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.45)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.58)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(244, 240, 234, 0.9)),
     url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2400&q=90')
       center/cover;
 }
@@ -283,7 +283,7 @@ button {
 
 .home-hero h1 {
   max-width: 1060px;
-  color: #ffffff;
+  color: #171717;
   font-size: clamp(52px, 7vw, 96px);
   letter-spacing: 0;
   text-transform: uppercase;
@@ -2152,11 +2152,11 @@ textarea {
   }
 
   .home-hero {
-    height: 100svh;
-    min-height: 100svh;
+    height: auto;
+    min-height: 92svh;
     background:
-      linear-gradient(90deg, rgba(0, 0, 0, 0.66), rgba(0, 0, 0, 0.36)),
-      linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.48)),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.58)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(244, 240, 234, 0.9)),
       url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1400&q=88')
         center/cover;
   }

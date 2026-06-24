@@ -16,9 +16,6 @@ const router = useRouter()
 const dismissedPopupIds = ref([])
 const activeSection = ref(0)
 let sectionObserver
-let scrollContainer
-let wheelCleanup
-let isSectionScrolling = false
 const rentalSwiperModules = [Navigation, Pagination, A11y]
 const noticePopupStorageKey = 'happyhome.noticePopupHiddenUntil'
 const defaultPriceMapQuery = {
@@ -116,63 +113,6 @@ function search() {
   })
 }
 
-function easeInOutCubic(progress) {
-  return progress < 0.5
-    ? 4 * progress * progress * progress
-    : 1 - Math.pow(-2 * progress + 2, 3) / 2
-}
-
-function animateSectionScroll(targetTop) {
-  if (!scrollContainer) return
-
-  const startTop = scrollContainer.scrollTop
-  const distance = targetTop - startTop
-  const duration = 1050
-  const startTime = performance.now()
-  isSectionScrolling = true
-
-  function step(currentTime) {
-    const elapsed = currentTime - startTime
-    const progress = Math.min(elapsed / duration, 1)
-    scrollContainer.scrollTop = startTop + distance * easeInOutCubic(progress)
-
-    if (progress < 1) {
-      requestAnimationFrame(step)
-      return
-    }
-
-    scrollContainer.scrollTop = targetTop
-    window.setTimeout(() => {
-      isSectionScrolling = false
-    }, 120)
-  }
-
-  requestAnimationFrame(step)
-}
-
-function bindFullpageWheel() {
-  scrollContainer = document.querySelector('.fullpage-scroll')
-  const sections = [...document.querySelectorAll('.fullpage-section')]
-  if (!scrollContainer || sections.length === 0) return
-
-  function onWheel(event) {
-    if (Math.abs(event.deltaY) < 18) return
-    event.preventDefault()
-
-    if (isSectionScrolling) return
-
-    const direction = event.deltaY > 0 ? 1 : -1
-    const nextIndex = Math.min(Math.max(activeSection.value + direction, 0), sections.length - 1)
-    if (nextIndex === activeSection.value) return
-
-    activeSection.value = nextIndex
-    animateSectionScroll(sections[nextIndex].offsetTop)
-  }
-
-  scrollContainer.addEventListener('wheel', onWheel, { passive: false })
-  wheelCleanup = () => scrollContainer?.removeEventListener('wheel', onWheel)
-}
-
 onMounted(() => {
   document.title = 'HOME FIT'
   refreshHiddenPopups()
@@ -194,25 +134,22 @@ onMounted(() => {
         }
       },
       {
-        root: document.querySelector('.fullpage-scroll'),
-        threshold: [0.24, 0.48, 0.72],
+        root: null,
+        rootMargin: '-18% 0px -30% 0px',
+        threshold: [0.18, 0.36, 0.58],
       },
     )
     sections.forEach((section) => sectionObserver.observe(section))
-    bindFullpageWheel()
   })
 })
 
 onBeforeUnmount(() => {
   sectionObserver?.disconnect()
-  wheelCleanup?.()
 })
 </script>
 
 <template>
-  <main
-    class="home-page fullpage-scroll h-screen overflow-y-auto scroll-smooth bg-[#f4f0ea] [scroll-snap-type:y_mandatory]"
-  >
+  <main class="home-page natural-scroll bg-[#f4f0ea]">
     <div
       v-if="visiblePopup"
       class="home-notice-popup fixed inset-0 z-40 grid place-items-center bg-black/68 px-4"
@@ -280,22 +217,22 @@ onBeforeUnmount(() => {
     </div>
 
     <section
-      class="main-hero home-hero fullpage-section relative grid h-screen min-h-screen items-center overflow-hidden bg-[linear-gradient(90deg,rgba(0,0,0,0.62),rgba(0,0,0,0.28)),linear-gradient(180deg,rgba(0,0,0,0.18),rgba(0,0,0,0.45)),url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2400&q=90')] bg-cover bg-center text-white [scroll-snap-align:start] [scroll-snap-stop:always]"
+      class="main-hero home-hero fullpage-section relative grid min-h-[92vh] items-center overflow-hidden bg-[linear-gradient(90deg,rgba(255,255,255,0.9),rgba(255,255,255,0.58)),linear-gradient(180deg,rgba(255,255,255,0.36),rgba(244,240,234,0.9)),url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2400&q=92')] bg-cover bg-center text-[#171717]"
       data-section-index="0"
     >
       <div
         class="main-hero-inner fullpage-reveal relative z-[1] mx-auto w-[min(1480px,calc(100%_-_48px))] px-0 pb-[72px] pt-[132px]"
         :class="{ 'is-visible': activeSection === 0 }"
       >
-        <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-white/80">
+        <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
           Real Estate Data Platform
         </p>
         <h1
-          class="mt-[18px] max-w-[1060px] text-[clamp(52px,7vw,96px)] font-black uppercase leading-[0.96] text-white"
+          class="mt-[18px] max-w-[1060px] text-[clamp(52px,7vw,96px)] font-black uppercase leading-[0.96] text-[#171717]"
         >
           FIND YOUR HOME,<br />BETTER YOUR LIFE
         </h1>
-        <p class="hero-copy mt-7 max-w-[640px] text-base font-bold leading-7 text-white/85">
+        <p class="hero-copy mt-7 max-w-[640px] text-base font-bold leading-7 text-neutral-600">
           공공 데이터를 기반으로 아파트 실거래 정보와 지역별 주택 흐름을 빠르게 확인하세요.
         </p>
 
@@ -316,7 +253,7 @@ onBeforeUnmount(() => {
     <section
       v-for="(story, index) in serviceStories"
       :key="story.eyebrow"
-      class="home-story-section fullpage-section grid h-screen min-h-screen content-center overflow-hidden [scroll-snap-align:start] [scroll-snap-stop:always]"
+      class="home-story-section fullpage-section grid min-h-[88vh] content-center overflow-hidden py-20"
       :class="index % 2 === 0 ? 'bg-white' : 'bg-[#f4f0ea]'"
       :data-section-index="index + 1"
       data-testid="home-service-story"
@@ -347,14 +284,14 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="home-story-visual relative">
-          <div class="home-product-shell border border-neutral-200 bg-[#171717] p-5 text-white shadow-[0_30px_80px_rgba(23,23,23,0.18)]">
-            <div class="flex items-center justify-between border-b border-white/10 pb-5">
-              <span class="text-[11px] font-black uppercase tracking-[0.24em] text-white/55">HOME FIT</span>
-              <span class="border border-white/20 px-3 py-1 text-xs font-black text-white/80">Live</span>
+          <div class="home-product-shell border border-neutral-200 bg-white p-5 text-[#171717] shadow-[0_30px_80px_rgba(116,104,88,0.14)]">
+            <div class="flex items-center justify-between border-b border-neutral-200 pb-5">
+              <span class="text-[11px] font-black uppercase tracking-[0.24em] text-neutral-500">HOME FIT</span>
+              <span class="border border-neutral-300 bg-[#faf8f5] px-3 py-1 text-xs font-black text-[#b4212a]">Live</span>
             </div>
             <div class="py-8">
-              <span class="text-sm font-black text-white/50">{{ story.statLabel }}</span>
-              <strong class="home-product-stat mt-3 block text-[clamp(54px,7vw,92px)] font-black leading-none text-white">
+              <span class="text-sm font-black text-neutral-500">{{ story.statLabel }}</span>
+              <strong class="home-product-stat mt-3 block text-[clamp(54px,7vw,92px)] font-black leading-none text-[#b4212a]">
                 {{ story.stat }}
               </strong>
             </div>
@@ -362,10 +299,10 @@ onBeforeUnmount(() => {
               <div
                 v-for="row in story.rows"
                 :key="row[0]"
-                class="home-product-row flex items-center justify-between gap-5 border border-white/10 bg-white/[0.06] px-5 py-4"
+                class="home-product-row flex items-center justify-between gap-5 border border-neutral-200 bg-[#faf8f5] px-5 py-4"
               >
-                <span class="text-sm font-black text-white/50">{{ row[0] }}</span>
-                <strong class="text-right text-base font-black text-white">{{ row[1] }}</strong>
+                <span class="text-sm font-black text-neutral-500">{{ row[0] }}</span>
+                <strong class="text-right text-base font-black text-[#171717]">{{ row[1] }}</strong>
               </div>
             </div>
           </div>
@@ -377,7 +314,7 @@ onBeforeUnmount(() => {
     </section>
 
     <section
-      class="home-section home-rental-section fullpage-section grid h-screen min-h-screen content-center bg-[#f4f0ea] [scroll-snap-align:start] [scroll-snap-stop:always]"
+      class="home-section home-rental-section fullpage-section grid min-h-[88vh] content-center bg-[#f4f0ea] py-20"
       data-section-index="4"
     >
       <div
@@ -476,7 +413,7 @@ onBeforeUnmount(() => {
     </section>
 
     <section
-      class="home-section home-feature-section fullpage-section grid h-screen min-h-screen content-center bg-white [scroll-snap-align:start] [scroll-snap-stop:always]"
+      class="home-section home-feature-section fullpage-section grid min-h-[82vh] content-center bg-white py-20"
       data-section-index="5"
     >
       <div
@@ -658,7 +595,6 @@ onBeforeUnmount(() => {
 
 @media (max-width: 680px) {
   .home-page {
-    scroll-snap-type: y proximity;
     scroll-padding-top: 96px;
   }
 

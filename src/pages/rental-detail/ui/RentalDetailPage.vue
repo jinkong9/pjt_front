@@ -199,7 +199,7 @@ watch(detailQuery.error, (nextError) => {
 })
 
 watch(detail, async (nextDetail) => {
-  favorite.value = false
+  favorite.value = Boolean(nextDetail?.notice?.favorite)
   selectedSupply.value = nextDetail?.supplies?.[0] ?? null
   if (nextDetail?.notice?.title) {
     document.title = `${nextDetail.notice.title} | HOME FIT`
@@ -238,11 +238,12 @@ onBeforeUnmount(() => {
             <button
               type="button"
               data-testid="rental-favorite-toggle"
-              class="inline-flex min-h-11 items-center justify-center border border-[#b4212a] bg-white px-[18px] font-black text-[#b4212a] disabled:cursor-wait disabled:opacity-60"
+              class="inline-flex min-h-11 items-center justify-center border px-[18px] font-black transition disabled:cursor-wait disabled:opacity-60"
+              :class="favorite ? 'border-[#b4212a] bg-[#b4212a] text-white' : 'border-[#b4212a] bg-white text-[#b4212a] hover:bg-[#fff7f7]'"
               :disabled="favoriteLoading"
               @click="toggleFavorite"
             >
-              {{ favorite ? '관심 공고 해제' : '관심 공고 등록' }}
+              {{ favorite ? '관심중' : '관심' }}
             </button>
             <a
               v-if="detail.notice.detailUrl"
