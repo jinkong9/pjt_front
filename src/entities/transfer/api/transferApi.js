@@ -1,4 +1,4 @@
-import { api, toQuery } from '@/shared/api/client'
+import { api, backendOrigin, toQuery } from '@/shared/api/client'
 
 function splitImageUrls(value) {
   if (!value) return []
@@ -16,7 +16,7 @@ export function resolveTransferImageUrl(imageUrl) {
   }
 
   const normalized = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`
-  return normalized
+  return `${backendOrigin().replace(/\/$/, '')}${normalized}`
 }
 
 export function normalizeTransfer(post) {

@@ -365,6 +365,13 @@ function tradePriceLabel(trade) {
   return getHouseTradePriceLabel(trade)
 }
 
+function tradeMetaLabel(trade) {
+  if (normalizeKey(trade.propertyType).includes('oneroom')) {
+    return trade.dealDate || '-'
+  }
+  return `${trade.exclusiveArea || '-'}㎡ · ${trade.floor || '-'}층 · ${trade.dealDate || '-'}`
+}
+
 function formatShortManwon(value) {
   const amount = Number(String(value ?? '').replace(/[^0-9.-]/g, ''))
   if (!Number.isFinite(amount) || amount <= 0) return '-'
@@ -894,7 +901,7 @@ watch(
             <div class="mt-4 text-sm">
               <strong class="text-lg text-[#b4212a]">{{ tradePriceLabel(trade) }}</strong>
               <p class="mt-2 font-bold text-neutral-700">
-                {{ trade.exclusiveArea }}㎡ · {{ trade.floor }}층 · {{ trade.dealDate }}
+                {{ tradeMetaLabel(trade) }}
               </p>
               <p class="mt-2 text-xs leading-5 text-neutral-500">{{ trade.address }}</p>
               <button

@@ -25,6 +25,7 @@ vi.mock('@/shared/api/client', () => ({
     put: vi.fn(),
     delete: vi.fn(),
   },
+  backendOrigin: () => 'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app',
   toQuery: (params) =>
     Object.fromEntries(
       Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ''),
@@ -78,8 +79,12 @@ describe('transferApi', () => {
   })
 
   it('normalizes transfer image URLs from backend variants', () => {
-    expect(resolveTransferImageUrl('/uploads/room.jpg')).toBe('/uploads/room.jpg')
-    expect(resolveTransferImageUrl('uploads/room.jpg')).toBe('/uploads/room.jpg')
+    expect(resolveTransferImageUrl('/uploads/room.jpg')).toBe(
+      'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app/uploads/room.jpg',
+    )
+    expect(resolveTransferImageUrl('uploads/room.jpg')).toBe(
+      'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app/uploads/room.jpg',
+    )
     expect(resolveTransferImageUrl('https://cdn.example.com/room.jpg')).toBe(
       'https://cdn.example.com/room.jpg',
     )
@@ -91,8 +96,8 @@ describe('transferApi', () => {
         image_urls: 'uploads/two.jpg, https://cdn.example.com/three.jpg',
       }).imageUrls,
     ).toEqual([
-      '/uploads/one.jpg',
-      '/uploads/two.jpg',
+      'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app/uploads/one.jpg',
+      'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app/uploads/two.jpg',
       'https://cdn.example.com/three.jpg',
     ])
   })

@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 import { saveAuthToken } from '@/shared/api/authToken'
+import { backendOrigin } from '@/shared/api/client'
 import { safeRedirect } from '@/shared/lib/safeRedirect'
 
 const route = useRoute()
@@ -28,16 +29,6 @@ const oauthSetupMessage = computed(() => {
   }
   return `${String(provider).toUpperCase()} 로그인 설정이 아직 완료되지 않았습니다. 관리자에게 OAuth client id와 redirect URI 설정을 확인해 주세요.`
 })
-
-function backendOrigin() {
-  if (import.meta.env.VITE_BACKEND_ORIGIN) {
-    return import.meta.env.VITE_BACKEND_ORIGIN
-  }
-  if (window.location.port === '5173') {
-    return 'http://localhost:8080'
-  }
-  return ''
-}
 
 function oauthUrl(provider) {
   const callbackUrl = new URL('/login', window.location.origin)
