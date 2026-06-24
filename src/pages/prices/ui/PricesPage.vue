@@ -21,10 +21,14 @@ const selectedTab = ref('detail')
 const activePropertyTab = ref('apartment')
 const mapEl = ref(null)
 const mapMessage = ref('')
+const mapCenterAddress = ref('지도 중심 주소 확인 중')
+const mapCenterRegion = ref(null)
+const mapCenterSearching = ref(false)
 let kakaoMap = null
 let markerBounds = null
 let kakaoSdkPromise = null
 let mapRenderSequence = 0
+let mapIdleListenerAttached = false
 const markers = []
 const defaultMapLevel = 6
 const defaultPriceCondition = {
@@ -250,7 +254,67 @@ function composeDealDate(trade) {
   return `${dealYear}-${String(dealMonth).padStart(2, '0')}-${String(dealDay).padStart(2, '0')}`
 }
 
+function normalizeKey(value) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s/_-]/g, '')
+}
+
+function isGenericPropertyName(name, propertyType) {
+  const normalizedName = normalizeKey(name)
+  const normalizedType = normalizeKey(propertyType)
+  const genericNames = [
+    '오피스텔',
+    'officetel',
+    '원룸',
+    'oneroom',
+    '단독다가구',
+    '다가구',
+    '다세대',
+  ]
+  return genericNames.includes(normalizedName) || normalizedName === normalizedType
+}
+
+function propertyDisplayName(trade, rawName, propertyType) {
+  if (!isGenericPropertyName(rawName, propertyType)) return rawName
+  const normalizedType = normalizeKey(propertyType)
+  const typeLabel =
+    normalizedType.includes('officetel') || normalizedType.includes('오피스텔')
+      ? '오피스텔'
+      : '원룸'
+  const dongName = pickFirst(trade.dongName, trade.dong_name, trade.umdName, trade.umd_nm)
+  const jibun = pickFirst(trade.jibun)
+  const location = [dongName, jibun].filter(Boolean).join(' ')
+  return location ? `${location} ${typeLabel}` : rawName
+}
+
 function normalizeTrade(trade) {
+  const propertyType = pickFirst(
+    trade.propertyType,
+    trade.property_type,
+    trade.houseType,
+    trade.house_type,
+    trade.buildingType,
+    trade.building_type,
+    trade.estateType,
+    trade.estate_type,
+    trade.realEstateType,
+    trade.real_estate_type,
+  )
+  const rawName = pickFirst(
+    trade.aptName,
+    trade.apt_nm,
+    trade.apt_name,
+    trade.propertyName,
+    trade.property_name,
+    trade.offiNm,
+    trade.offi_nm,
+    trade.offiName,
+    trade.officetelName,
+    trade.officetel_name,
+  )
+
   return {
     ...trade,
     no: pickFirst(
@@ -261,13 +325,7 @@ function normalizeTrade(trade) {
       trade.property_deal_id,
     ),
     aptSeq: pickFirst(trade.aptSeq, trade.apt_seq, trade.sourceId, trade.source_id),
-    aptName: pickFirst(
-      trade.aptName,
-      trade.apt_nm,
-      trade.apt_name,
-      trade.propertyName,
-      trade.property_name,
-    ),
+    aptName: propertyDisplayName(trade, rawName, propertyType),
     sidoName: pickFirst(trade.sidoName, trade.sido_name),
     gugunName: pickFirst(trade.gugunName, trade.gugun_name),
     dongName: pickFirst(trade.dongName, trade.dong_name, trade.umdName, trade.umd_nm),
@@ -282,18 +340,7 @@ function normalizeTrade(trade) {
       trade.monthly_rent_amount,
       trade.monthlyRent,
     ),
-    propertyType: pickFirst(
-      trade.propertyType,
-      trade.property_type,
-      trade.houseType,
-      trade.house_type,
-      trade.buildingType,
-      trade.building_type,
-      trade.estateType,
-      trade.estate_type,
-      trade.realEstateType,
-      trade.real_estate_type,
-    ),
+    propertyType,
     dealType: pickFirst(
       trade.dealType,
       trade.deal_type,
@@ -403,11 +450,92 @@ function getLatLng(trade) {
   return { latitude, longitude }
 }
 
+function hasTradeCoordinates(trade) {
+  return Boolean(getLatLng(trade))
+}
+
 function focusMap(point, level = 3) {
   if (!point || !kakaoMap || !window.kakao?.maps) return
   const position = new window.kakao.maps.LatLng(point.latitude, point.longitude)
   kakaoMap.setLevel(level)
   kakaoMap.panTo(position)
+}
+
+function coordinateValue(point, methodName, fallbackKeys = []) {
+  if (!point) return null
+  if (typeof point[methodName] === 'function') return Number(point[methodName]())
+  const fallbackValue = fallbackKeys.map((key) => point[key]).find((value) => value !== undefined)
+  return Number(fallbackValue)
+}
+
+function mapCenterPoint() {
+  const center = kakaoMap?.getCenter?.()
+  const latitude = coordinateValue(center, 'getLat', ['latitude', 'lat', 'y'])
+  const longitude = coordinateValue(center, 'getLng', ['longitude', 'lng', 'x'])
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
+  return { latitude, longitude }
+}
+
+function reverseGeocodeMapCenter() {
+  const point = mapCenterPoint()
+  const services = window.kakao?.maps?.services
+  if (!point || !services?.Geocoder) return Promise.resolve(null)
+  const geocoder = new services.Geocoder()
+  return new Promise((resolve) => {
+    geocoder.coord2RegionCode(point.longitude, point.latitude, (documents, status) => {
+      if (status !== services.Status.OK || !Array.isArray(documents) || documents.length === 0) {
+        resolve(null)
+        return
+      }
+      const region = documents.find((item) => item.region_type === 'B') ?? documents[0]
+      const regionInfo = {
+        addressName:
+          region.address_name ||
+          [region.region_1depth_name, region.region_2depth_name, region.region_3depth_name]
+            .filter(Boolean)
+            .join(' '),
+        sidoName: region.region_1depth_name || '',
+        gugunName: region.region_2depth_name || '',
+        dongName: region.region_3depth_name || region.region_3depth_h_name || '',
+      }
+      resolve(regionInfo)
+    })
+  })
+}
+
+async function updateMapCenterAddress() {
+  const region = await reverseGeocodeMapCenter()
+  if (!region) {
+    mapCenterAddress.value = '지도 중심 주소를 확인할 수 없습니다'
+    mapCenterRegion.value = null
+    return
+  }
+  mapCenterRegion.value = region
+  mapCenterAddress.value = region.addressName
+}
+
+async function searchCurrentMapArea() {
+  mapCenterSearching.value = true
+  try {
+    const region = mapCenterRegion.value ?? (await reverseGeocodeMapCenter())
+    if (!region) {
+      mapCenterAddress.value = '지도 중심 주소를 확인할 수 없습니다'
+      return
+    }
+    mapCenterRegion.value = region
+    mapCenterAddress.value = region.addressName
+    Object.assign(condition, {
+      mode: 'region',
+      keyword: '',
+      sidoName: region.sidoName,
+      gugunName: region.gugunName,
+      dongName: region.dongName,
+    })
+    await router.push({ path: '/prices', query: toQuery(condition) })
+    await loadTrades()
+  } finally {
+    mapCenterSearching.value = false
+  }
 }
 
 function shouldFocusSearchResult() {
@@ -458,6 +586,10 @@ async function renderMap() {
         center: fallbackCenter,
         level: defaultMapLevel,
       })
+      if (!mapIdleListenerAttached && kakao.maps.event?.addListener) {
+        kakao.maps.event.addListener(kakaoMap, 'idle', updateMapCenterAddress)
+        mapIdleListenerAttached = true
+      }
     }
     clearMarkers()
     markerBounds = new kakao.maps.LatLngBounds()
@@ -490,6 +622,7 @@ async function renderMap() {
       kakaoMap.setLevel(defaultMapLevel)
     }
     mapMessage.value = ''
+    await updateMapCenterAddress()
   } catch {
     mapMessage.value =
       'Kakao 지도를 불러오지 못했습니다. .env의 OPENAPI_KAKAO_JAVASCRIPT_KEY와 Kakao Web 플랫폼 도메인을 확인하세요.'
@@ -599,6 +732,20 @@ watch(
       <div
         class="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-black/70 via-black/20 to-transparent md:block"
       ></div>
+      <div
+        class="pointer-events-none absolute left-1/2 top-[92px] z-30 -translate-x-1/2 md:top-[92px]"
+      >
+        <button
+          type="button"
+          data-testid="map-center-search"
+          class="pointer-events-auto inline-flex min-h-9 items-center justify-center gap-1.5 whitespace-nowrap border border-[#d8d1c8] bg-white/95 px-3.5 text-xs font-black text-[#b4212a] shadow-[0_8px_22px_rgba(23,23,23,0.16)] backdrop-blur-md transition hover:border-[#b4212a] hover:bg-[#fff7f7] disabled:opacity-60"
+          :disabled="mapCenterSearching"
+          @click="searchCurrentMapArea"
+        >
+          <span class="material-symbols-outlined text-[16px] leading-none">my_location</span>
+          {{ mapCenterSearching ? '검색 중' : '현 지도에서 검색' }}
+        </button>
+      </div>
 
       <aside
         class="price-search-panel price-panel-frame relative z-20 flex w-full flex-col bg-white/95 shadow-2xl backdrop-blur md:absolute md:bottom-0 md:left-0 md:top-20 md:border md:border-white/70"
@@ -674,9 +821,12 @@ watch(
               :key="tab.key"
               type="button"
               :data-testid="`property-tab-${tab.key}`"
+              :aria-pressed="activePropertyTab === tab.key"
               class="property-type-tab grid min-h-[58px] place-items-center gap-1 border border-neutral-200 bg-white px-2 py-2 text-xs font-black text-neutral-600 transition hover:border-[#b4212a] hover:text-[#b4212a]"
               :class="
-                activePropertyTab === tab.key ? 'border-[#b4212a] bg-[#fff1f2] text-[#b4212a]' : ''
+                activePropertyTab === tab.key
+                  ? 'border-[#b4212a] bg-[#fff1f2] text-[#b4212a] shadow-[inset_0_-3px_0_#b4212a]'
+                  : ''
               "
               @click="selectPropertyTab(tab.key)"
             >
@@ -712,13 +862,15 @@ watch(
             @click="openDetail(trade)"
           >
             <RouterLink
+              v-if="hasTradeCoordinates(trade)"
+              :data-testid="`trade-analysis-link-${trade.no}`"
               class="static mb-3 inline-flex min-h-9 items-center justify-center border border-neutral-300 bg-white px-3 py-2 text-xs font-black text-[#171717] hover:text-[#b4212a] sm:absolute sm:right-5 sm:top-5 sm:mb-0"
               :to="{
                 path: '/analysis',
                 query: {
                   label: trade.address,
-                  longitude: trade.longitude || 126.9413,
-                  latitude: trade.latitude || 37.4826,
+                  longitude: trade.longitude,
+                  latitude: trade.latitude,
                   radius: 1000,
                 },
               }"
@@ -726,6 +878,15 @@ watch(
             >
               생활권 분석
             </RouterLink>
+            <button
+              v-else
+              type="button"
+              :data-testid="`trade-analysis-disabled-${trade.no}`"
+              class="static mb-3 inline-flex min-h-9 cursor-not-allowed items-center justify-center border border-neutral-200 bg-[#f7f4ef] px-3 py-2 text-xs font-black text-neutral-400 sm:absolute sm:right-5 sm:top-5 sm:mb-0"
+              disabled
+            >
+              좌표 확인 필요
+            </button>
             <div class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a] sm:pr-28">
               {{ tradeLabel(trade) }}
             </div>
@@ -890,7 +1051,6 @@ watch(
 :global(.price-map-marker.is-active .price-map-marker__area) {
   background: #2563eb;
 }
-
 @media (min-width: 768px) {
   .price-search-panel {
     top: var(--price-panel-top);

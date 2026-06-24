@@ -146,4 +146,20 @@ describe('PropertyDetailPanel', () => {
     expect(api.post).toHaveBeenCalledWith('/favorites/11/toggle')
     expect(wrapper.get('[data-testid="property-favorite-toggle"]').text()).toContain('관심중')
   })
+
+  it('does not show the neighborhood analysis link when coordinates are missing', async () => {
+    const wrapper = await mountPanel()
+    await wrapper.setProps({
+      trade: {
+        ...trade,
+        latitude: null,
+        longitude: null,
+      },
+    })
+
+    expect(wrapper.find('[data-testid="property-analysis-link"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="property-analysis-disabled"]').text()).toContain(
+      '좌표 확인 필요',
+    )
+  })
 })

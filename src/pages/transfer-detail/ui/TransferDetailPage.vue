@@ -73,7 +73,42 @@ function isOwnComment(comment) {
 
 function formatDate(value) {
   if (!value) return ''
-  return String(value).replace('T', ' ').slice(0, 16)
+  if (Array.isArray(value)) {
+    const [year, month, day, hour = 0, minute = 0] = value
+    return formatDateParts(year, month, day, hour, minute)
+  }
+
+  const text = String(value)
+  if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(text)) {
+    const date = new Date(text)
+    if (!Number.isNaN(date.getTime())) {
+      return formatKoreaDate(date)
+    }
+  }
+
+  return text.replace('T', ' ').slice(0, 16)
+}
+
+function formatKoreaDate(date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
+  const part = (type) => parts.find((item) => item.type === type)?.value ?? '00'
+  return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')}`
+}
+
+function formatDateParts(year, month, day, hour, minute) {
+  return `${year}-${pad2(month)}-${pad2(day)} ${pad2(hour)}:${pad2(minute)}`
+}
+
+function pad2(value) {
+  return String(value).padStart(2, '0')
 }
 
 onMounted(() => {
