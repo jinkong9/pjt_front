@@ -790,7 +790,7 @@ watch(
 
   min-width: 68px;
   width: max-content;
-  height: 48px;
+  height: 52px;
 
   overflow: visible;
   border: 1px solid #676b73;
