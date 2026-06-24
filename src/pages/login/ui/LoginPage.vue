@@ -3,9 +3,8 @@ import { computed, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 import { safeRedirect } from '@/shared/lib/safeRedirect'
-import kakaoLoginImage from '@/assets/oauth/kakao-login.svg'
-import naverLoginImage from '@/assets/oauth/naver-login.svg'
-import googleLoginImage from '@/assets/oauth/google-login.svg'
+import kakaoLoginImage from '@/assets/oauth/kakao-login-official.png'
+import naverLoginImage from '@/assets/oauth/naver-login-official.png'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,12 +16,17 @@ const form = reactive({
 })
 
 const oauthProviders = [
-  { id: 'kakao', label: 'Kakao', title: '카카오 계정으로 로그인', image: kakaoLoginImage },
-  { id: 'naver', label: 'Naver', title: '네이버 계정으로 로그인', image: naverLoginImage },
-  { id: 'google', label: 'Google', title: '구글 계정으로 로그인', image: googleLoginImage },
+  { id: 'kakao', label: 'Kakao', title: '카카오 계정으로 로그인' },
+  { id: 'naver', label: 'Naver', title: '네이버 계정으로 로그인' },
+  { id: 'google', label: '구글로 로그인', title: '구글 계정으로 로그인' },
 ]
 
 const oauthRedirect = computed(() => safeRedirect(route.query.redirect))
+const oauthImageMap = {
+  kakao: kakaoLoginImage,
+  naver: naverLoginImage,
+}
+
 const oauthSetupMessage = computed(() => {
   const provider = route.query.oauthSetup
   if (!provider) {
@@ -73,14 +77,14 @@ async function login() {
         class="grid w-[min(100%,500px)] content-center justify-self-center px-[52px] py-12 max-[899px]:w-full max-[899px]:px-6 max-[899px]:py-[34px]"
       >
         <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Login</p>
-        <h1 class="mt-4 text-[clamp(38px,4vw,48px)] font-normal leading-none">로그인</h1>
+        <h1 class="mt-4 text-[clamp(38px,4vw,50px)] font-normal leading-none">로그인</h1>
         <p
           v-if="error || oauthSetupMessage"
           class="mt-4 border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700"
         >
           {{ error || oauthSetupMessage }}
         </p>
-        <form class="mt-[26px] grid gap-3.5" @submit.prevent="login">
+        <form class="mt-[26px] grid gap-[13px]" @submit.prevent="login">
           <label class="grid gap-2 text-sm font-black text-[#171717]">
             이메일
             <input
@@ -101,7 +105,7 @@ async function login() {
           </label>
           <button
             type="submit"
-            class="mt-0.5 min-h-[52px] border border-[#b4212a] bg-[#b4212a] font-black text-white hover:border-[#921b22] hover:bg-[#921b22]"
+            class="mt-1.5 min-h-[54px] border border-[#b4212a] bg-[#b4212a] text-[15px] font-black text-white hover:border-[#921b22] hover:bg-[#921b22]"
           >
             로그인
           </button>
@@ -110,16 +114,27 @@ async function login() {
           <span class="block text-xs font-black uppercase tracking-[0.18em] text-[#666666]"
             >Social Login</span
           >
-          <div class="mt-3 grid !grid-cols-3 gap-2">
+          <div data-testid="oauth-list" class="mt-3 grid grid-cols-1 gap-2.5">
             <a
               v-for="provider in oauthProviders"
               :key="provider.id"
               :data-testid="`oauth-${provider.id}`"
-              class="inline-flex h-10 min-w-0 cursor-pointer items-center justify-center overflow-hidden rounded-md no-underline transition-opacity hover:opacity-85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b4212a]"
+              class="block min-h-[54px] w-full min-w-0 cursor-pointer overflow-hidden rounded-md no-underline transition-opacity hover:opacity-85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b4212a]"
+              :class="provider.id === 'google' ? 'google-oauth-button' : ''"
               :href="oauthUrl(provider.id)"
               :title="provider.title"
             >
-              <img class="h-full w-full object-contain" :src="provider.image" :alt="provider.title" />
+              <img
+                v-if="provider.id !== 'google'"
+                class="oauth-image block h-[54px] w-full object-fill"
+                :src="oauthImageMap[provider.id]"
+                :alt="provider.title"
+              />
+              <template v-else>
+                <span class="google-oauth-logo" aria-hidden="true">G</span>
+                <span class="google-oauth-label">{{ provider.label }}</span>
+              </template>
+              <span class="sr-only">{{ provider.title }}</span>
             </a>
           </div>
         </div>
@@ -148,3 +163,37 @@ async function login() {
     </section>
   </main>
 </template>
+
+<style scoped>
+.oauth-image {
+  width: 100% !important;
+  height: 54px !important;
+  object-fit: fill !important;
+}
+
+.google-oauth-button {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  align-items: center;
+  border: 1px solid #dadce0;
+  background: #ffffff;
+  color: #1f1f1f;
+}
+
+.google-oauth-logo {
+  display: grid;
+  min-height: 54px;
+  place-items: center;
+  color: #4285f4;
+  font-family: Arial, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.google-oauth-label {
+  justify-self: center;
+  font-family: Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+}
+</style>

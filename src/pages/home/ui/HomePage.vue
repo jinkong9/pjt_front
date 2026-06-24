@@ -217,7 +217,7 @@ onBeforeUnmount(() => {
     </div>
 
     <section
-      class="main-hero home-hero fullpage-section relative grid min-h-[92vh] items-center overflow-hidden bg-[linear-gradient(90deg,rgba(255,255,255,0.9),rgba(255,255,255,0.58)),linear-gradient(180deg,rgba(255,255,255,0.36),rgba(244,240,234,0.9)),url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2400&q=92')] bg-cover bg-center text-[#171717]"
+      class="main-hero home-hero fullpage-section relative grid min-h-[100svh] items-center overflow-hidden bg-[linear-gradient(90deg,rgba(23,23,23,0.7),rgba(23,23,23,0.34)),url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2400&q=92')] bg-cover bg-center text-[#171717]"
       data-section-index="0"
     >
       <div
@@ -225,14 +225,14 @@ onBeforeUnmount(() => {
         :class="{ 'is-visible': activeSection === 0 }"
       >
         <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
-          Real Estate Data Platform
+          HOME FIT
         </p>
         <h1
-          class="mt-[18px] max-w-[1060px] text-[clamp(52px,7vw,96px)] font-black uppercase leading-[0.96] text-[#171717]"
+          class="mt-[18px] max-w-[1060px] text-[clamp(52px,7vw,96px)] text-white uppercase leading-[0.96] text-[#171717]"
         >
           FIND YOUR HOME,<br />BETTER YOUR LIFE
         </h1>
-        <p class="hero-copy mt-7 max-w-[640px] text-base font-bold leading-7 text-neutral-600">
+        <p class="hero-copy mt-7 max-w-[640px] text-base font-bold leading-7 text-neutral-300">
           공공 데이터를 기반으로 아파트 실거래 정보와 지역별 주택 흐름을 빠르게 확인하세요.
         </p>
 
@@ -254,7 +254,7 @@ onBeforeUnmount(() => {
       v-for="(story, index) in serviceStories"
       :key="story.eyebrow"
       class="home-story-section fullpage-section grid min-h-[88vh] content-center overflow-hidden py-20"
-      :class="index % 2 === 0 ? 'bg-white' : 'bg-[#f4f0ea]'"
+      :class="`home-story-gradient-${index}`"
       :data-section-index="index + 1"
       data-testid="home-service-story"
     >
@@ -287,7 +287,7 @@ onBeforeUnmount(() => {
           <div class="home-product-shell border border-neutral-200 bg-white p-5 text-[#171717] shadow-[0_30px_80px_rgba(116,104,88,0.14)]">
             <div class="flex items-center justify-between border-b border-neutral-200 pb-5">
               <span class="text-[11px] font-black uppercase tracking-[0.24em] text-neutral-500">HOME FIT</span>
-              <span class="border border-neutral-300 bg-[#faf8f5] px-3 py-1 text-xs font-black text-[#b4212a]">Live</span>
+              
             </div>
             <div class="py-8">
               <span class="text-sm font-black text-neutral-500">{{ story.statLabel }}</span>
@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
     </section>
 
     <section
-      class="home-section home-rental-section fullpage-section grid min-h-[88vh] content-center bg-[#f4f0ea] py-20"
+      class="home-section home-rental-section home-rental-gradient fullpage-section grid min-h-[88vh] content-center bg-[#f4f0ea] py-20"
       data-section-index="4"
     >
       <div
@@ -413,7 +413,7 @@ onBeforeUnmount(() => {
     </section>
 
     <section
-      class="home-section home-feature-section fullpage-section grid min-h-[82vh] content-center bg-white py-20"
+      class="home-section home-feature-section home-feature-gradient fullpage-section grid min-h-[82vh] content-center bg-white py-20"
       data-section-index="5"
     >
       <div
@@ -490,12 +490,20 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.home-hero {
+  min-height: 100svh;
+  background:
+    linear-gradient(90deg, rgba(23, 23, 23, 0.7), rgba(23, 23, 23, 0.34)),
+    url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2400&q=92')
+      center/cover;
+}
+
 .home-hero::after {
   content: '';
   position: absolute;
   inset: auto 0 0;
-  height: 28vh;
-  background: linear-gradient(180deg, rgba(244, 240, 234, 0), #f4f0ea);
+  height: 18vh;
+  background: linear-gradient(180deg, rgba(244, 240, 234, 0), rgba(244, 240, 234, 0.72));
   pointer-events: none;
 }
 
@@ -516,6 +524,26 @@ onBeforeUnmount(() => {
 
 .home-story-section {
   color: #171717;
+}
+
+.home-story-section.home-story-gradient-0 {
+  background: linear-gradient(180deg, #f4f0ea 0%, #fbfaf8 24%, #ffffff 72%, #f7f4ef 100%);
+}
+
+.home-story-section.home-story-gradient-1 {
+  background: linear-gradient(180deg, #f7f4ef 0%, #f4f0ea 46%, #fbfaf8 100%);
+}
+
+.home-story-section.home-story-gradient-2 {
+  background: linear-gradient(180deg, #fbfaf8 0%, #ffffff 48%, #f4f0ea 100%);
+}
+
+.home-rental-gradient {
+  background: linear-gradient(180deg, #f4f0ea 0%, #fbfaf8 46%, #f4f0ea 100%);
+}
+
+.home-feature-gradient {
+  background: linear-gradient(180deg, #f4f0ea 0%, #ffffff 48%, #fbfaf8 100%);
 }
 
 .home-story-visual {

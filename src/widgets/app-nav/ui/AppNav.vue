@@ -8,9 +8,7 @@ const memberStore = useMemberStore()
 const route = useRoute()
 const router = useRouter()
 const isHome = computed(() => route.name === 'home')
-const isBoardLayout = computed(() => ['notices', 'notice-detail'].includes(route.name))
-const isNoticeRoute = computed(() => ['notices', 'notice-detail'].includes(route.name))
-const isCalendarRoute = computed(() => route.name === 'lh-calendar')
+const isBoardLayout = computed(() => false)
 const isAuthenticated = computed(() => memberStore.isLoggedIn && Boolean(getAccessToken()))
 const sidebarOpen = ref(false)
 
@@ -77,7 +75,6 @@ async function logout() {
     </nav>
   </header>
   <header
-    v-else
     class="site-header border-b border-neutral-200 bg-white"
     :class="{
       'hero-header home-nav-dark-text fixed inset-x-0 top-0 z-10 text-[#171717]':

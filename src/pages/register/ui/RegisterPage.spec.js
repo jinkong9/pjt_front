@@ -58,6 +58,15 @@ describe('RegisterPage email consent', () => {
     })
   })
 
+  it('formats a mobile phone number with hyphens while typing', async () => {
+    const wrapper = await mountRegisterPage()
+    const phoneInput = wrapper.get('[data-testid="register-phone"]')
+
+    await phoneInput.setValue('01012341234')
+
+    expect(phoneInput.element.value).toBe('010-1234-1234')
+  })
+
   it('registers with rental notice email consent when the user checks it', async () => {
     api.post.mockResolvedValueOnce({ data: { userId: 'test@example.com' } })
     const wrapper = await mountRegisterPage()

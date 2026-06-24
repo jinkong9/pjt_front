@@ -52,20 +52,25 @@ onMounted(() => {
       </header>
 
       <form
-        class="mb-6 grid grid-cols-[minmax(0,1fr)_64px_72px] border border-neutral-200 bg-white p-3 shadow-[0_12px_34px_rgba(23,23,23,0.08)] max-[640px]:grid-cols-1"
+        class="mb-6 grid grid-cols-[minmax(0,1fr)_80px_80px] items-center gap-2 border border-neutral-200 bg-white p-3 shadow-[0_12px_34px_rgba(23,23,23,0.08)] max-[640px]:grid-cols-1"
         @submit.prevent="searchNotices"
       >
         <input
           v-model="keyword"
-          class="h-12 border-0 px-4 text-sm font-bold outline-none"
+          class="h-12 min-w-0 border-0 px-4 text-sm font-bold outline-none"
           placeholder="제목, 내용, 작성자 검색"
         />
-        <button type="submit" class="h-12 bg-[#b4212a] text-sm font-black text-white">
+
+        <button
+          type="submit"
+          class="flex h-12 w-full items-center justify-center bg-[#b4212a] text-sm font-black text-white"
+        >
           검색
         </button>
+
         <button
           type="button"
-          class="h-12 border border-neutral-200 bg-white text-sm font-black text-[#171717]"
+          class="flex h-12 w-full items-center justify-center border border-neutral-200 bg-white text-sm font-black text-[#171717]"
           @click="resetSearch"
         >
           초기화
