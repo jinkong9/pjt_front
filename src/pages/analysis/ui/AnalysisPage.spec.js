@@ -36,6 +36,26 @@ const analysis = {
     busStopWithin500m: 5,
     subwayWithin1km: 3,
   },
+  busStops: [
+    {
+      nodeName: '역삼역 정류장',
+      nodeNo: '23284',
+      distanceMeters: 180,
+    },
+    {
+      nodeName: '강남역 정류장',
+      nodeNo: '22009',
+      distanceMeters: 420,
+    },
+  ],
+  subwayStations: [
+    {
+      name: '역삼역',
+      line: '2호선',
+      address: '서울 강남구 테헤란로',
+      distanceMeters: 260,
+    },
+  ],
   places: [
     {
       name: '강남 대형마트',
@@ -120,6 +140,14 @@ describe('AnalysisPage nearby facilities', () => {
     expect(wrapper.text()).toContain('음식점 1')
     expect(wrapper.text()).toContain('강남 대형마트')
     expect(wrapper.text()).toContain('대형마트 / 대형마트 · 서울특별시 강남구 논현로 651')
+
+    expect(wrapper.text()).toContain('교통 접근성')
+    expect(wrapper.text()).toContain('역삼역 정류장')
+    expect(wrapper.text()).toContain('23284')
+    expect(wrapper.text()).toContain('180m')
+    expect(wrapper.text()).toContain('역삼역')
+    expect(wrapper.text()).toContain('2호선')
+    expect(wrapper.text()).toContain('260m')
 
     wrapper.unmount()
   })
