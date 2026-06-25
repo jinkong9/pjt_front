@@ -65,8 +65,11 @@ describe('RentalsPage recommendations', () => {
 
     const { wrapper } = await mountRentalsPage()
 
+    expect(fetchRentalRecommendations).not.toHaveBeenCalled()
+    await wrapper.get('[data-testid="rental-section-tab-recommendation"]').trigger('click')
+    await flushPromises()
+
     expect(fetchRentalRecommendations).toHaveBeenCalledWith(10)
-    expect(wrapper.text()).toContain('나에게 맞는 LH 추천')
     expect(wrapper.text()).toContain('서울 행복주택')
     expect(wrapper.text()).toContain('92')
     expect(wrapper.text()).toContain('소득 기준에 적합합니다.')
@@ -82,8 +85,9 @@ describe('RentalsPage recommendations', () => {
     fetchRentalRecommendations.mockRejectedValue({ response: { status: 401 } })
 
     const { wrapper } = await mountRentalsPage()
+    await wrapper.get('[data-testid="rental-section-tab-recommendation"]').trigger('click')
+    await flushPromises()
 
-    expect(wrapper.text()).toContain('로그인하면 맞춤 LH 추천을 볼 수 있습니다.')
     expect(wrapper.findComponent({ name: 'RouterLink' }).exists()).toBe(true)
   })
 
@@ -91,6 +95,8 @@ describe('RentalsPage recommendations', () => {
     fetchRentalRecommendations.mockRejectedValue({ response: { status: 409 } })
 
     const { wrapper } = await mountRentalsPage()
+    await wrapper.get('[data-testid="rental-section-tab-recommendation"]').trigger('click')
+    await flushPromises()
 
     expect(wrapper.text()).toContain('금융 프로필을 먼저 입력해 주세요.')
     expect(wrapper.text()).toContain('프로필 입력')
@@ -160,13 +166,13 @@ describe('RentalsPage recommendations', () => {
 
     expect(wrapper.get('[data-testid="rental-type-select"]').text()).toContain('유형 전체')
     expect(wrapper.text()).not.toContain('상태 전체')
-    expect(wrapper.get('[data-testid="rental-type-tab-all"]').text()).toContain('전체')
-    expect(wrapper.get('[data-testid="rental-type-tab-토지"]').text()).toContain('토지')
-    expect(wrapper.get('[data-testid="rental-type-tab-임대주택"]').text()).toContain('임대주택')
-    expect(wrapper.get('[data-testid="rental-type-tab-상가"]').text()).toContain('상가')
+    expect(wrapper.get('[data-testid="rental-section-tab-all"]').text()).toContain('전체')
+    expect(wrapper.get('[data-testid="rental-section-tab-land"]').text()).toContain('토지')
+    expect(wrapper.get('[data-testid="rental-section-tab-rental"]').text()).toContain('임대주택')
+    expect(wrapper.get('[data-testid="rental-section-tab-shop"]').text()).toContain('상가')
+    expect(wrapper.get('[data-testid="rental-section-tab-recommendation"]').text()).toContain('추천')
 
-    await wrapper.get('[data-testid="rental-type-tab-임대주택"]').trigger('click')
-
+    await wrapper.get('[data-testid="rental-section-tab-rental"]').trigger('click')
     expect(wrapper.text()).toContain('행복주택 입주자 모집')
     expect(wrapper.text()).not.toContain('토지 공급 공고')
     expect(wrapper.text()).not.toContain('상가 입점자 모집')

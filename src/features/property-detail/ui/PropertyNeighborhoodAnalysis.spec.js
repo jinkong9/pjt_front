@@ -29,6 +29,34 @@ const analysis = {
     busStopWithin500m: 4,
     subwayWithin1km: 2,
   },
+  busStops: [
+    {
+      nodeId: 'BUS-1',
+      nodeName: '강남역',
+      nodeNo: '22009',
+      cityCode: '11',
+    },
+    {
+      nodeId: 'BUS-2',
+      nodeName: '역삼역',
+      nodeNo: '23284',
+      cityCode: '11',
+    },
+  ],
+  subwayStations: [
+    {
+      id: 'SUBWAY-1',
+      name: '강남역',
+      address: '서울 강남구 강남대로',
+      distanceMeters: 240,
+    },
+    {
+      id: 'SUBWAY-2',
+      name: '역삼역',
+      address: '서울 강남구 테헤란로',
+      distanceMeters: 760,
+    },
+  ],
   places: [
     {
       name: '강남 대형마트',
@@ -85,6 +113,11 @@ describe('PropertyNeighborhoodAnalysis', () => {
     const wrapper = mount(PropertyNeighborhoodAnalysis, { props: { trade } })
     await flushPromises()
 
+    expect(wrapper.get('[data-testid="transit-breakdown"]').text()).toContain('교통 접근성')
+    expect(wrapper.get('[data-testid="bus-stop-breakdown"]').text()).toContain('버스정류장 4곳')
+    expect(wrapper.get('[data-testid="bus-stop-breakdown"]').text()).toContain('강남역')
+    expect(wrapper.get('[data-testid="subway-station-breakdown"]').text()).toContain('지하철역 2곳')
+    expect(wrapper.get('[data-testid="subway-station-breakdown"]').text()).toContain('240m')
     expect(getPropertyAnalysis).toHaveBeenCalledWith({
       label: trade.address,
       longitude: 127.027619,

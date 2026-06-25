@@ -73,6 +73,9 @@ describe('api client auth', () => {
     expect(document.cookie).toContain('happyhome.accessToken=access-token')
     expect(document.cookie).toContain('happyhome.refreshToken=refresh-token')
     expect(document.cookie).toContain('happyhome.grantType=Bearer')
+    expect(localStorage.getItem('happyhome.accessToken')).toBeNull()
+    expect(localStorage.getItem('happyhome.refreshToken')).toBeNull()
+    expect(localStorage.getItem('happyhome.grantType')).toBeNull()
   })
 
   it('does not add Authorization header after tokens are cleared', async () => {
