@@ -14,6 +14,7 @@ const router = useRouter()
 const queryClient = useQueryClient()
 const recommendationFavoriteMessage = ref('')
 const favoriteStates = ref({})
+const activeSection = ref('all')
 const condition = reactive({
   keyword: '',
   regionCode: '',
@@ -55,7 +56,12 @@ async function loadRentals() {
 }
 
 const noticesQuery = useQuery(computed(() => rentalQueryOptions.list(submittedCondition.value)))
-const recommendationsQuery = useQuery(rentalQueryOptions.recommendations(10))
+const recommendationsQuery = useQuery(
+  computed(() => ({
+    ...rentalQueryOptions.recommendations(10),
+    enabled: activeSection.value === 'recommendation',
+  })),
+)
 const favoriteMutation = useMutation({
   mutationFn: (noticeId) => toggleFavoriteRentalNotice(noticeId),
   onSuccess: () => {
@@ -74,7 +80,22 @@ const notices = computed(() => {
   if (!condition.type) return allNotices.value
   return allNotices.value.filter((notice) => notice.noticeType === condition.type)
 })
-const loading = computed(() => noticesQuery.isPending.value)
+const categoryTabs = [
+  { key: 'all', label: '전체' },
+  { key: 'welfare', label: '주거복지' },
+  { key: 'land', label: '토지' },
+  { key: 'rental', label: '임대주택' },
+  { key: 'shop', label: '상가' },
+  { key: 'recommendation', label: '추천' },
+]
+const visibleNotices = computed(() => {
+  if (activeSection.value === 'recommendation') return []
+  if (activeSection.value === 'all') return notices.value
+  return notices.value.filter((notice) => noticeMatchesSection(notice, activeSection.value))
+})
+const loading = computed(() =>
+  activeSection.value === 'recommendation' ? recommendationLoading.value : noticesQuery.isPending.value,
+)
 const recommendations = computed(() => recommendationsQuery.data.value ?? [])
 const recommendationLoading = computed(() => recommendationsQuery.isPending.value)
 const recommendationError = computed(() => {
@@ -99,6 +120,23 @@ function favoriteButtonClass(notice) {
   return isFavorite(notice)
     ? 'border-[#b4212a] bg-[#b4212a] text-white hover:bg-[#921b22]'
     : 'border-[#b4212a] bg-white text-[#b4212a] hover:bg-[#fff7f7]'
+}
+
+function noticeText(notice = {}) {
+  return [notice.noticeType, notice.detailType, notice.title].filter(Boolean).join(' ')
+}
+
+function noticeMatchesSection(notice, section) {
+  const text = noticeText(notice)
+  if (section === 'welfare') return includesAny(text, ['주거복지', '복지', '매입임대', '전세임대'])
+  if (section === 'land') return includesAny(text, ['토지', '용지', '분양토지'])
+  if (section === 'rental') return includesAny(text, ['임대주택', '공공임대', '국민임대', '행복주택', '영구임대'])
+  if (section === 'shop') return includesAny(text, ['상가', '상업', '근린생활시설'])
+  return true
+}
+
+function includesAny(value, keywords) {
+  return keywords.some((keyword) => String(value).includes(keyword))
 }
 
 async function toggleRecommendationFavorite(noticeId) {
@@ -143,13 +181,13 @@ async function toggleNoticeFavorite(noticeId) {
 
 async function search() {
   condition.page = 1
+  activeSection.value = 'all'
   await router.push({ path: '/rentals', query: { ...condition } })
   await loadRentals()
 }
 
-async function selectRentalType(type) {
-  condition.type = type === '전체' ? '' : type
-  await search()
+function selectSection(section) {
+  activeSection.value = section
 }
 
 onMounted(async () => {
@@ -174,91 +212,6 @@ onMounted(async () => {
         </p>
       </div>
     </div>
-
-    <section class="mb-6 border border-neutral-200 bg-white p-5">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p class="eyebrow m-0 text-xs font-black uppercase tracking-[0.2em] text-[#b4212a]">
-            Recommendation
-          </p>
-          <h2 class="mt-2 text-[28px] font-black text-[#171717]">나에게 맞는 LH 추천</h2>
-        </div>
-        <p
-          v-if="recommendationFavoriteMessage"
-          class="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700"
-        >
-          {{ recommendationFavoriteMessage }}
-        </p>
-      </div>
-
-      <p v-if="recommendationLoading" class="mt-4 text-sm font-black text-neutral-500">
-        추천 공고를 불러오는 중입니다.
-      </p>
-      <div v-else-if="recommendationError === 'login'" class="mt-4 flex flex-wrap items-center justify-between gap-4 bg-[#faf8f5] p-4">
-        <p class="text-sm font-bold text-neutral-600">로그인하면 맞춤 LH 추천을 볼 수 있습니다.</p>
-        <RouterLink
-          class="inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-4 text-sm font-black text-white"
-          :to="{ path: '/login', query: { redirect: '/rentals' } }"
-        >
-          로그인
-        </RouterLink>
-      </div>
-      <div v-else-if="recommendationError === 'profile'" class="mt-4 flex flex-wrap items-center justify-between gap-4 bg-[#faf8f5] p-4">
-        <p class="text-sm font-bold text-neutral-600">금융 프로필을 먼저 입력해 주세요.</p>
-        <RouterLink
-          class="inline-flex min-h-10 items-center justify-center border border-[#171717] bg-[#171717] px-4 text-sm font-black text-white"
-          to="/member"
-        >
-          프로필 입력
-        </RouterLink>
-      </div>
-      <p v-else-if="recommendationError" class="mt-4 text-sm font-black text-red-700">
-        추천 공고를 불러오지 못했습니다.
-      </p>
-      <div v-else-if="recommendations.length" class="mt-4 grid gap-4 lg:grid-cols-2">
-        <article
-          v-for="item in recommendations"
-          :key="item.notice.rentalNoticeId"
-          class="border border-neutral-200 bg-[#fafafa] p-4"
-        >
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <span class="tag bg-[#f7f4ef] px-3 py-1 text-xs font-black text-[#b4212a]">
-                {{ item.notice.status || '공고' }}
-              </span>
-              <h3 class="mt-3 text-xl font-black">{{ item.notice.title }}</h3>
-              <p class="mt-1 text-sm font-bold text-neutral-500">{{ item.notice.regionName }}</p>
-            </div>
-            <strong class="text-2xl font-black text-[#b4212a]">{{ item.score }}</strong>
-          </div>
-          <ul class="mt-4 grid gap-1 text-sm font-bold text-neutral-600">
-            <li v-for="reason in item.reasons" :key="reason">{{ reason }}</li>
-          </ul>
-          <p v-if="item.supplies[0]" class="mt-3 text-sm font-bold text-neutral-500">
-            {{ item.supplies[0].area || '-' }}m² · {{ item.supplies[0].expectedAmount || '-' }}
-          </p>
-          <div class="mt-4 flex flex-wrap gap-2">
-            <RouterLink
-              class="inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-4 text-sm font-black text-white"
-              :to="`/rentals/${item.notice.rentalNoticeId}`"
-            >
-              상세 보기
-            </RouterLink>
-            <button
-              type="button"
-              :data-testid="`recommendation-favorite-${item.notice.rentalNoticeId}`"
-              class="inline-flex min-h-10 items-center justify-center border px-4 text-sm font-black transition"
-              :class="favoriteButtonClass(item.notice)"
-              @click="toggleRecommendationFavorite(item.notice.rentalNoticeId)"
-            >
-              {{ isFavorite(item.notice) ? '관심중' : '관심' }}
-            </button>
-          </div>
-        </article>
-      </div>
-      <p v-else class="mt-4 text-sm font-bold text-neutral-500">현재 추천할 LH 공고가 없습니다.</p>
-    </section>
-
     <form
       class="search mb-4 grid gap-3 border border-neutral-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_auto]"
       @submit.prevent="search"
@@ -298,25 +251,113 @@ onMounted(async () => {
 
     <nav class="mb-6 flex flex-wrap gap-2" aria-label="공공임대 유형">
       <button
-        v-for="type in rentalTypes"
-        :key="type"
+        v-for="tab in categoryTabs"
+        :key="tab.key"
         type="button"
-        :data-testid="`rental-type-tab-${type === '전체' ? 'all' : type}`"
+        :data-testid="`rental-section-tab-${tab.key}`"
         class="inline-flex min-h-10 items-center justify-center border px-4 text-sm font-black transition"
-        :class="(type === '전체' && !condition.type) || condition.type === type
+        :class="activeSection === tab.key
           ? 'border-[#b4212a] bg-[#b4212a] text-white'
           : 'border-neutral-200 bg-white text-[#171717] hover:border-[#b4212a]'"
-        @click="selectRentalType(type)"
+        @click="selectSection(tab.key)"
       >
-        {{ type }}
+        {{ tab.label }}
       </button>
     </nav>
 
+    <p
+      v-if="recommendationFavoriteMessage"
+      class="mb-4 border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700"
+    >
+      {{ recommendationFavoriteMessage }}
+    </p>
+
     <LoadingState v-if="loading" />
-    <EmptyState v-else-if="!notices.length" message="조회된 공고가 없습니다." />
+    <section
+      v-else-if="activeSection === 'recommendation' && recommendationError === 'login'"
+      class="border border-neutral-200 bg-white p-5"
+    >
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-sm font-bold text-neutral-600">로그인하면 나에게 맞는 LH 추천을 볼 수 있습니다.</p>
+        <RouterLink
+          class="inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-4 text-sm font-black text-white"
+          :to="{ path: '/login', query: { redirect: '/rentals' } }"
+        >
+          로그인
+        </RouterLink>
+      </div>
+    </section>
+    <section
+      v-else-if="activeSection === 'recommendation' && recommendationError === 'profile'"
+      class="border border-neutral-200 bg-white p-5"
+    >
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <p class="text-sm font-bold text-neutral-600">금융 프로필을 먼저 입력해 주세요.</p>
+        <RouterLink
+          class="inline-flex min-h-10 items-center justify-center border border-[#171717] bg-[#171717] px-4 text-sm font-black text-white"
+          to="/member"
+        >
+          프로필 입력
+        </RouterLink>
+      </div>
+    </section>
+    <p
+      v-else-if="activeSection === 'recommendation' && recommendationError"
+      class="border border-red-200 bg-red-50 p-4 text-sm font-black text-red-700"
+    >
+      추천 공고를 불러오지 못했습니다.
+    </p>
+    <EmptyState
+      v-else-if="activeSection === 'recommendation' && !recommendations.length"
+      message="현재 추천할 LH 공고가 없습니다."
+    />
+    <div
+      v-else-if="activeSection === 'recommendation'"
+      class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+    >
+      <article
+        v-for="item in recommendations"
+        :key="item.notice.rentalNoticeId"
+        class="card flex min-h-[278px] flex-col border border-neutral-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#b4212a] hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]"
+      >
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <span class="tag bg-[#f7f4ef] px-3 py-1 text-xs font-black text-[#b4212a]">
+            추천 {{ item.score }}
+          </span>
+          <span class="text-xs font-black text-neutral-400">{{ item.notice.regionName }}</span>
+        </div>
+        <h3 class="mb-3 min-h-[56px] overflow-hidden text-[20px] font-black leading-7 text-[#171717] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]">
+          {{ item.notice.title }}
+        </h3>
+        <ul class="grid gap-1 text-sm font-bold text-neutral-600">
+          <li v-for="reason in item.reasons.slice(0, 3)" :key="reason">{{ reason }}</li>
+        </ul>
+        <p v-if="item.supplies[0]" class="mt-3 text-sm font-bold text-neutral-500">
+          {{ item.supplies[0].area || '-' }}㎡ · {{ item.supplies[0].expectedAmount || '-' }}
+        </p>
+        <div class="mt-auto grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+          <RouterLink
+            class="button primary inline-flex min-h-10 items-center justify-center border border-[#b4212a] bg-[#b4212a] px-[18px] text-sm font-black text-white"
+            :to="`/rentals/${item.notice.rentalNoticeId}`"
+          >
+            상세 보기
+          </RouterLink>
+          <button
+            type="button"
+            :data-testid="`recommendation-favorite-${item.notice.rentalNoticeId}`"
+            class="inline-flex min-h-10 items-center justify-center border px-4 text-sm font-black transition"
+            :class="favoriteButtonClass(item.notice)"
+            @click="toggleRecommendationFavorite(item.notice.rentalNoticeId)"
+          >
+            {{ isFavorite(item.notice) ? '관심중' : '관심' }}
+          </button>
+        </div>
+      </article>
+    </div>
+    <EmptyState v-else-if="!visibleNotices.length" message="조회된 공고가 없습니다." />
     <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
       <article
-        v-for="notice in notices"
+        v-for="notice in visibleNotices"
         :key="notice.rentalNoticeId"
         class="card flex min-h-[278px] flex-col border border-neutral-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#b4212a] hover:shadow-[0_18px_40px_rgba(23,23,23,0.12)]"
       >

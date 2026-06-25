@@ -3,10 +3,6 @@ const REFRESH_TOKEN_KEY = 'happyhome.refreshToken'
 const GRANT_TYPE_KEY = 'happyhome.grantType'
 const AUTH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
 
-function storage() {
-  return typeof localStorage === 'undefined' ? null : localStorage
-}
-
 function readCookie(name) {
   if (typeof document === 'undefined') return ''
   const encodedName = `${encodeURIComponent(name)}=`
@@ -28,33 +24,33 @@ function removeCookie(name) {
   document.cookie = `${encodeURIComponent(name)}=; path=/; max-age=0; SameSite=Lax`
 }
 
+function clearLegacyStorage() {
+  if (typeof localStorage === 'undefined') return
+  localStorage.removeItem(ACCESS_TOKEN_KEY)
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
+  localStorage.removeItem(GRANT_TYPE_KEY)
+}
+
 export function getAccessToken() {
-  return decodeURIComponent(readCookie(ACCESS_TOKEN_KEY)) || storage()?.getItem(ACCESS_TOKEN_KEY) || ''
+  return decodeURIComponent(readCookie(ACCESS_TOKEN_KEY)) || ''
 }
 
 export function saveAuthToken(tokenResponse = {}) {
-  const targetStorage = storage()
+  clearLegacyStorage()
 
   if (tokenResponse.accessToken) {
-    targetStorage?.setItem(ACCESS_TOKEN_KEY, tokenResponse.accessToken)
     writeCookie(ACCESS_TOKEN_KEY, tokenResponse.accessToken)
   }
   if (tokenResponse.refreshToken) {
-    targetStorage?.setItem(REFRESH_TOKEN_KEY, tokenResponse.refreshToken)
     writeCookie(REFRESH_TOKEN_KEY, tokenResponse.refreshToken)
   }
   if (tokenResponse.grantType) {
-    targetStorage?.setItem(GRANT_TYPE_KEY, tokenResponse.grantType)
     writeCookie(GRANT_TYPE_KEY, tokenResponse.grantType)
   }
 }
 
 export function clearAuthToken() {
-  const targetStorage = storage()
-
-  targetStorage?.removeItem(ACCESS_TOKEN_KEY)
-  targetStorage?.removeItem(REFRESH_TOKEN_KEY)
-  targetStorage?.removeItem(GRANT_TYPE_KEY)
+  clearLegacyStorage()
   removeCookie(ACCESS_TOKEN_KEY)
   removeCookie(REFRESH_TOKEN_KEY)
   removeCookie(GRANT_TYPE_KEY)

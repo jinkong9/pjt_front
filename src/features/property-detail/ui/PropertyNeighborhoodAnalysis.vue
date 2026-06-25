@@ -19,6 +19,8 @@ const selectedFacilityFilter = ref('all')
 let requestToken = 0
 
 const places = computed(() => analysis.value?.places ?? [])
+const busStops = computed(() => analysis.value?.busStops ?? [])
+const subwayStations = computed(() => analysis.value?.subwayStations ?? [])
 const counts = computed(() => countFacilities(places.value))
 const filteredPlaces = computed(() => filterFacilities(places.value, selectedFacilityFilter.value))
 const scoreTotal = computed(() => Math.round(Number(analysis.value?.score?.total ?? 0)))
@@ -26,10 +28,21 @@ const scoreLevel = computed(() => analysis.value?.score?.level ?? '분석 완료
 const transitSummary = computed(() => analysis.value?.transitSummary ?? {})
 const busStopCount = computed(() => Number(transitSummary.value.busStopWithin500m ?? analysis.value?.busStops?.length ?? 0))
 const subwayCount = computed(() => Number(transitSummary.value.subwayWithin1km ?? analysis.value?.subwayStations?.length ?? 0))
+const nearbyBusStops = computed(() => busStops.value.slice(0, 3))
+const nearbySubwayStations = computed(() => subwayStations.value.slice(0, 3))
 const trafficRiskSummary = computed(() => analysis.value?.trafficRiskSummary ?? {})
 const trafficIssueCount = computed(
   () => Number(trafficRiskSummary.value.eventCount ?? 0) + Number(trafficRiskSummary.value.roadWorkCount ?? 0),
 )
+
+function busStopMeta(stop = {}) {
+  return [stop.nodeNo, stop.cityCode].filter(Boolean).join(' · ')
+}
+
+function subwayStationMeta(station = {}) {
+  const distance = Number(station.distanceMeters)
+  return Number.isFinite(distance) && distance > 0 ? `${distance.toLocaleString('ko-KR')}m` : station.address || ''
+}
 
 function hasCoordinates(longitude, latitude) {
   return (
@@ -125,6 +138,46 @@ watch(() => props.trade.no, loadAnalysis, { immediate: true })
           <p class="mt-1 text-sm font-black">교통 위험 {{ trafficIssueCount }}건</p>
         </article>
       </div>
+
+      <section class="mt-5 border border-neutral-200 bg-[#fafafa] p-4" data-testid="transit-breakdown">
+        <div class="flex items-center justify-between gap-3">
+          <h4 class="text-base font-black text-[#171717]">교통 접근성</h4>
+          <span class="text-xs font-black text-neutral-500">반경 1km 기준</span>
+        </div>
+        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+          <article class="border border-neutral-200 bg-white p-3" data-testid="bus-stop-breakdown">
+            <span class="block text-[11px] font-black uppercase tracking-[0.14em] text-[#b4212a]">Bus</span>
+            <strong class="mt-1 block text-lg font-black">버스정류장 {{ busStopCount }}곳</strong>
+            <ul v-if="nearbyBusStops.length" class="mt-3 grid gap-2">
+              <li
+                v-for="stop in nearbyBusStops"
+                :key="stop.nodeId ?? `${stop.nodeName}-${stop.nodeNo}`"
+                class="border-t border-neutral-100 pt-2 first:border-0 first:pt-0"
+              >
+                <strong class="block text-sm font-black">{{ stop.nodeName }}</strong>
+                <span class="mt-0.5 block text-xs font-bold text-neutral-500">{{ busStopMeta(stop) }}</span>
+              </li>
+            </ul>
+            <p v-else class="mt-3 text-xs font-bold text-neutral-500">가까운 버스정류장 정보가 없습니다.</p>
+          </article>
+
+          <article class="border border-neutral-200 bg-white p-3" data-testid="subway-station-breakdown">
+            <span class="block text-[11px] font-black uppercase tracking-[0.14em] text-[#b4212a]">Subway</span>
+            <strong class="mt-1 block text-lg font-black">지하철역 {{ subwayCount }}곳</strong>
+            <ul v-if="nearbySubwayStations.length" class="mt-3 grid gap-2">
+              <li
+                v-for="station in nearbySubwayStations"
+                :key="station.id ?? `${station.name}-${station.address}`"
+                class="border-t border-neutral-100 pt-2 first:border-0 first:pt-0"
+              >
+                <strong class="block text-sm font-black">{{ station.name }}</strong>
+                <span class="mt-0.5 block text-xs font-bold text-neutral-500">{{ subwayStationMeta(station) }}</span>
+              </li>
+            </ul>
+            <p v-else class="mt-3 text-xs font-bold text-neutral-500">가까운 지하철역 정보가 없습니다.</p>
+          </article>
+        </div>
+      </section>
 
       <div class="mt-5 flex gap-2 overflow-x-auto pb-1">
         <button
