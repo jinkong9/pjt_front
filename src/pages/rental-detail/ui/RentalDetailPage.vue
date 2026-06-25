@@ -3,12 +3,15 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { toggleFavoriteRentalNotice } from '@/entities/rental/api/rentalApi'
+import { memberQueryOptions } from '@/entities/member/model/memberQueries'
 import { rentalKeys, rentalQueryOptions } from '@/entities/rental/model/rentalQueries'
 import {
   evaluateRentalEligibility,
+  normalizeMyDataProfile,
   readStoredMyDataProfile,
   validateMyDataProfile,
 } from '@/entities/mydata/model/myDataProfile'
+import { getAccessToken } from '@/shared/api/authToken'
 import AiChatWidget from '@/widgets/ai-chat/ui/AiChatWidget.vue'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
@@ -29,6 +32,11 @@ let kakaoMarker = null
 let kakaoInfoWindow = null
 const noticeId = computed(() => route.params.noticeId)
 const detailQuery = useQuery(computed(() => rentalQueryOptions.detail(noticeId.value)))
+const financialProfileQuery = useQuery({
+  ...memberQueryOptions.financialProfile(),
+  enabled: () => Boolean(getAccessToken()),
+  retry: false,
+})
 const detail = computed(() => detailQuery.data.value)
 const loading = computed(() => detailQuery.isPending.value)
 const favoriteMutation = useMutation({
@@ -46,10 +54,16 @@ function mapError(code, message) {
   return error
 }
 
-const myDataErrors = computed(() => validateMyDataProfile(myDataProfile.value))
+const activeMyDataProfile = computed(() =>
+  normalizeMyDataProfile({
+    ...myDataProfile.value,
+    ...(financialProfileQuery.data.value ?? {}),
+  }),
+)
+const myDataErrors = computed(() => validateMyDataProfile(activeMyDataProfile.value))
 const hasMyData = computed(() => !Object.keys(myDataErrors.value).length)
 const eligibility = computed(() =>
-  hasMyData.value && detail.value ? evaluateRentalEligibility(myDataProfile.value, detail.value) : null,
+  hasMyData.value && detail.value ? evaluateRentalEligibility(activeMyDataProfile.value, detail.value) : null,
 )
 const supplyRows = computed(() => detail.value?.supplies ?? [])
 const contractMapLabel = computed(() => {

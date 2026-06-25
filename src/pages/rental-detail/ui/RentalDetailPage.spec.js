@@ -4,11 +4,17 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import RentalDetailPage from './RentalDetailPage.vue'
 import { fetchRentalDetail, toggleFavoriteRentalNotice } from '@/entities/rental/api/rentalApi'
+import { getFinancialProfile } from '@/entities/member/api/financialProfileApi'
+import { saveAuthToken } from '@/shared/api/authToken'
 
 vi.mock('@/entities/rental/api/rentalApi', () => ({
   fetchFavoriteRentalNotices: vi.fn().mockResolvedValue([]),
   fetchRentalDetail: vi.fn(),
   toggleFavoriteRentalNotice: vi.fn(),
+}))
+
+vi.mock('@/entities/member/api/financialProfileApi', () => ({
+  getFinancialProfile: vi.fn(),
 }))
 
 function rentalDetail() {
@@ -56,6 +62,8 @@ async function mountPage(initialPath = '/rentals/LH-1') {
 describe('RentalDetailPage favorite button', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
+    getFinancialProfile.mockResolvedValue(null)
     delete window.kakao
     document.getElementById('kakao-map-sdk')?.remove()
   })
@@ -230,5 +238,24 @@ describe('RentalDetailPage favorite button', () => {
       '서울특별시 관악구 봉천동 100-1 서울특별시 관악구 봉천동 100-1',
       expect.any(Function),
     )
+  })
+
+  it('shows MyData eligibility from the member financial profile when local MyData is empty', async () => {
+    saveAuthToken({ accessToken: 'access-token' })
+    fetchRentalDetail.mockResolvedValue(rentalDetail())
+    getFinancialProfile.mockResolvedValue({
+      birthDate: '2000-01-01',
+      householdMembers: 1,
+      isHomeless: 'yes',
+      annualIncome: 2400,
+      totalAssets: 3000,
+      desiredRegions: ['서울'],
+    })
+
+    const { wrapper } = await mountPage()
+    await flushPromises()
+
+    expect(getFinancialProfile).toHaveBeenCalled()
+    expect(wrapper.text()).toContain('가능성 높음')
   })
 })
