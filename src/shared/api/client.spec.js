@@ -11,8 +11,8 @@ describe('api client auth', () => {
     document.cookie = 'happyhome.grantType=; path=/; max-age=0'
   })
 
-  it('uses the configured backend origin for API requests', () => {
-    expect(apiBaseUrl()).toBe('http://localhost:8080/api')
+  it('uses the Vite proxy path for API requests by default', () => {
+    expect(apiBaseUrl()).toBe('/api')
     expect(api.defaults.baseURL).toBe(apiBaseUrl())
   })
 
