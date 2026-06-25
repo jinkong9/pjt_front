@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { api, apiBaseUrl } from './client'
+import { api, apiBaseUrl, DEFAULT_BACKEND_ORIGIN } from './client'
 import { clearAuthToken, saveAuthToken } from './authToken'
 
 describe('api client auth', () => {
@@ -11,8 +11,8 @@ describe('api client auth', () => {
     document.cookie = 'happyhome.grantType=; path=/; max-age=0'
   })
 
-  it('uses the Vite proxy path for API requests by default', () => {
-    expect(apiBaseUrl()).toBe('/api')
+  it('uses the deployed backend API by default', () => {
+    expect(apiBaseUrl()).toBe(`${DEFAULT_BACKEND_ORIGIN}/api`)
     expect(api.defaults.baseURL).toBe(apiBaseUrl())
   })
 
