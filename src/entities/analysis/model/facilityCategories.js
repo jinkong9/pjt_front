@@ -11,11 +11,29 @@ export const facilityFilters = [
 
 export function facilityCategory(place = {}) {
   const text = `${place.largeCategory ?? ''} ${place.middleCategory ?? ''} ${place.name ?? ''}`.toLowerCase()
+  const categoryTokens = [place.largeCategory, place.middleCategory]
+    .map((value) => String(value ?? '').trim().toLowerCase())
+    .filter(Boolean)
 
   if (containsAny(text, ['대형마트', '할인점', 'hypermarket', 'supermarket', 'mart', 'mt1'])) {
     return 'mart'
   }
-  if (containsAny(text, ['편의점', 'convenience', 'cs2'])) {
+  if (
+    categoryTokens.includes('편의') ||
+    containsAny(text, [
+      '편의점',
+      'convenience',
+      'cs2',
+      'cu',
+      'gs25',
+      '세븐일레븐',
+      '7-eleven',
+      '이마트24',
+      'emart24',
+      '미니스톱',
+      'ministop',
+    ])
+  ) {
     return 'convenience'
   }
   if (containsAny(text, ['어린이집', '유치원', '보육', 'daycare', 'kindergarten', 'preschool', 'ps3'])) {

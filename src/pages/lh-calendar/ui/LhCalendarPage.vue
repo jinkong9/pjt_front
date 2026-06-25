@@ -99,9 +99,11 @@ function moveToFirstScheduleMonth(items) {
 }
 
 function eventToneClass(tone) {
-  if (tone === 'start') return 'bg-blue-50 text-blue-700'
-  if (tone === 'end' || tone === 'close') return 'bg-[#fff1f2] text-[#b4212a]'
-  return 'bg-[#f7f4ef] text-[#171717]'
+  if (tone === 'start') return 'calendar-event-start border-sky-500 bg-sky-50 text-sky-800'
+  if (tone === 'end' || tone === 'close') {
+    return 'calendar-event-deadline border-[#b4212a] bg-[#fff1f2] text-[#b4212a]'
+  }
+  return 'calendar-event-notice border-neutral-400 bg-[#f7f4ef] text-[#171717]'
 }
 
 function openDayModal(day) {
@@ -163,6 +165,19 @@ watch(notices, syncCalendarMonth, { immediate: true })
 
     <LoadingState v-if="loading" />
     <section v-else class="panel calendar-panel border border-neutral-200 bg-white p-6">
+      <div
+        class="mb-4 flex flex-wrap items-center justify-end gap-3 text-[11px] font-black text-neutral-600"
+        data-testid="calendar-legend"
+      >
+        <span class="inline-flex items-center gap-1.5">
+          <i class="h-2.5 w-2.5 bg-sky-500" aria-hidden="true"></i>
+          접수시작
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <i class="h-2.5 w-2.5 bg-[#b4212a]" aria-hidden="true"></i>
+          접수마감
+        </span>
+      </div>
       <div class="overflow-x-auto">
         <div class="min-w-[720px]">
       <div class="calendar-weekdays grid grid-cols-7 border-b border-neutral-200 pb-3 text-center text-xs font-black text-neutral-500">
@@ -193,11 +208,13 @@ watch(notices, syncCalendarMonth, { immediate: true })
               v-for="event in day.events.slice(0, 3)"
               :key="`${event.type}-${event.notice.rentalNoticeId}`"
               data-testid="calendar-event"
-              class="calendar-event block min-w-0 truncate border-l-[3px] px-2 py-1 text-xs font-black leading-4 transition hover:bg-white"
+              class="calendar-event flex min-w-0 items-center gap-1.5 truncate border-l-[3px] px-2 py-1 text-xs font-black leading-4 transition hover:bg-white"
               :class="eventToneClass(event.tone)"
               :to="`/rentals/${event.notice.rentalNoticeId}`"
+              :title="`${event.type} · ${event.notice.title}`"
             >
-              {{ event.notice.title }}
+              <span class="shrink-0">{{ event.type }}</span>
+              <span class="min-w-0 truncate">{{ event.notice.title }}</span>
             </RouterLink>
             <button
               v-if="day.events.length > 3"
@@ -233,7 +250,8 @@ watch(notices, syncCalendarMonth, { immediate: true })
           </div>
           <button
             type="button"
-            class="grid h-10 w-10 place-items-center border border-neutral-300 bg-white text-lg font-black hover:border-[#b4212a] hover:text-[#b4212a]"
+            data-testid="calendar-modal-close"
+            class="grid h-10 w-10 place-items-center border border-[#171717] bg-[#171717] text-lg font-black text-white transition hover:border-[#b4212a] hover:bg-[#b4212a]"
             aria-label="일정 모달 닫기"
             @click="closeDayModal"
           >
@@ -245,12 +263,14 @@ watch(notices, syncCalendarMonth, { immediate: true })
             <RouterLink
               v-for="event in selectedDay.events"
               :key="`modal-${event.type}-${event.notice.rentalNoticeId}`"
-              class="block min-w-0 truncate border-l-[3px] px-3 py-2 text-sm font-black leading-5 transition hover:bg-white"
+              class="flex min-w-0 items-center gap-2 truncate border-l-[3px] px-3 py-2 text-sm font-black leading-5 transition hover:bg-white"
               :class="eventToneClass(event.tone)"
               :to="`/rentals/${event.notice.rentalNoticeId}`"
+              :title="`${event.type} · ${event.notice.title}`"
               @click="closeDayModal"
             >
-              {{ event.notice.title }}
+              <span class="shrink-0">{{ event.type }}</span>
+              <span class="min-w-0 truncate">{{ event.notice.title }}</span>
             </RouterLink>
           </div>
         </div>

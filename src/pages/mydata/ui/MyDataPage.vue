@@ -5,6 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useMemberStore } from '@/entities/member/model/member'
 import { saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import { memberKeys, memberQueryOptions } from '@/entities/member/model/memberQueries'
+import { sendRentalRecommendationEmails } from '@/entities/rental/api/rentalApi'
 import {
   buildFinancialPayload,
   normalizeMyDataProfile,
@@ -32,7 +33,10 @@ const saveFinancialMutation = useMutation({
     queryClient.setQueryData(memberKeys.financialProfile(), profile)
   },
 })
-const saving = computed(() => saveFinancialMutation.isPending.value)
+const recommendationEmailMutation = useMutation({
+  mutationFn: sendRentalRecommendationEmails,
+})
+const saving = computed(() => saveFinancialMutation.isPending.value || recommendationEmailMutation.isPending.value)
 
 const completion = computed(() => {
   const requiredFields = ['birthDate', 'householdMembers', 'isHomeless', 'annualIncome', 'totalAssets']
@@ -93,6 +97,23 @@ async function saveMyData() {
     const financialProfile = await saveFinancialMutation.mutateAsync(buildFinancialPayload(storedProfile))
     applyProfile({ ...storedProfile, ...financialProfile })
     message.value = '마이데이터가 저장되었습니다.'
+
+    try {
+      const emailResult = await recommendationEmailMutation.mutateAsync({
+        desiredRegions: storedProfile.desiredRegions,
+        rentalTypes: storedProfile.rentalTypes,
+        limit: 5,
+      })
+      message.value = emailResult.sentCount > 0
+        ? `마이데이터가 저장되었습니다. 추천 공고 ${emailResult.sentCount}건을 메일로 보냈습니다.`
+        : '마이데이터가 저장되었습니다. 새로 보낼 추천 공고 메일은 없습니다.'
+    } catch (emailError) {
+      if (emailError?.response?.status === 403) {
+        error.value = 'LH 추천 메일을 받으려면 회원 정보에서 메일 수신 동의를 켜주세요.'
+        return
+      }
+      error.value = '마이데이터는 저장했지만 LH 추천 메일은 보내지 못했습니다.'
+    }
   } catch {
     error.value = '마이데이터를 저장하지 못했습니다.'
   }
@@ -175,7 +196,7 @@ onMounted(async () => {
         </RouterLink>
       </aside>
 
-      <form class="panel border border-neutral-200 bg-white p-6" @submit.prevent="saveMyData">
+      <form data-testid="mydata-form" class="panel border border-neutral-200 bg-white p-6" @submit.prevent="saveMyData">
         <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 class="text-2xl font-black text-[#171717]">LH 필수 정보</h2>
@@ -204,7 +225,7 @@ onMounted(async () => {
           <section class="grid gap-4 md:grid-cols-3">
             <label class="grid gap-2">
               <span class="text-xs font-black text-neutral-500">생년월일</span>
-              <input v-model="form.birthDate" type="date" class="min-h-11 border border-neutral-200 px-3 font-bold" />
+              <input v-model="form.birthDate" data-testid="mydata-field-birthDate" type="date" class="min-h-11 border border-neutral-200 px-3 font-bold" />
               <span v-if="validationErrors.birthDate" class="text-xs font-bold text-red-600">{{ validationErrors.birthDate }}</span>
             </label>
             <label class="grid gap-2">
@@ -234,12 +255,12 @@ onMounted(async () => {
             </label>
             <label class="grid gap-2">
               <span class="text-xs font-black text-neutral-500">가구원 수</span>
-              <input v-model.number="form.householdMembers" type="number" min="1" class="min-h-11 border border-neutral-200 px-3 font-bold" />
+              <input v-model.number="form.householdMembers" data-testid="mydata-field-householdMembers" type="number" min="1" class="min-h-11 border border-neutral-200 px-3 font-bold" />
               <span v-if="validationErrors.householdMembers" class="text-xs font-bold text-red-600">{{ validationErrors.householdMembers }}</span>
             </label>
             <label class="grid gap-2">
               <span class="text-xs font-black text-neutral-500">무주택 여부</span>
-              <select v-model="form.isHomeless" class="min-h-11 border border-neutral-200 px-3 font-bold">
+              <select v-model="form.isHomeless" data-testid="mydata-field-isHomeless" class="min-h-11 border border-neutral-200 px-3 font-bold">
                 <option value="">선택</option>
                 <option value="yes">무주택</option>
                 <option value="no">주택 보유</option>
@@ -266,7 +287,7 @@ onMounted(async () => {
             <div class="mt-4 grid gap-4 md:grid-cols-3">
               <label class="grid gap-2">
                 <span class="text-xs font-black text-neutral-500">연소득(원)</span>
-                <input v-model.number="form.annualIncome" type="number" min="0" class="min-h-11 border border-neutral-200 px-3 font-bold" />
+                <input v-model.number="form.annualIncome" data-testid="mydata-field-annualIncome" type="number" min="0" class="min-h-11 border border-neutral-200 px-3 font-bold" />
                 <span v-if="validationErrors.annualIncome" class="text-xs font-bold text-red-600">{{ validationErrors.annualIncome }}</span>
               </label>
               <label class="grid gap-2">
@@ -275,11 +296,11 @@ onMounted(async () => {
               </label>
               <label class="grid gap-2">
                 <span class="text-xs font-black text-neutral-500">사용 가능 자산(원)</span>
-                <input v-model.number="form.availableAssets" type="number" min="0" class="min-h-11 border border-neutral-200 px-3 font-bold" />
+                <input v-model.number="form.availableAssets" data-testid="mydata-field-availableAssets" type="number" min="0" class="min-h-11 border border-neutral-200 px-3 font-bold" />
               </label>
               <label class="grid gap-2">
                 <span class="text-xs font-black text-neutral-500">총자산(원)</span>
-                <input v-model.number="form.totalAssets" type="number" min="0" class="min-h-11 border border-neutral-200 px-3 font-bold" />
+                <input v-model.number="form.totalAssets" data-testid="mydata-field-totalAssets" type="number" min="0" class="min-h-11 border border-neutral-200 px-3 font-bold" />
                 <span v-if="validationErrors.totalAssets" class="text-xs font-bold text-red-600">{{ validationErrors.totalAssets }}</span>
               </label>
               <label class="grid gap-2">
@@ -303,8 +324,8 @@ onMounted(async () => {
               <div class="grid gap-2">
                 <span class="text-xs font-black text-neutral-500">희망 지역</span>
                 <div class="flex gap-2">
-                  <input v-model="regionInput" class="min-h-11 flex-1 border border-neutral-200 px-3 font-bold" placeholder="예: 서울, 경기" @keydown.enter.prevent="addRegion" />
-                  <button type="button" class="min-h-11 border border-[#171717] px-4 font-black" @click="addRegion">추가</button>
+                  <input v-model="regionInput" data-testid="mydata-field-desiredRegion" class="min-h-11 flex-1 border border-neutral-200 px-3 font-bold" placeholder="예: 서울, 경기" @keydown.enter.prevent="addRegion" />
+                  <button type="button" data-testid="mydata-add-region" class="min-h-11 border border-[#171717] px-4 font-black" @click="addRegion">추가</button>
                 </div>
                 <span v-if="validationErrors.desiredRegions" class="text-xs font-bold text-red-600">{{ validationErrors.desiredRegions }}</span>
                 <div class="flex flex-wrap gap-2">
@@ -326,6 +347,7 @@ onMounted(async () => {
                     v-for="type in ['행복주택', '국민임대', '매입임대', '전세임대']"
                     :key="type"
                     type="button"
+                    :data-testid="`mydata-rental-type-${type}`"
                     class="min-h-10 border px-4 text-sm font-black"
                     :class="form.rentalTypes.includes(type) ? 'border-[#b4212a] bg-[#b4212a] text-white' : 'border-neutral-200 bg-white text-[#171717]'"
                     @click="toggleRentalType(type)"

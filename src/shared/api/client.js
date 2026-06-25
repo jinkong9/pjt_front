@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { clearAuthToken, getAccessToken } from './authToken'
 
-export const DEFAULT_BACKEND_ORIGIN = 'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app'
+export const DEFAULT_BACKEND_ORIGIN = 'http://localhost:8080'
 
 export function backendOrigin() {
   return import.meta.env.VITE_BACKEND_ORIGIN || DEFAULT_BACKEND_ORIGIN
@@ -47,6 +47,9 @@ function requiresAuth(config = {}) {
     return true
   }
   if (path === '/rentals/favorites' || path === '/rentals/favorites/emails/send') {
+    return true
+  }
+  if (path === '/rentals/recommendations/emails/send') {
     return true
   }
   if (method === 'post' && /^\/rentals\/[^/]+\/favorite\/toggle$/.test(path)) {

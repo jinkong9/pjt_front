@@ -8,6 +8,7 @@ import {
   normalizeRentalNotice,
   normalizeRentalRecommendation,
   sendFavoriteRentalNoticeEmails,
+  sendRentalRecommendationEmails,
   toggleFavoriteRentalNotice,
 } from './rentalApi'
 
@@ -214,5 +215,24 @@ describe('rentalApi normalization', () => {
       missingMemberCount: 0,
     })
     expect(api.post).toHaveBeenCalledWith('/rentals/favorites/emails/send')
+  })
+
+  it('sends LH recommendation emails with MyData criteria', async () => {
+    const criteria = {
+      desiredRegions: ['서울'],
+      rentalTypes: ['행복주택'],
+      limit: 5,
+    }
+    api.post.mockResolvedValueOnce({
+      data: { sentCount: 2, skippedCount: 1, missingMemberCount: 0, consentRequiredCount: 0 },
+    })
+
+    await expect(sendRentalRecommendationEmails(criteria)).resolves.toEqual({
+      sentCount: 2,
+      skippedCount: 1,
+      missingMemberCount: 0,
+      consentRequiredCount: 0,
+    })
+    expect(api.post).toHaveBeenCalledWith('/rentals/recommendations/emails/send', criteria)
   })
 })
