@@ -63,7 +63,7 @@ async function mountPanel() {
     history: createWebHistory(),
     routes: [
       { path: '/prices', component: { template: '<div />' } },
-      { path: '/mydata', component: { template: '<div />' } },
+      { path: '/member', component: { template: '<div />' } },
       { path: '/analysis', component: { template: '<div />' } },
       { path: '/login', component: { template: '<div />' } },
     ],
@@ -99,7 +99,7 @@ describe('PropertyDetailPanel', () => {
 
     const link = wrapper.get('[data-testid="mydata-link"]')
     expect(link.text()).toContain('마이데이터 입력하러 가기')
-    expect(link.attributes('href')).toBe('/mydata')
+    expect(link.attributes('href')).toBe('/member')
     expect(analyzePropertyLoan).not.toHaveBeenCalled()
   })
 

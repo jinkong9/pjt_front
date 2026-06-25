@@ -9,6 +9,7 @@ import {
   readStoredMyDataProfile,
   validateMyDataProfile,
 } from '@/entities/mydata/model/myDataProfile'
+import AiChatWidget from '@/widgets/ai-chat/ui/AiChatWidget.vue'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import LoadingState from '@/shared/ui/LoadingState.vue'
 
@@ -62,6 +63,19 @@ const contractMapTarget = computed(() => ({
   lotNumber: '',
 }))
 const mapTarget = computed(() => selectedSupply.value ?? supplyRows.value[0] ?? contractMapTarget.value)
+const aiChatContext = computed(() => {
+  if (!detail.value) return ''
+  const notice = detail.value.notice
+  const target = mapTarget.value
+  return [
+    '현재 화면: LH 공고 상세보기',
+    `보고 있는 공고: ${notice.title || '-'}`,
+    `공고 유형: ${notice.noticeType || '-'} / ${notice.detailType || '-'}`,
+    `공고 지역: ${notice.regionName || '-'}`,
+    `보고 있는 위치: ${supplyMapAddress(target) || contractMapLabel.value || '-'}`,
+    `공급 정보: ${target?.usage || '-'} / 면적 ${target?.area || '-'} / 예정가격 ${target?.expectedAmount || '-'}`,
+  ].join('\n')
+})
 
 function value(value) {
   return value || '-'
@@ -360,7 +374,7 @@ onBeforeUnmount(() => {
               </p>
               <RouterLink
                 class="mt-5 inline-flex min-h-11 items-center justify-center bg-[#b4212a] px-[18px] font-black text-white"
-                to="/mydata"
+                to="/member"
               >
                 마이데이터 입력하러가기
               </RouterLink>
@@ -428,6 +442,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </section>
+        <AiChatWidget :context="aiChatContext" />
       </template>
     </div>
   </main>

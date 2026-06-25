@@ -23,12 +23,6 @@ const form = reactive({
 const submittedForm = ref({ ...form })
 const analysisQuery = useQuery(computed(() => appQueryOptions.analysis(submittedForm.value)))
 
-const presets = [
-  { label: '강남역 근처', place: '서울특별시 강남구 역삼동', latitude: 37.5006, longitude: 127.0365 },
-  { label: '봉천동 주거지', place: '서울특별시 관악구 봉천동', latitude: 37.4707, longitude: 126.9368 },
-  { label: '광교 중심', place: '경기도 수원시 영통구', latitude: 37.2595, longitude: 127.0475 },
-]
-
 const radiusOptions = [
   { label: '500m', value: 500 },
   { label: '1km', value: 1000 },
@@ -41,12 +35,18 @@ const filteredPlaces = computed(() => filterFacilities(places.value, selectedFac
 const scoreTotal = computed(() => Math.round(Number(analysis.value?.score?.total ?? 0)))
 const scoreLevel = computed(() => analysis.value?.score?.level ?? '분석 완료')
 const transitSummary = computed(() => analysis.value?.transitSummary ?? {})
-const busStopCount = computed(() => Number(transitSummary.value.busStopWithin500m ?? analysis.value?.busStops?.length ?? 0))
-const subwayCount = computed(() => Number(transitSummary.value.subwayWithin1km ?? analysis.value?.subwayStations?.length ?? 0))
+const busStopCount = computed(() =>
+  Number(transitSummary.value.busStopWithin500m ?? analysis.value?.busStops?.length ?? 0),
+)
+const subwayCount = computed(() =>
+  Number(transitSummary.value.subwayWithin1km ?? analysis.value?.subwayStations?.length ?? 0),
+)
 const trafficRiskSummary = computed(() => analysis.value?.trafficRiskSummary ?? {})
 const trafficRiskLabel = computed(() => trafficRiskSummary.value.riskLevel ?? 'Low')
 const trafficIssueCount = computed(
-  () => Number(trafficRiskSummary.value.eventCount ?? 0) + Number(trafficRiskSummary.value.roadWorkCount ?? 0),
+  () =>
+    Number(trafficRiskSummary.value.eventCount ?? 0) +
+    Number(trafficRiskSummary.value.roadWorkCount ?? 0),
 )
 
 function queryString(key, fallback) {
@@ -58,12 +58,6 @@ function queryString(key, fallback) {
 function queryNumber(key, fallback) {
   const number = Number(queryString(key, fallback))
   return Number.isFinite(number) ? number : fallback
-}
-
-function applyPreset(preset) {
-  form.label = preset.place
-  form.latitude = preset.latitude
-  form.longitude = preset.longitude
 }
 
 function createFallbackAnalysis() {
@@ -135,15 +129,17 @@ async function analyze() {
 <template>
   <main class="mx-auto w-[min(1480px,calc(100%_-_48px))] py-28 text-[#171717]">
     <section class="border border-neutral-200 bg-white p-6">
-      <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
-        Life Analysis
-      </p>
+      <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Life Analysis</p>
       <h1 class="mt-3 text-[clamp(42px,6vw,76px)] font-black leading-none">생활권 분석</h1>
       <p class="mt-3 text-sm font-bold leading-7 text-neutral-500">
-        지도에서 선택한 매물 주변의 대형마트, 편의점, 학교, 어린이집·유치원, 카페, 병원, 음식점을 카카오 주변검색 기준으로 확인합니다.
+        지도에서 선택한 매물 주변의 대형마트, 편의점, 학교, 어린이집·유치원, 카페, 병원, 음식점을
+        카카오 주변검색 기준으로 확인합니다.
       </p>
 
-      <form class="mt-6 grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto_auto]" @submit.prevent="analyze">
+      <form
+        class="mt-6 grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto_auto]"
+        @submit.prevent="analyze"
+      >
         <input
           v-model="form.label"
           class="min-h-12 border border-neutral-200 bg-white px-3 text-sm font-black outline-0"
@@ -174,18 +170,6 @@ async function analyze() {
           {{ loading ? '분석 중' : '분석하기' }}
         </button>
       </form>
-
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button
-          v-for="preset in presets"
-          :key="preset.label"
-          type="button"
-          class="min-h-9 border border-neutral-200 bg-white px-3 text-xs font-black"
-          @click="applyPreset(preset)"
-        >
-          {{ preset.label }}
-        </button>
-      </div>
     </section>
 
     <section v-if="analysis" class="mt-5 border border-neutral-200 bg-white p-8">
@@ -211,7 +195,9 @@ async function analyze() {
         <article class="border border-neutral-200 bg-white p-5">
           <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">Traffic</p>
           <strong class="mt-2 block text-4xl font-black">{{ trafficIssueCount }}건</strong>
-          <span class="mt-2 block text-sm font-black text-neutral-500">교통 위험 {{ trafficRiskLabel }}</span>
+          <span class="mt-2 block text-sm font-black text-neutral-500"
+            >교통 위험 {{ trafficRiskLabel }}</span
+          >
         </article>
       </div>
 
@@ -226,7 +212,7 @@ async function analyze() {
           :key="filter.key"
           type="button"
           :data-testid="`analysis-facility-filter-${filter.key}`"
-          class="min-h-[50px] flex-[0_0_auto] border border-neutral-200 bg-white px-5 text-base font-black"
+          class="min-h-[50px] flex-[0_0_auto] border border-neutral-200 bg-white px-5 text-base font-black text-neutral-900"
           :class="{
             'border-[#b4212a] text-[#b4212a]': selectedFacilityFilter === filter.key,
           }"

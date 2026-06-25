@@ -24,6 +24,7 @@ vi.mock('@/entities/member/api/financialProfileApi', () => ({
 
 vi.mock('@/entities/rental/api/rentalApi', () => ({
   fetchFavoriteRentalNotices: vi.fn(),
+  sendRentalRecommendationEmails: vi.fn(),
   toggleFavoriteRentalNotice: vi.fn(),
 }))
 

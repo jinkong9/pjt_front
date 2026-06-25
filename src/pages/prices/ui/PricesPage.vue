@@ -6,6 +6,7 @@ import { toQuery } from '@/shared/api/client'
 import { useMemberStore } from '@/entities/member/model/member'
 import { memberQueryOptions } from '@/entities/member/model/memberQueries'
 import PropertyDetailPanel from '@/features/property-detail/ui/PropertyDetailPanel.vue'
+import AiChatWidget from '@/widgets/ai-chat/ui/AiChatWidget.vue'
 import { appQueryOptions } from '@/shared/query/appQueries'
 import {
   getDealTypeLabel,
@@ -68,12 +69,7 @@ const dealFavoritesQuery = useQuery({
   ...memberQueryOptions.dealFavorites(),
   enabled: () => memberStore.isLoggedIn && activePropertyTab.value === 'favorites',
 })
-const loading = computed(
-  () =>
-    apartmentTradesQuery.isPending.value ||
-    officetelTradesQuery.isPending.value ||
-    oneroomTradesQuery.isPending.value,
-)
+
 const tabLoading = computed(
   () =>
     activePropertyQuery.value.isPending.value ||
@@ -86,11 +82,7 @@ const officetelTrades = computed(() =>
   normalizeTrades(officetelTradesQuery.data.value, 'OFFICETEL'),
 )
 const oneroomTrades = computed(() => normalizeTrades(oneroomTradesQuery.data.value, 'ONEROOM'))
-const allTrades = computed(() => [
-  ...apartmentTrades.value,
-  ...officetelTrades.value,
-  ...oneroomTrades.value,
-])
+
 const activePropertyQuery = computed(() => {
   if (activePropertyTab.value === 'officetel') return officetelTradesQuery
   if (activePropertyTab.value === 'oneroom') return oneroomTradesQuery
@@ -156,6 +148,25 @@ const propertyLoginRoute = computed(() => {
       redirect: `/prices?${query.join('&')}`,
     },
   }
+})
+
+const aiChatContext = computed(() => {
+  if (!selectedTrade.value) return ''
+  const trade = selectedTrade.value
+  const mapRegion = mapCenterRegion.value
+  const mapLocation = mapCenterAddress.value || trade.address || ''
+  return [
+    '현재 화면: 실거래 지도 상세보기',
+    `지도 기준 위치: ${mapLocation}`,
+    mapRegion
+      ? `지도 행정동: ${[mapRegion.sidoName, mapRegion.gugunName, mapRegion.dongName].filter(Boolean).join(' ')}`
+      : '',
+    `선택 실거래: ${trade.aptName || '-'}`,
+    `선택 실거래 주소: ${trade.address || '-'}`,
+    `거래 정보: ${tradeLabel(trade)} / ${tradePriceLabel(trade)} / ${tradeMetaLabel(trade)}`,
+  ]
+    .filter(Boolean)
+    .join('\n')
 })
 
 function hasSearchCondition() {
@@ -933,6 +944,7 @@ watch(
         @tab-change="selectedTab = $event"
         @close="selectedTrade = null"
       />
+      <AiChatWidget v-if="selectedTrade" :context="aiChatContext" />
     </main>
   </div>
 </template>

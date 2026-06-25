@@ -69,6 +69,10 @@ function updateMoneyField(key, value) {
   form[key] = String(value ?? '').replace(/[^\d]/g, '')
 }
 
+function updateMyDataMoneyField(key, value) {
+  myData[key] = String(value ?? '').replace(/[^\d]/g, '')
+}
+
 function addRegion() {
   const nextRegion = regionInput.value.trim()
   if (!nextRegion || myData.desiredRegions.includes(nextRegion)) return
@@ -88,7 +92,11 @@ function toggleRentalType(type) {
 </script>
 
 <template>
-  <form data-testid="financial-profile-form" class="grid gap-5 lg:grid-cols-[260px_1fr]" @submit.prevent="submit">
+  <form
+    data-testid="financial-profile-form"
+    class="grid gap-5 lg:grid-cols-[260px_1fr]"
+    @submit.prevent="submit"
+  >
     <aside class="border border-neutral-200 bg-[#faf8f5] p-5">
       <p class="text-xs font-black uppercase tracking-[0.22em] text-[#b4212a]">MyData</p>
       <h3 class="mt-2 text-2xl font-black leading-tight text-[#171717]">LH 추천 준비</h3>
@@ -100,23 +108,35 @@ function toggleRentalType(type) {
         <strong class="mt-1 block text-3xl font-black text-[#b4212a]">{{ completion }}%</strong>
       </div>
       <div class="mt-4 flex flex-wrap gap-2">
-        <span class="border border-neutral-200 bg-white px-3 py-1 text-xs font-black">금융 5개 필드</span>
-        <span class="border border-neutral-200 bg-white px-3 py-1 text-xs font-black">무주택/세대</span>
-        <span class="border border-neutral-200 bg-white px-3 py-1 text-xs font-black">희망 지역</span>
+        <span class="border border-neutral-200 bg-white px-3 py-1 text-xs font-black"
+          >금융 5개 필드</span
+        >
+        <span class="border border-neutral-200 bg-white px-3 py-1 text-xs font-black"
+          >무주택/세대</span
+        >
+        <span class="border border-neutral-200 bg-white px-3 py-1 text-xs font-black"
+          >희망 지역</span
+        >
       </div>
     </aside>
 
     <div class="grid gap-5">
       <section class="border border-neutral-200 bg-white p-5">
         <div>
-          <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">Financial Profile</p>
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">
+            Financial Profile
+          </p>
           <h3 class="mt-1 text-2xl font-black">대출 계산용 정보</h3>
           <p class="mt-2 text-sm font-bold leading-6 text-neutral-500">
             이 5개 항목은 백엔드 금융 프로필에 저장되어 대출 계산과 LH 추천 점수에 사용됩니다.
           </p>
         </div>
         <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <label v-for="field in financialFields" :key="field[0]" class="block text-xs font-black text-neutral-600">
+          <label
+            v-for="field in financialFields"
+            :key="field[0]"
+            class="block text-xs font-black text-neutral-600"
+          >
             {{ field[1] }} (원)
             <input
               :value="formatNumber(form[field[0]])"
@@ -133,10 +153,15 @@ function toggleRentalType(type) {
       <section class="border border-neutral-200 bg-[#faf8f5] p-5">
         <h3 class="text-2xl font-black text-[#171717]">LH 추천 조건</h3>
         <p class="mt-2 text-sm font-bold leading-6 text-neutral-500">
-          무주택, 가구, 희망지역, 임대 유형을 넣어두면 LH 공고를 볼 때 추천/자격 판단에 같이 활용할 수 있습니다.
+          무주택, 가구, 희망지역, 임대 유형을 넣어두면 LH 공고를 볼 때 추천/자격 판단에 같이 활용할
+          수 있습니다.
         </p>
         <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <label v-for="field in householdFields" :key="field[0]" class="block text-xs font-black text-neutral-600">
+          <label
+            v-for="field in householdFields"
+            :key="field[0]"
+            class="block text-xs font-black text-neutral-600"
+          >
             {{ field[1] }}
             <input
               v-model="myData[field[0]]"
@@ -174,21 +199,23 @@ function toggleRentalType(type) {
           <label class="block text-xs font-black text-neutral-600">
             총자산 (원)
             <input
-              v-model="myData.totalAssets"
-              type="number"
-              min="0"
+              :value="formatNumber(myData.totalAssets)"
+              type="text"
+              inputmode="numeric"
               data-testid="mydata-field-totalAssets"
               class="mt-2 h-11 w-full border border-neutral-300 bg-white px-3 text-sm font-bold"
+              @input="updateMyDataMoneyField('totalAssets', $event.target.value)"
             />
           </label>
           <label class="block text-xs font-black text-neutral-600">
             자동차 가액 (원)
             <input
-              v-model="myData.carValue"
-              type="number"
-              min="0"
+              :value="formatNumber(myData.carValue)"
+              type="text"
+              inputmode="numeric"
               data-testid="mydata-field-carValue"
               class="mt-2 h-11 w-full border border-neutral-300 bg-white px-3 text-sm font-bold"
+              @input="updateMyDataMoneyField('carValue', $event.target.value)"
             />
           </label>
         </div>
@@ -218,7 +245,7 @@ function toggleRentalType(type) {
                 v-for="region in myData.desiredRegions"
                 :key="region"
                 type="button"
-                class="border border-neutral-200 bg-white px-3 py-1 text-sm font-black"
+                class="border border-neutral-200 bg-white px-3 py-1 text-sm font-black text-black"
                 @click="removeRegion(region)"
               >
                 {{ region }} x
@@ -234,7 +261,11 @@ function toggleRentalType(type) {
                 type="button"
                 :data-testid="`mydata-rental-type-${type}`"
                 class="h-10 border px-4 text-sm font-black"
-                :class="myData.rentalTypes.includes(type) ? 'border-[#b4212a] bg-[#b4212a] text-white' : 'border-neutral-300 bg-white text-[#171717]'"
+                :class="
+                  myData.rentalTypes.includes(type)
+                    ? 'border-[#b4212a] bg-[#b4212a] text-white'
+                    : 'border-neutral-300 bg-white text-[#171717]'
+                "
                 @click="toggleRentalType(type)"
               >
                 {{ type }}
