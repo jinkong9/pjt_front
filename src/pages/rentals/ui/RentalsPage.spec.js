@@ -74,11 +74,73 @@ describe('RentalsPage recommendations', () => {
     expect(wrapper.text()).toContain('92')
     expect(wrapper.text()).toContain('소득 기준에 적합합니다.')
 
+    expect(wrapper.text()).toContain('46.2㎡')
+    expect(wrapper.text()).toContain('1억 2000만원')
+
     await wrapper.get('[data-testid="recommendation-favorite-LH-REC-1"]').trigger('click')
     await flushPromises()
 
     expect(toggleFavoriteRentalNotice).toHaveBeenCalledWith('LH-REC-1')
     expect(wrapper.get('[data-testid="recommendation-favorite-LH-REC-1"]').text()).toContain('관심중')
+  })
+
+  it('shows unavailable text when recommendation supply area or amount is missing', async () => {
+    fetchRentalRecommendations.mockResolvedValue([
+      {
+        notice: {
+          rentalNoticeId: 'LH-REC-MISSING',
+          title: 'Missing supply fields',
+          regionName: 'Seoul',
+        },
+        score: 71,
+        reasons: [],
+        supplies: [{ area: '-', expectedAmount: '-' }],
+      },
+    ])
+
+    const { wrapper } = await mountRentalsPage()
+
+    await wrapper.get('[data-testid="rental-section-tab-recommendation"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('면적 미제공')
+    expect(wrapper.text()).toContain('금액 미제공')
+    expect(wrapper.text()).not.toContain('-㎡')
+  })
+
+  it('formats recommendation supply amount in Korean units', async () => {
+    fetchRentalRecommendations.mockResolvedValue([
+      {
+        notice: {
+          rentalNoticeId: 'LH-REC-AMOUNT',
+          title: 'Amount formatting',
+          regionName: 'Seoul',
+        },
+        score: 80,
+        reasons: [],
+        supplies: [{ area: '84', expectedAmount: '400000000' }],
+      },
+      {
+        notice: {
+          rentalNoticeId: 'LH-REC-AMOUNT-2',
+          title: 'Amount formatting 2',
+          regionName: 'Seoul',
+        },
+        score: 79,
+        reasons: [],
+        supplies: [{ area: '59', expectedAmount: '40000000' }],
+      },
+    ])
+
+    const { wrapper } = await mountRentalsPage()
+
+    await wrapper.get('[data-testid="rental-section-tab-recommendation"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('4억')
+    expect(wrapper.text()).toContain('4000만원')
+    expect(wrapper.text()).not.toContain('400000000')
+    expect(wrapper.text()).not.toContain('40000000')
   })
 
   it('shows a login CTA when recommendations return 401', async () => {

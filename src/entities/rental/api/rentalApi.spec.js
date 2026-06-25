@@ -172,6 +172,29 @@ describe('rentalApi normalization', () => {
     })
   })
 
+  it('preserves missing recommendation supply fields for unavailable display', () => {
+    expect(
+      normalizeRentalRecommendation({
+        notice: { notice_id: 'LH-EMPTY' },
+        supplies: [
+          {
+            area: '',
+            expected_amount: '',
+            household_count: null,
+          },
+        ],
+      }),
+    ).toMatchObject({
+      supplies: [
+        {
+          area: '',
+          expectedAmount: '',
+          householdCount: '',
+        },
+      ],
+    })
+  })
+
   it('loads favorite LH notices through the favorites endpoint', async () => {
     api.get.mockResolvedValueOnce({
       data: [

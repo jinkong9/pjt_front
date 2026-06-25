@@ -16,7 +16,8 @@ export function resolveTransferImageUrl(imageUrl) {
   }
 
   const normalized = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`
-  return `${backendOrigin().replace(/\/$/, '')}${normalized}`
+  const origin = backendOrigin()
+  return origin ? `${origin}${normalized}` : normalized
 }
 
 export function normalizeTransfer(post) {

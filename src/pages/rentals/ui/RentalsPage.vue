@@ -139,6 +139,39 @@ function includesAny(value, keywords) {
   return keywords.some((keyword) => String(value).includes(keyword))
 }
 
+function hasProvidedValue(value) {
+  return value !== undefined && value !== null && String(value).trim() !== '' && String(value).trim() !== '-'
+}
+
+function supplyAreaText(supply = {}) {
+  return hasProvidedValue(supply.area) ? `${supply.area}㎡` : '면적 미제공'
+}
+
+function supplyAmountText(supply = {}) {
+  if (!hasProvidedValue(supply.expectedAmount)) return '금액 미제공'
+  return formatKoreanMoney(supply.expectedAmount)
+}
+
+function formatKoreanMoney(value) {
+  const amount = Number(String(value).replace(/[^0-9]/g, ''))
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return value
+  }
+
+  const eok = Math.floor(amount / 100000000)
+  const man = Math.floor((amount % 100000000) / 10000)
+  if (eok > 0 && man > 0) {
+    return `${eok}억 ${man}만원`
+  }
+  if (eok > 0) {
+    return `${eok}억`
+  }
+  if (man > 0) {
+    return `${man}만원`
+  }
+  return `${amount.toLocaleString('ko-KR')}원`
+}
+
 async function toggleRecommendationFavorite(noticeId) {
   recommendationFavoriteMessage.value = ''
   try {
@@ -322,7 +355,7 @@ onMounted(async () => {
       >
         <div class="mb-4 flex items-center justify-between gap-3">
           <span class="tag bg-[#f7f4ef] px-3 py-1 text-xs font-black text-[#b4212a]">
-            추천 {{ item.score }}
+            추천 {{ item.score }}점
           </span>
           <span class="text-xs font-black text-neutral-400">{{ item.notice.regionName }}</span>
         </div>
@@ -333,7 +366,7 @@ onMounted(async () => {
           <li v-for="reason in item.reasons.slice(0, 3)" :key="reason">{{ reason }}</li>
         </ul>
         <p v-if="item.supplies[0]" class="mt-3 text-sm font-bold text-neutral-500">
-          {{ item.supplies[0].area || '-' }}㎡ · {{ item.supplies[0].expectedAmount || '-' }}
+          {{ supplyAreaText(item.supplies[0]) }} · {{ supplyAmountText(item.supplies[0]) }}
         </p>
         <div class="mt-auto grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
           <RouterLink

@@ -5,13 +5,14 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
 const backendOrigin =
-  process.env.VITE_BACKEND_ORIGIN || 'http://localhost:8080'
+  process.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8080'
 
 // https://vite.dev/config/
 export default defineConfig({
   envPrefix: ['VITE_', 'OPENAPI_'],
   plugins: [vue(), tailwindcss()],
   server: {
+    host: '127.0.0.1',
     port: 5173,
     strictPort: true,
     proxy: {

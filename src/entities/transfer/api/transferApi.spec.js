@@ -25,7 +25,7 @@ vi.mock('@/shared/api/client', () => ({
     put: vi.fn(),
     delete: vi.fn(),
   },
-  backendOrigin: () => 'http://localhost:8080',
+  backendOrigin: () => '',
   toQuery: (params) =>
     Object.fromEntries(
       Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ''),
@@ -79,12 +79,8 @@ describe('transferApi', () => {
   })
 
   it('normalizes transfer image URLs from backend variants', () => {
-    expect(resolveTransferImageUrl('/uploads/room.jpg')).toBe(
-      'http://localhost:8080/uploads/room.jpg',
-    )
-    expect(resolveTransferImageUrl('uploads/room.jpg')).toBe(
-      'http://localhost:8080/uploads/room.jpg',
-    )
+    expect(resolveTransferImageUrl('/uploads/room.jpg')).toBe('/uploads/room.jpg')
+    expect(resolveTransferImageUrl('uploads/room.jpg')).toBe('/uploads/room.jpg')
     expect(resolveTransferImageUrl('https://cdn.example.com/room.jpg')).toBe(
       'https://cdn.example.com/room.jpg',
     )
@@ -96,8 +92,8 @@ describe('transferApi', () => {
         image_urls: 'uploads/two.jpg, https://cdn.example.com/three.jpg',
       }).imageUrls,
     ).toEqual([
-      'http://localhost:8080/uploads/one.jpg',
-      'http://localhost:8080/uploads/two.jpg',
+      '/uploads/one.jpg',
+      '/uploads/two.jpg',
       'https://cdn.example.com/three.jpg',
     ])
   })

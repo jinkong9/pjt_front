@@ -1,15 +1,13 @@
 import axios from 'axios'
 import { clearAuthToken, getAccessToken } from './authToken'
 
-export const DEFAULT_BACKEND_ORIGIN = 'http://localhost:8080'
-
 export function backendOrigin() {
-  return import.meta.env.VITE_BACKEND_ORIGIN || DEFAULT_BACKEND_ORIGIN
+  return (import.meta.env.VITE_BACKEND_ORIGIN || '').replace(/\/$/, '')
 }
 
 export function apiBaseUrl() {
   const origin = backendOrigin()
-  return `${origin.replace(/\/$/, '')}/api`
+  return origin ? `${origin}/api` : '/api'
 }
 
 export const api = axios.create({

@@ -9,6 +9,10 @@ function buildPeriod(start, end) {
   return start || end || ''
 }
 
+function providedValue(source = {}, ...keys) {
+  return valueOf(source, ...keys) ?? ''
+}
+
 export function normalizeRentalNotice(notice) {
   const noticeId = valueOf(notice, 'noticeId', 'notice_id', 'rentalNoticeId', 'rental_notice_id')
   const applyStartDate = valueOf(notice, 'applyStartDate', 'apply_start_date')
@@ -56,11 +60,11 @@ export function normalizeRentalDetail(payload = {}) {
       usage: valueOf(supply, 'usage') || '-',
       address: valueOf(supply, 'address') || '-',
       lotNumber: valueOf(supply, 'lotNumber', 'lot_number') || '-',
-      area: valueOf(supply, 'area') || '-',
-      expectedAmount: valueOf(supply, 'expectedAmount', 'expected_amount') || '-',
-      expectedAmountRaw: valueOf(supply, 'expectedAmountRaw', 'expected_amount_raw') || '',
+      area: providedValue(supply, 'area'),
+      expectedAmount: providedValue(supply, 'expectedAmount', 'expected_amount'),
+      expectedAmountRaw: providedValue(supply, 'expectedAmountRaw', 'expected_amount_raw'),
       houseType: valueOf(supply, 'houseType', 'house_type') || '-',
-      householdCount: valueOf(supply, 'householdCount', 'household_count') || '-',
+      householdCount: providedValue(supply, 'householdCount', 'household_count'),
       internetApplyStatus: valueOf(supply, 'internetApplyStatus', 'internet_apply_status') || '-',
       mapAddress: valueOf(supply, 'mapAddress', 'map_address') || valueOf(supply, 'address') || '',
       mapUrl: valueOf(supply, 'mapUrl', 'map_url') || '',
@@ -79,11 +83,11 @@ export function normalizeRentalRecommendation(payload = {}) {
       usage: valueOf(supply, 'usage') || '-',
       address: valueOf(supply, 'address') || '-',
       lotNumber: valueOf(supply, 'lotNumber', 'lot_number') || '-',
-      area: valueOf(supply, 'area') || '-',
-      expectedAmount: valueOf(supply, 'expectedAmount', 'expected_amount') || '-',
-      expectedAmountRaw: valueOf(supply, 'expectedAmountRaw', 'expected_amount_raw') || '',
+      area: providedValue(supply, 'area'),
+      expectedAmount: providedValue(supply, 'expectedAmount', 'expected_amount'),
+      expectedAmountRaw: providedValue(supply, 'expectedAmountRaw', 'expected_amount_raw'),
       houseType: valueOf(supply, 'houseType', 'house_type') || '-',
-      householdCount: valueOf(supply, 'householdCount', 'household_count') || '-',
+      householdCount: providedValue(supply, 'householdCount', 'household_count'),
       internetApplyStatus: valueOf(supply, 'internetApplyStatus', 'internet_apply_status') || '-',
       mapAddress: valueOf(supply, 'mapAddress', 'map_address') || valueOf(supply, 'address') || '',
       mapUrl: valueOf(supply, 'mapUrl', 'map_url') || '',
