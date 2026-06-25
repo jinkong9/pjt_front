@@ -7,7 +7,10 @@ import EmptyState from '@/shared/ui/EmptyState.vue'
 import FinancialProfileForm from '@/features/property-detail/ui/FinancialProfileForm.vue'
 import { saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import { memberKeys, memberQueryOptions } from '@/entities/member/model/memberQueries'
-import { toggleFavoriteRentalNotice } from '@/entities/rental/api/rentalApi'
+import {
+  sendRentalRecommendationEmails,
+  toggleFavoriteRentalNotice,
+} from '@/entities/rental/api/rentalApi'
 import { rentalKeys, rentalQueryOptions } from '@/entities/rental/model/rentalQueries'
 import { transferQueryOptions } from '@/entities/transfer/model/transferQueries'
 import {
@@ -76,6 +79,9 @@ const removeRentalFavoriteMutation = useMutation({
     queryClient.invalidateQueries({ queryKey: ['rentals', 'list'] })
     queryClient.invalidateQueries({ queryKey: ['rentals', 'recommendations'] })
   },
+})
+const recommendationEmailMutation = useMutation({
+  mutationFn: sendRentalRecommendationEmails,
 })
 const favorites = computed(() => dealFavoritesQuery.data.value ?? [])
 const rentalFavorites = computed(() => rentalFavoritesQuery.data.value ?? [])
@@ -154,6 +160,22 @@ async function updateFinancialProfile(payload = {}) {
       buildFinancialPayload(payload.financialProfile ?? nextMyDataProfile),
     )
     queryClient.invalidateQueries({ queryKey: memberKeys.financialProfile() })
+    try {
+      const emailResult = await recommendationEmailMutation.mutateAsync({
+        desiredRegions: nextMyDataProfile.desiredRegions,
+        rentalTypes: nextMyDataProfile.rentalTypes,
+        limit: 5,
+      })
+      financialMessage.value =
+        emailResult.sentCount > 0
+          ? `금융 프로필이 저장되었습니다. 추천 공고 ${emailResult.sentCount}건을 메일로 보냈습니다.`
+          : '금융 프로필이 저장되었습니다. 새로 보낼 추천 공고 메일은 없습니다.'
+    } catch (emailError) {
+      financialMessage.value =
+        emailError?.response?.status === 403
+          ? '금융 프로필은 저장되었습니다. LH 추천 메일을 받으려면 회원 정보에서 메일 수신 동의를 켜주세요.'
+          : '금융 프로필은 저장되었습니다. LH 추천 메일은 보내지 못했습니다.'
+    }
     financialMessage.value = '금융 프로필이 저장되었습니다.'
   } finally {
     financialSaving.value = false

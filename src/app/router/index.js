@@ -5,7 +5,6 @@ import HomePage from '@/pages/home/ui/HomePage.vue'
 import LhCalendarPage from '@/pages/lh-calendar/ui/LhCalendarPage.vue'
 import LoginPage from '@/pages/login/ui/LoginPage.vue'
 import MemberPage from '@/pages/member/ui/MemberPage.vue'
-import MyDataPage from '@/pages/mydata/ui/MyDataPage.vue'
 import NoticeDetailPage from '@/pages/notice-detail/ui/NoticeDetailPage.vue'
 import NoticesPage from '@/pages/notices/ui/NoticesPage.vue'
 import PricesPage from '@/pages/prices/ui/PricesPage.vue'
@@ -37,7 +36,7 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginPage },
     { path: '/register', name: 'register', component: RegisterPage },
     { path: '/member', name: 'member', component: MemberPage },
-    { path: '/mydata', name: 'mydata', component: MyDataPage },
+    { path: '/mydata', redirect: '/member' },
   ],
 })
 

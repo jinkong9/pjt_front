@@ -1,7 +1,14 @@
 <script setup>
-import { nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useMutation } from '@tanstack/vue-query'
 import { askAiChat } from '@/shared/api/aiChatApi'
+
+const props = defineProps({
+  context: {
+    type: String,
+    default: '',
+  },
+})
 
 const isOpen = ref(false)
 const draft = ref('')
@@ -10,7 +17,7 @@ const messages = ref([
   {
     id: 1,
     role: 'assistant',
-    text: '안녕하세요. HappyHome AI 상담봇입니다. 매물, 임대 공고, 지역 분석에 대해 물어보세요.',
+    text: '안녕하세요. HappyHome AI 상담봇입니다. 지금 보고 있는 위치를 기준으로 질문해 주세요.',
     meta: 'RAG 기반 답변',
   },
 ])
@@ -19,11 +26,8 @@ const chatMutation = useMutation({
   mutationFn: (question) => askAiChat(question),
 })
 
-const quickQuestions = [
-  '강남구 최근 실거래가 알려줘',
-  '청년 임대 공고 찾아줘',
-  '이 지역 생활 편의성 어때?',
-]
+const quickQuestions = ['이 지역 실거래가 알려줘', '이 지역 생활 편의성 어때?']
+const contextPrefix = computed(() => props.context.trim())
 
 function toggleChat() {
   isOpen.value = !isOpen.value
@@ -54,7 +58,10 @@ async function sendMessage(question = draft.value) {
   await scrollToBottom()
 
   try {
-    const response = await chatMutation.mutateAsync(trimmed)
+    const contextualQuestion = contextPrefix.value
+      ? `${contextPrefix.value}\n\n사용자 질문: ${trimmed}`
+      : trimmed
+    const response = await chatMutation.mutateAsync(contextualQuestion)
     messages.value.push({
       id: Date.now() + 1,
       role: 'assistant',
@@ -87,7 +94,9 @@ async function sendMessage(question = draft.value) {
         v-if="isOpen"
         class="ai-chat-panel grid !h-[min(640px,calc(100vh_-_120px))] !w-[min(420px,calc(100vw_-_32px))] grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden border border-neutral-200 bg-white shadow-[0_24px_70px_rgba(23,23,23,0.24)]"
       >
-        <header class="ai-chat-header flex items-center justify-between gap-4 bg-[#b4212a] p-4 text-white">
+        <header
+          class="ai-chat-header flex items-center justify-between gap-4 bg-[#b4212a] p-4 text-white"
+        >
           <div class="ai-chat-title flex items-center gap-3">
             <span
               class="ai-chat-avatar grid h-11 w-11 place-items-center rounded-2xl border border-white/35 bg-white/15"
@@ -97,7 +106,6 @@ async function sendMessage(question = draft.value) {
             </span>
             <div>
               <strong class="block font-black">HappyHome AI</strong>
-              <small class="block text-xs font-bold text-white/75">Spring AI RAG 상담봇</small>
             </div>
           </div>
           <button
@@ -106,7 +114,7 @@ async function sendMessage(question = draft.value) {
             aria-label="챗봇 닫기"
             @click="closeChat"
           >
-            ×
+            x
           </button>
         </header>
 
@@ -128,7 +136,9 @@ async function sendMessage(question = draft.value) {
             ]"
           >
             <p>{{ message.text }}</p>
-            <small v-if="message.meta" class="mt-2 block text-[11px] font-black opacity-70">{{ message.meta }}</small>
+            <small v-if="message.meta" class="mt-2 block text-[11px] font-black opacity-70">{{
+              message.meta
+            }}</small>
           </div>
 
           <div
@@ -136,8 +146,12 @@ async function sendMessage(question = draft.value) {
             class="ai-chat-message assistant typing flex w-fit gap-1 border border-neutral-200 bg-white p-3"
           >
             <span class="h-2 w-2 animate-bounce rounded-full bg-neutral-400"></span>
-            <span class="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.12s]"></span>
-            <span class="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.24s]"></span>
+            <span
+              class="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.12s]"
+            ></span>
+            <span
+              class="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0.24s]"
+            ></span>
           </div>
         </div>
 

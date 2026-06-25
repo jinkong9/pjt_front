@@ -80,7 +80,7 @@ describe('App', () => {
     expect(router.resolve('/transfers/new').name).toBe('transfer-create')
     expect(router.resolve('/transfers/1/edit').name).toBe('transfer-edit')
     expect(router.resolve('/lh-calendar').name).toBe('lh-calendar')
-    expect(router.resolve('/mydata').name).toBe('mydata')
+    expect(router.resolve('/mydata').matched[0].redirect).toBe('/member')
   })
 
   it('uses natural scroll reveal sections on the home page', async () => {

@@ -273,7 +273,7 @@ function hasTradeCoordinates(trade) {
           </p>
           <RouterLink
             data-testid="mydata-link"
-            to="/mydata"
+            to="/member"
             class="mt-4 block bg-[#b4212a] px-4 py-3 text-center text-sm font-black text-white"
           >
             마이데이터 입력하러 가기

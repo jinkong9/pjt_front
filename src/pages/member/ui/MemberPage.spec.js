@@ -8,6 +8,7 @@ import { useMemberStore } from '@/entities/member/model/member'
 import { getFinancialProfile, saveFinancialProfile } from '@/entities/member/api/financialProfileApi'
 import {
   fetchFavoriteRentalNotices,
+  sendRentalRecommendationEmails,
   toggleFavoriteRentalNotice,
 } from '@/entities/rental/api/rentalApi'
 import { fetchFavoriteTransfers } from '@/entities/transfer/api/transferApi'
@@ -36,6 +37,7 @@ vi.mock('@/entities/member/api/financialProfileApi', () => ({
 
 vi.mock('@/entities/rental/api/rentalApi', () => ({
   fetchFavoriteRentalNotices: vi.fn(),
+  sendRentalRecommendationEmails: vi.fn(),
   toggleFavoriteRentalNotice: vi.fn(),
 }))
 
@@ -95,6 +97,12 @@ describe('MemberPage', () => {
     vi.clearAllMocks()
     localStorage.clear()
     fetchFavoriteTransfers.mockResolvedValue([])
+    sendRentalRecommendationEmails.mockResolvedValue({
+      sentCount: 0,
+      skippedCount: 0,
+      missingMemberCount: 0,
+      consentRequiredCount: 0,
+    })
   })
 
   it('alerts and redirects to login instead of rendering the logged-out member panel', async () => {
@@ -166,6 +174,12 @@ describe('MemberPage', () => {
       monthlySavings: 1200000,
       existingLoanBalance: 0,
       existingMonthlyDebtPayment: 0,
+    })
+    expect(sendRentalRecommendationEmails).toHaveBeenCalled()
+    expect(sendRentalRecommendationEmails.mock.calls[0][0]).toEqual({
+      desiredRegions: ['서울'],
+      rentalTypes: ['행복주택'],
+      limit: 5,
     })
     expect(JSON.parse(localStorage.getItem('happyhome.mydata.profile'))).toMatchObject({
       householdMembers: 2,
