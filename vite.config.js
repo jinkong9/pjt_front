@@ -5,7 +5,8 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
 const backendOrigin =
-  process.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8080'
+  process.env.VITE_BACKEND_ORIGIN ||
+  'https://port-0-pjt-back-mf0t9nz68786d23e.sel5.cloudtype.app'
 
 // https://vite.dev/config/
 export default defineConfig({
