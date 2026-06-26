@@ -27,13 +27,7 @@ onMounted(() => {
         <article
           class="mt-7 border border-neutral-200 bg-white px-10 py-9 shadow-[0_18px_44px_rgba(23,23,23,0.08)] max-[640px]:px-6"
         >
-          <div class="mb-7 border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-black text-blue-600">
-            공지사항이 등록되었습니다.
-          </div>
-
-          <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">
-            Notice
-          </p>
+          <p class="m-0 text-xs font-black uppercase tracking-[0.28em] text-[#b4212a]">Notice</p>
           <h1 class="mt-4 text-[clamp(34px,4vw,48px)] font-black leading-tight">
             {{ notice.title }}
           </h1>
@@ -55,18 +49,6 @@ onMounted(() => {
             </p>
           </div>
         </article>
-
-        <div class="mt-5 flex justify-end gap-2">
-          <button type="button" class="min-h-10 bg-[#171717] px-5 text-sm font-black text-white">
-            수정
-          </button>
-          <button
-            type="button"
-            class="min-h-10 border border-neutral-200 bg-white px-5 text-sm font-black text-[#b4212a]"
-          >
-            삭제
-          </button>
-        </div>
       </template>
     </div>
   </main>
