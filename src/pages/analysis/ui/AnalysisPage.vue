@@ -30,6 +30,8 @@ const radiusOptions = [
 ]
 
 const places = computed(() => analysis.value?.places ?? [])
+const busStops = computed(() => analysis.value?.busStops ?? [])
+const subwayStations = computed(() => analysis.value?.subwayStations ?? [])
 const counts = computed(() => countFacilities(places.value))
 const filteredPlaces = computed(() => filterFacilities(places.value, selectedFacilityFilter.value))
 const scoreTotal = computed(() => Math.round(Number(analysis.value?.score?.total ?? 0)))
@@ -109,6 +111,24 @@ function createFallbackAnalysis() {
       },
     ],
   }
+}
+
+function formatDistance(value) {
+  const distance = Number(value)
+  if (!Number.isFinite(distance)) return '-'
+  return `${Math.round(distance)}m`
+}
+
+function busStopName(stop) {
+  return stop.nodeName || stop.name || '-'
+}
+
+function busStopNumber(stop) {
+  return stop.nodeNo || stop.stationId || stop.nodeId || '-'
+}
+
+function subwayStationName(station) {
+  return station.name || station.stationName || '-'
 }
 
 async function analyze() {
@@ -238,6 +258,64 @@ async function analyze() {
       <p v-if="!filteredPlaces.length" class="mt-8 text-lg font-black text-neutral-500">
         선택한 카테고리의 시설이 없습니다.
       </p>
+      <section class="mt-12 border-t border-neutral-200 pt-8">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="m-0 text-xs font-black uppercase tracking-[0.18em] text-[#b4212a]">
+              Transit Access
+            </p>
+            <h2 class="mt-2 text-[clamp(30px,4vw,44px)] font-black leading-none">
+              교통 접근성
+            </h2>
+          </div>
+          <span class="text-sm font-black text-neutral-500">
+            버스 {{ busStops.length }}곳 · 지하철 {{ subwayStations.length }}곳
+          </span>
+        </div>
+
+        <div class="mt-7 grid gap-5 lg:grid-cols-2">
+          <article class="border border-neutral-200 bg-[#faf8f5] p-5">
+            <h3 class="text-2xl font-black">가까운 버스 정류장</h3>
+            <ul v-if="busStops.length" class="mt-5 grid gap-4">
+              <li
+                v-for="stop in busStops"
+                :key="`${busStopName(stop)}-${busStopNumber(stop)}`"
+                class="border-b border-neutral-200 pb-4 last:border-0 last:pb-0"
+              >
+                <strong class="block text-lg font-black">{{ busStopName(stop) }}</strong>
+                <p class="mt-2 text-sm font-bold text-neutral-500">
+                  정류장 번호 {{ busStopNumber(stop) }} · {{ formatDistance(stop.distanceMeters) }}
+                </p>
+              </li>
+            </ul>
+            <p v-else class="mt-5 text-sm font-black text-neutral-500">
+              반경 안에서 확인된 버스 정류장이 없습니다.
+            </p>
+          </article>
+
+          <article class="border border-neutral-200 bg-white p-5">
+            <h3 class="text-2xl font-black">가까운 지하철역</h3>
+            <ul v-if="subwayStations.length" class="mt-5 grid gap-4">
+              <li
+                v-for="station in subwayStations"
+                :key="`${subwayStationName(station)}-${station.line || station.address || ''}`"
+                class="border-b border-neutral-200 pb-4 last:border-0 last:pb-0"
+              >
+                <strong class="block text-lg font-black">{{ subwayStationName(station) }}</strong>
+                <p class="mt-2 text-sm font-bold text-neutral-500">
+                  {{ station.line || '노선 정보 없음' }} · {{ formatDistance(station.distanceMeters) }}
+                </p>
+                <p v-if="station.address" class="mt-1 text-sm font-bold text-neutral-400">
+                  {{ station.address }}
+                </p>
+              </li>
+            </ul>
+            <p v-else class="mt-5 text-sm font-black text-neutral-500">
+              반경 안에서 확인된 지하철역이 없습니다.
+            </p>
+          </article>
+        </div>
+      </section>
     </section>
 
     <section v-else class="mt-5 border border-neutral-200 bg-white p-8">
