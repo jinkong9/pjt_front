@@ -165,9 +165,11 @@ describe('App', () => {
       },
     })
 
-    expect(wrapper.find('.analysis-quick-form').exists()).toBe(true)
-    expect(wrapper.find('.analysis-presets').exists()).toBe(true)
-    expect(wrapper.text()).toContain('동네 이름')
-    expect(wrapper.text()).toContain('고급 좌표 설정')
+    expect(wrapper.find('form').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="analysis-radius-500"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="analysis-radius-1000"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="analysis-radius-1500"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('생활권 분석')
+    expect(wrapper.text()).toContain('분석하기')
   })
 })
