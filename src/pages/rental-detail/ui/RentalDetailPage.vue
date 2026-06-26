@@ -57,7 +57,7 @@ function mapError(code, message) {
 const activeMyDataProfile = computed(() =>
   normalizeMyDataProfile({
     ...myDataProfile.value,
-    ...(financialProfileQuery.data.value ?? {}),
+    ...financialProfileQuery.data.value,
   }),
 )
 const myDataErrors = computed(() => validateMyDataProfile(activeMyDataProfile.value))
